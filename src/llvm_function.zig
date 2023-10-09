@@ -1,10 +1,9 @@
-const Module = @import("llvm_module.zig");
 const llvm = @import("llvm.zig");
 
-module: *Module = undefined,
+module: *llvm.Module = undefined,
 current: ?llvm.Function = null,
 
-pub fn init(mod: *Module) @This() {
+pub fn init(mod: *llvm.Module) @This() {
     return .{
         .module = mod,
     };
@@ -17,6 +16,6 @@ pub fn next(self: *@This()) ?llvm.Function {
         else
             null
     else
-        llvm.first_func(self.module.mod_ref);
+        llvm.first_func(self.module.*);
     return self.current;
 }
