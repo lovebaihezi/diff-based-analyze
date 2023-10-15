@@ -9,6 +9,8 @@ pub const llvm_c = @cImport({
     @cInclude("llvm-c/IRReader.h");
 });
 
+pub const MaxParam = 64;
+
 pub const Value = llvm_c.LLVMValueRef;
 pub const Module = llvm_c.LLVMModuleRef;
 pub const Instruction = Value;
@@ -17,13 +19,31 @@ pub const Function = Value;
 pub const Opcode = llvm_c.LLVMOpcode;
 pub const MemoryBuffer = llvm_c.LLVMMemoryBufferRef;
 pub const Context = llvm_c.LLVMContextRef;
+pub const Param = Value;
 
 pub const Load = llvm_c.LLVMLoad;
 pub const Store = llvm_c.LLVMStore;
 pub const Alloca = llvm_c.LLVMAlloca;
+pub const Call = llvm_c.LLVMCall;
+
+pub fn getCalledValue(func: Instruction) Value {
+    return llvm_c.LLVMGetCalledValue(func);
+}
 
 pub fn createContext() Context {
     return llvm_c.LLVMContextCreate();
+}
+
+pub fn function_paramter_count(func: Function) usize {
+    return @intCast(llvm_c.LLVMCountParams(func));
+}
+
+pub fn function_parameters(func: Function, parameters: []Value) void {
+    llvm_c.LLVMGetParams(func, parameters.ptr);
+}
+
+pub fn function_parameter(func: Function, index: usize) Value {
+    return llvm_c.LLVMGetParam(func, @intCast(index));
 }
 
 pub fn destoryContext(ctx: Context) void {

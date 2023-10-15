@@ -2,3 +2,4 @@
 /zig-out
 *.bc
 *.ir
+*.ll

@@ -29,7 +29,11 @@ pub fn main() void {
     defer arena.deinit();
     const allocator = arena.allocator();
     var map = std.StringArrayHashMap(VariableInfo).init(allocator);
-    while (function.next()) |_| {
+    while (function.next()) |f| {
+        std.log.info("function: {s}", .{llvm.value_name(f)});
+        for (function.current_parameters()) |param| {
+            std.log.info("param {s}", .{llvm.value_name(param)});
+        }
         while (block.next()) |_| {
             while (instruction.next()) |i| {
                 const opcode = llvm.inst_opcode(i);
@@ -57,9 +61,12 @@ pub fn main() void {
                     llvm.Alloca => {
                         const name = llvm.value_name(i);
                         var info = VariableInfo.init(allocator);
-                        map.put(name, info) catch {
-                            @panic("put to map failed");
-                        };
+                        map.put(name, info) catch unreachable;
+                    },
+                    // We seen the function not declare first
+                    llvm.Call => {
+                        const called_function = llvm.getCalledValue(i);
+                        _ = called_function;
                     },
                     else => {
                         count += 1;

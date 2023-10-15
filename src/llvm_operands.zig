@@ -12,7 +12,7 @@ pub fn init(inst: *const Instruction) @This() {
     };
 }
 
-pub fn next(self: *@This()) ?llvm.Instruction {
+pub fn next(self: *@This()) ?llvm.Value {
     const i = self.i;
     self.i += 1;
     return if (i == self.size)
