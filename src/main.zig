@@ -31,16 +31,23 @@ pub fn main() void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
-    var map = std.StringArrayHashMap(VariableInfo).init(allocator);
     while (function.next()) |f| {
+        var map = std.StringArrayHashMap(VariableInfo).init(allocator);
+        defer map.deinit();
         out.print("func {s}(", .{llvm.valueName(f)}) catch unreachable;
         const parameters = function.currentParameters();
         const len = parameters.len;
         if (len > 0) {
             for (parameters[0 .. len - 1]) |param| {
-                out.print("{s}, ", .{llvm.valueName(param)}) catch unreachable;
+                const name = llvm.valueName(param);
+                out.print("{s}, ", .{name}) catch unreachable;
+                var info = VariableInfo.init(allocator);
+                map.put(name, info) catch unreachable;
             }
-            out.print("{s})\n", .{llvm.valueName(parameters[len - 1])}) catch unreachable;
+            const name = llvm.valueName(parameters[len - 1]);
+            var info = VariableInfo.init(allocator);
+            map.put(name, info) catch unreachable;
+            out.print("{s})\n", .{name}) catch unreachable;
         } else {
             out.print(")\n", .{}) catch unreachable;
         }
@@ -86,12 +93,14 @@ pub fn main() void {
                 bw.flush() catch unreachable;
             }
         }
-    }
-    for (map.keys()) |key| {
-        const info = map.get(key) orelse unreachable;
-        const read_count = VariableInfo.read_count(info);
-        const write_count = VariableInfo.write_count(info);
-        out.print("{s}: read count: {d}, write count: {d}\n", .{ key, read_count, write_count }) catch unreachable;
+        for (map.keys()) |key| {
+            var info = map.get(key) orelse unreachable;
+            defer info.deinit();
+            const read_count = VariableInfo.read_count(info);
+            const write_count = VariableInfo.write_count(info);
+            out.print("{s}: read count: {d}, write count: {d}\n", .{ key, read_count, write_count }) catch unreachable;
+        }
+        bw.flush() catch unreachable;
     }
 }
 
