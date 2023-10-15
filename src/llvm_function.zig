@@ -23,13 +23,13 @@ pub fn next(self: *@This()) ?llvm.Function {
     return self.current;
 }
 
-pub fn current_parameters(self: *@This()) []llvm.Param {
+pub fn currentParameters(self: *@This()) []llvm.Param {
     const f = self.current.?;
-    const function_paramter_count = llvm.function_paramter_count(f);
+    const function_paramter_count = llvm.functionParamterCount(f);
     self.parameter_count = function_paramter_count;
-    llvm.function_parameters(self.current.?, &self.parameters);
+    llvm.functionParameters(self.current.?, &self.parameters);
     if (function_paramter_count > llvm.MaxParam) {
-        std.log.err("function {s} paramater way too large:{d} then {d}", .{ llvm.value_name(f), function_paramter_count, llvm.MaxParam });
+        std.log.err("function {s} paramater way too large:{d} then {d}", .{ llvm.valueName(f), function_paramter_count, llvm.MaxParam });
         @panic("function paramater way too large");
     }
     return self.parameters[0..self.parameter_count];

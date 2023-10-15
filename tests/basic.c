@@ -5,9 +5,13 @@ int f1(int* arg1, int arg2, int arg3) {
 }
 
 int f2(int *arg1) {
-    int x = *arg1;
-    x += 2;
-    return x;
+    if (arg1 != 0x0) {
+        int x = *arg1;
+        x += 2;
+        return x;
+    } else {
+        return 0;
+    }
 }
 
 void f(void) {

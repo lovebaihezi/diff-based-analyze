@@ -10,6 +10,9 @@ const VariableInfo = @import("variable_info.zig");
 const llvm = @import("llvm.zig");
 
 pub fn main() void {
+    const stdout = std.io.getStdOut().writer();
+    var bw = std.io.bufferedWriter(stdout);
+    const out = bw.writer();
     const mem_buf = MemoryBuffer.initWithStdin() catch {
         std.log.err("failed create memory buffer from stdin", .{});
         std.os.exit(255);
@@ -30,18 +33,26 @@ pub fn main() void {
     const allocator = arena.allocator();
     var map = std.StringArrayHashMap(VariableInfo).init(allocator);
     while (function.next()) |f| {
-        std.log.info("function: {s}", .{llvm.value_name(f)});
-        for (function.current_parameters()) |param| {
-            std.log.info("param {s}", .{llvm.value_name(param)});
+        out.print("func {s}(", .{llvm.valueName(f)}) catch unreachable;
+        const parameters = function.currentParameters();
+        const len = parameters.len;
+        if (len > 0) {
+            for (parameters[0 .. len - 1]) |param| {
+                out.print("{s}, ", .{llvm.valueName(param)}) catch unreachable;
+            }
+            out.print("{s})\n", .{llvm.valueName(parameters[len - 1])}) catch unreachable;
+        } else {
+            out.print(")\n", .{}) catch unreachable;
         }
-        while (block.next()) |_| {
+        while (block.next()) |b| {
+            out.print("  block: {s}\n", .{llvm.basicBlockName(b)}) catch unreachable;
             while (instruction.next()) |i| {
                 const opcode = llvm.inst_opcode(i);
                 switch (opcode) {
                     llvm.Load => {
                         var operands = Operands.init(&instruction);
                         while (operands.next()) |op| {
-                            const name = llvm.value_name(op);
+                            const name = llvm.valueName(op);
                             if (map.getPtr(name)) |info| {
                                 VariableInfo.add_write_operand(info, op);
                                 break;
@@ -51,7 +62,7 @@ pub fn main() void {
                     llvm.Store => {
                         var operands = Operands.init(&instruction);
                         while (operands.next()) |op| {
-                            const name = llvm.value_name(op);
+                            const name = llvm.valueName(op);
                             if (map.getPtr(name)) |info| {
                                 VariableInfo.add_read_operand(info, op);
                                 break;
@@ -59,19 +70,20 @@ pub fn main() void {
                         }
                     },
                     llvm.Alloca => {
-                        const name = llvm.value_name(i);
+                        const name = llvm.valueName(i);
                         var info = VariableInfo.init(allocator);
                         map.put(name, info) catch unreachable;
                     },
                     // We seen the function not declare first
                     llvm.Call => {
                         const called_function = llvm.getCalledValue(i);
-                        _ = called_function;
+                        out.print("    call: {s}\n", .{llvm.valueName(called_function)}) catch unreachable;
                     },
                     else => {
                         count += 1;
                     },
                 }
+                bw.flush() catch unreachable;
             }
         }
     }
@@ -79,9 +91,8 @@ pub fn main() void {
         const info = map.get(key) orelse unreachable;
         const read_count = VariableInfo.read_count(info);
         const write_count = VariableInfo.write_count(info);
-        std.log.info("{s}: read count: {d}, write count: {d}", .{ key, read_count, write_count });
+        out.print("{s}: read count: {d}, write count: {d}\n", .{ key, read_count, write_count }) catch unreachable;
     }
-    std.debug.print("inst last: {}\n", .{count});
 }
 
 test "import other tests" {

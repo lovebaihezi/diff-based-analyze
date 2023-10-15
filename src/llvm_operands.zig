@@ -8,7 +8,7 @@ size: usize,
 pub fn init(inst: *const Instruction) @This() {
     return .{
         .instruction = inst,
-        .size = llvm.inst_operand_count(inst.current.?),
+        .size = llvm.instOperandCount(inst.current.?),
     };
 }
 
@@ -18,5 +18,5 @@ pub fn next(self: *@This()) ?llvm.Value {
     return if (i == self.size)
         null
     else
-        llvm.inst_nth_operand(self.instruction.current.?, i);
+        llvm.instNthOperand(self.instruction.current.?, i);
 }
