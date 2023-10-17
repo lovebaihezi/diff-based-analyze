@@ -21,6 +21,28 @@ pub const MemoryBuffer = llvm_c.LLVMMemoryBufferRef;
 pub const Context = llvm_c.LLVMContextRef;
 pub const Param = Value;
 
+pub fn NonNull(comptime ty: type) type {
+    const type_info = @typeInfo(ty);
+    return switch (type_info) {
+        .Optional => |child| child.child,
+        else => ty,
+    };
+}
+
+test "non null type decorator" {
+    try std.testing.expect(NonNull(?i32) == i32);
+}
+
+pub const NonNullValue = NonNull(llvm_c.LLVMValueRef);
+pub const NonNullModule = NonNull(llvm_c.LLVMModuleRef);
+pub const NonNullInstruction = NonNullValue;
+pub const NonNullBasicBlock = NonNull(llvm_c.LLVMBasicBlockRef);
+pub const NonNullFunction = NonNullValue;
+pub const NonNullOpcode = NonNull(llvm_c.LLVMOpcode);
+pub const NonNullMemoryBuffer = NonNull(llvm_c.LLVMMemoryBufferRef);
+pub const NonNullContext = NonNull(llvm_c.LLVMContextRef);
+pub const NonNullParam = NonNullValue;
+
 pub const Load = llvm_c.LLVMLoad;
 pub const Store = llvm_c.LLVMStore;
 pub const Alloca = llvm_c.LLVMAlloca;

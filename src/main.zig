@@ -106,4 +106,6 @@ pub fn main() void {
 
 test "import other tests" {
     std.testing.refAllDecls(@This());
+    _ = @import("llvm.zig");
+    _ = @import("call_tree.zig");
 }

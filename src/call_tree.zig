@@ -1,0 +1,32 @@
+const llvm = @import("llvm.zig");
+const CallPath = @import("call_path.zig");
+const Path = CallPath.Path;
+
+pub const FunctionNode = struct {};
+
+pub const BranchNode = struct {};
+
+pub const InstructionNode = struct {};
+
+pub const Node = union(enum) {
+    const Self = @This();
+
+    Function: FunctionNode,
+    Branch: BranchNode,
+    Instruction: InstructionNode,
+};
+
+/// The Call Tree
+/// Used to find a Instruction exec path, functions, branches
+pub const CallTree = struct {
+    root: *Node,
+
+    pub fn init(root: *Node) @This() {
+        return .{ .root = root };
+    }
+
+    pub fn path(inst: llvm.Instruction) ?Path {
+        _ = inst;
+        return null;
+    }
+};

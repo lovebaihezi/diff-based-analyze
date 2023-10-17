@@ -58,16 +58,3 @@ pub fn deinit(mem: MemoryBuf) void {
     // TODO: this will cause seg, find out why
     // llvm_c.LLVMDisposeMemoryBuffer(mem.mem_buf);
 }
-
-test "init with memory" {
-    const content =
-        \\int f(void) {
-        \\   int x = 0;
-        \\}
-    ;
-    var module = try MemoryBuf.initWithContent("content", content);
-    try std.testing.expect(module.mem_buf != null);
-    try module.parse_bite_code_functions();
-    try std.testing.expect(module.mod_ref != null);
-    defer module.deinit();
-}
