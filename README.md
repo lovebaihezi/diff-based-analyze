@@ -7,6 +7,7 @@ Still in progress.
 The `build.zig` will dynamic link the `LLVM` and `libc`.
 
 ```
-nix develop
 zig build -Doptimize=ReleaseSafe
 ```
+
+Make sure you have `LLVM` installed locally
