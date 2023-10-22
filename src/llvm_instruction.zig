@@ -13,10 +13,10 @@ pub fn init(block: *const BasicBlock) @This() {
 pub fn next(self: *@This()) ?llvm.Instruction {
     self.current = if (self.current) |current|
         if (current != null)
-            llvm.next_inst(current) orelse null
+            llvm.nextInstruction(current) orelse null
         else
             null
     else
-        llvm.first_inst(self.basic_block.current.?);
+        llvm.firstInstruction(self.basic_block.current.?);
     return self.current;
 }

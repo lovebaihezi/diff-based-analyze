@@ -7,6 +7,7 @@ const BasicBlock = @import("llvm_basic_block.zig");
 const Instruction = @import("llvm_instruction.zig");
 const Operands = @import("llvm_operands.zig");
 const VariableInfo = @import("variable_info.zig");
+const GlobalVar = @import("llvm_global_var.zig");
 const llvm = @import("llvm.zig");
 
 pub fn main() void {
@@ -24,15 +25,53 @@ pub fn main() void {
         std.os.exit(255);
     };
     defer module.deinit();
+    var global_var = GlobalVar.init(&module.mod_ref);
     var function = Function.init(&module.mod_ref);
     var block = BasicBlock.init(&function);
     var instruction = Instruction.init(&block);
-    var count: usize = 0;
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
+    var map = std.StringArrayHashMap(VariableInfo).init(allocator);
+    while (global_var.next()) |g| {
+        const opcode = llvm.instructionCode(g);
+        switch (opcode) {
+            llvm.Load => {
+                var operands = Operands.init(&instruction);
+                while (operands.next()) |op| {
+                    const name = llvm.valueName(op);
+                    if (map.getPtr(name)) |info| {
+                        VariableInfo.add_write_operand(info, op);
+                        break;
+                    }
+                }
+            },
+            llvm.Store => {
+                var operands = Operands.init(&instruction);
+                while (operands.next()) |op| {
+                    const name = llvm.valueName(op);
+                    if (map.getPtr(name)) |info| {
+                        VariableInfo.add_read_operand(info, op);
+                        break;
+                    }
+                }
+            },
+            llvm.Alloca => {
+                const name = llvm.valueName(g);
+                var info = VariableInfo.init(allocator);
+                out.print("global var: {s}\n", .{name}) catch unreachable;
+                map.put(name, info) catch unreachable;
+            },
+            // We seen the function not declare first
+            llvm.Call => {
+                const called_function = llvm.getCalledValue(g);
+                out.print("    call: {s}\n", .{llvm.valueName(called_function)}) catch unreachable;
+            },
+            else => {},
+        }
+        bw.flush() catch unreachable;
+    }
     while (function.next()) |f| {
-        var map = std.StringArrayHashMap(VariableInfo).init(allocator);
         defer map.deinit();
         out.print("func {s}(", .{llvm.valueName(f)}) catch unreachable;
         const parameters = function.currentParameters();
@@ -54,7 +93,7 @@ pub fn main() void {
         while (block.next()) |b| {
             out.print("  block: {s}\n", .{llvm.basicBlockName(b)}) catch unreachable;
             while (instruction.next()) |i| {
-                const opcode = llvm.inst_opcode(i);
+                const opcode = llvm.instructionCode(i);
                 switch (opcode) {
                     llvm.Load => {
                         var operands = Operands.init(&instruction);
@@ -86,9 +125,7 @@ pub fn main() void {
                         const called_function = llvm.getCalledValue(i);
                         out.print("    call: {s}\n", .{llvm.valueName(called_function)}) catch unreachable;
                     },
-                    else => {
-                        count += 1;
-                    },
+                    else => {},
                 }
                 bw.flush() catch unreachable;
             }

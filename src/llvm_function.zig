@@ -15,11 +15,11 @@ pub fn init(mod: *llvm.Module) @This() {
 pub fn next(self: *@This()) ?llvm.Function {
     self.current = if (self.current) |current|
         if (current != null)
-            llvm.next_func(current) orelse null
+            llvm.nextFunction(current) orelse null
         else
             null
     else
-        llvm.first_func(self.module.*);
+        llvm.firstFunction(self.module.*);
     return self.current;
 }
 

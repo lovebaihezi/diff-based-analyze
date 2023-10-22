@@ -1,6 +1,6 @@
 const std = @import("std");
 const llvm = @import("llvm.zig");
-const llvm_c = llvm.llvm_c;
+const llvm_c = llvm.c;
 
 const IR = @This();
 pub const LLVMError = error{

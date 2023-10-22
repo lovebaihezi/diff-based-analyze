@@ -13,10 +13,10 @@ pub fn init(func: *const Function) @This() {
 pub fn next(self: *@This()) ?llvm.BasicBlock {
     self.current = if (self.current) |current|
         if (current != null)
-            llvm.next_bc_block(current) orelse null
+            llvm.nextBasicBlock(current) orelse null
         else
             null
     else
-        llvm.first_bc_block(self.function.current.?);
+        llvm.firstBasicBlock(self.function.current.?);
     return self.current;
 }
