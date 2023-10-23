@@ -47,6 +47,8 @@ pub const Load = c.LLVMLoad;
 pub const Store = c.LLVMStore;
 pub const Alloca = c.LLVMAlloca;
 pub const Call = c.LLVMCall;
+pub const Add = c.LLVMAdd;
+pub const Mul = c.LLVMMul;
 
 pub fn basicBlockName(block: BasicBlock) []const u8 {
     const ptr = c.LLVMGetBasicBlockName(block);

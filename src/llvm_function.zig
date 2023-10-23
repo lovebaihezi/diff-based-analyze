@@ -1,25 +1,22 @@
 const std = @import("std");
 const llvm = @import("llvm.zig");
 
-module: *llvm.Module = undefined,
-current: ?llvm.Function = null,
+module: llvm.NonNullModule = undefined,
+current: ?llvm.NonNullFunction = null,
 parameters: [llvm.MaxParam]llvm.Value = undefined,
 parameter_count: usize = 0,
 
-pub fn init(mod: *llvm.Module) @This() {
+pub fn init(mod: llvm.NonNullModule) @This() {
     return .{
         .module = mod,
     };
 }
 
-pub fn next(self: *@This()) ?llvm.Function {
+pub fn next(self: *@This()) llvm.Function {
     self.current = if (self.current) |current|
-        if (current != null)
-            llvm.nextFunction(current) orelse null
-        else
-            null
+        llvm.nextFunction(current) orelse null
     else
-        llvm.firstFunction(self.module.*);
+        llvm.firstFunction(self.module);
     return self.current;
 }
 

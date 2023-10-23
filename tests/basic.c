@@ -1,5 +1,5 @@
-int g_1 = 0;
-int g_2 = 0;
+extern int g_1;
+extern int g_2;
 
 int f1(int *arg1, int arg2, int arg3) {
     g_1 += 1;

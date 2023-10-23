@@ -1,14 +1,15 @@
 const llvm = @import("llvm.zig");
 const Instruction = @import("llvm_instruction.zig");
 
-instruction: *const Instruction = undefined,
+instruction: llvm.NonNullInstruction = undefined,
+
 i: usize = 0,
 size: usize,
 
-pub fn init(inst: *const Instruction) @This() {
+pub fn init(inst: llvm.NonNullInstruction) @This() {
     return .{
         .instruction = inst,
-        .size = llvm.instOperandCount(inst.current.?),
+        .size = llvm.instOperandCount(inst),
     };
 }
 
@@ -18,5 +19,5 @@ pub fn next(self: *@This()) ?llvm.Value {
     return if (i == self.size)
         null
     else
-        llvm.instNthOperand(self.instruction.current.?, i);
+        llvm.instNthOperand(self.instruction, i);
 }
