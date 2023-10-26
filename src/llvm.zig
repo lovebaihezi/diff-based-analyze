@@ -50,6 +50,10 @@ pub const Call = c.LLVMCall;
 pub const Add = c.LLVMAdd;
 pub const Mul = c.LLVMMul;
 
+pub fn isGlobalValue(value: NonNullValue) bool {
+    return c.LLVMIsAGlobalValue(value) != null;
+}
+
 pub fn basicBlockName(block: BasicBlock) []const u8 {
     const ptr = c.LLVMGetBasicBlockName(block);
     const len = std.mem.len(ptr);

@@ -33,41 +33,10 @@ pub fn main() void {
     var global_map = std.StringArrayHashMap(VariableInfo).init(allocator);
     defer global_map.deinit();
     while (global_var.next()) |g| {
-        const opcode = llvm.instructionCode(g);
-        switch (opcode) {
-            llvm.Load => {
-                var operands = Operands.init(g);
-                while (operands.next()) |op| {
-                    const name = llvm.valueName(op);
-                    if (global_map.getPtr(name)) |info| {
-                        VariableInfo.add_write_operand(info, op);
-                        break;
-                    }
-                }
-            },
-            llvm.Store => {
-                var operands = Operands.init(g);
-                while (operands.next()) |op| {
-                    const name = llvm.valueName(op);
-                    if (global_map.getPtr(name)) |info| {
-                        VariableInfo.add_read_operand(info, op);
-                        break;
-                    }
-                }
-            },
-            llvm.Alloca => {
-                const name = llvm.valueName(g);
-                var info = VariableInfo.init(allocator);
-                out.print("global var: {s}\n", .{name}) catch unreachable;
-                global_map.put(name, info) catch unreachable;
-            },
-            // We seen the function not declare first
-            llvm.Call => {
-                const called_function = llvm.getCalledValue(g);
-                out.print("    call: {s}\n", .{llvm.valueName(called_function)}) catch unreachable;
-            },
-            else => {},
-        }
+        const name = llvm.valueName(g);
+        var info = VariableInfo.init(allocator);
+        out.print("global var: {s}\n", .{name}) catch unreachable;
+        global_map.put(name, info) catch unreachable;
         bw.flush() catch unreachable;
     }
     while (function.next()) |f| {
@@ -101,7 +70,7 @@ pub fn main() void {
                         var operands = Operands.init(i);
                         while (operands.next()) |op| {
                             const name = llvm.valueName(op);
-                            if (map.getPtr(name)) |info| {
+                            if (map.getPtr(name) orelse global_map.getPtr(name)) |info| {
                                 VariableInfo.add_write_operand(info, op);
                                 break;
                             } else if (name.len != 0) {
@@ -113,7 +82,7 @@ pub fn main() void {
                         var operands = Operands.init(i);
                         while (operands.next()) |op| {
                             const name = llvm.valueName(op);
-                            if (map.getPtr(name)) |info| {
+                            if (map.getPtr(name) orelse global_map.getPtr(name)) |info| {
                                 VariableInfo.add_read_operand(info, op);
                                 break;
                             } else if (name.len != 0) {
