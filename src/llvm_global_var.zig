@@ -17,3 +17,7 @@ pub fn next(self: *@This()) llvm.Value {
         llvm.firstGlobalVariable(self.module);
     return self.current;
 }
+
+pub fn reset(self: *@This()) void {
+    self.current = llvm.firstGlobalVariable(self.module);
+}
