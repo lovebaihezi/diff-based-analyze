@@ -27,11 +27,7 @@ inst_ref: llvm.Value = null,
 pub fn init(mem_buf: llvm.MemoryBuffer) LLVMError!BitCode {
     std.debug.assert(mem_buf != null);
     var module: @This() = .{};
-    var out_msg: [*c]u8 = 0x0;
     if (llvm_c.LLVMParseBitcode2(mem_buf, &module.mod_ref) != 0) {
-        if (out_msg != 0x0) {
-            std.log.err("failed to read bitcode from stdin, output message: {s}", .{out_msg});
-        }
         return error.parse_bit_code_failed;
     }
     module.function_ref = llvm_c.LLVMGetFirstFunction(module.mod_ref);

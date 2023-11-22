@@ -34,7 +34,7 @@ pub fn main() void {
     defer global_map.deinit();
     while (global_var.next()) |g| {
         const name = llvm.valueName(g);
-        var info = VariableInfo.init(allocator);
+        const info = VariableInfo.init(allocator);
         out.print("global var: {s}\n", .{name}) catch unreachable;
         global_map.put(name, info) catch unreachable;
         bw.flush() catch unreachable;
@@ -49,11 +49,11 @@ pub fn main() void {
             for (parameters[0 .. len - 1]) |param| {
                 const name = llvm.valueName(param);
                 out.print("{s}, ", .{name}) catch unreachable;
-                var info = VariableInfo.init(allocator);
+                const info = VariableInfo.init(allocator);
                 map.put(name, info) catch unreachable;
             }
             const name = llvm.valueName(parameters[len - 1]);
-            var info = VariableInfo.init(allocator);
+            const info = VariableInfo.init(allocator);
             map.put(name, info) catch unreachable;
             out.print("{s})\n", .{name}) catch unreachable;
         } else {
@@ -92,7 +92,7 @@ pub fn main() void {
                     },
                     llvm.Alloca => {
                         const name = llvm.valueName(i);
-                        var info = VariableInfo.init(allocator);
+                        const info = VariableInfo.init(allocator);
                         map.put(name, info) catch unreachable;
                     },
                     else => {},
