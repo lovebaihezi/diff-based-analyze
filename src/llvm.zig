@@ -63,6 +63,17 @@ pub fn basicBlockName(block: BasicBlock) []const u8 {
         "";
 }
 
+pub fn basicBlockTerminator(block: BasicBlock) Value {
+    const term = c.LLVMGetBasicBlockTerminator(block);
+    return term;
+}
+
+pub fn isSwitchBlock(block: BasicBlock) bool {
+    const term = basicBlockTerminator(block);
+    const opcode = instructionCode(term);
+    return opcode == c.LLVMSwitch;
+}
+
 pub fn getCalledValue(func: Instruction) Value {
     return c.LLVMGetCalledValue(func);
 }
@@ -104,6 +115,12 @@ pub fn valueName(value: Value) []const u8 {
         ptr[0..len]
     else
         "";
+}
+
+pub fn functionName(value: Value) []const u8 {
+    const function_value = c.LLVMGetCalledValue(value);
+    const name = valueName(function_value);
+    return name;
 }
 
 pub fn firstFunction(module: Module) Function {

@@ -61,11 +61,19 @@ pub fn main() void {
         }
         var block = BasicBlock.init(f);
         while (block.next()) |b| {
-            var instruction = Instruction.init(b);
             out.print("  block: {s}\n", .{llvm.basicBlockName(b)}) catch unreachable;
+            var instruction = Instruction.init(b);
             while (instruction.next()) |i| {
                 const opcode = llvm.instructionCode(i);
                 switch (opcode) {
+                    llvm.Call => {
+                        const function_name = llvm.functionName(i);
+                        var operands = Operands.init(i);
+                        while (operands.next()) |op| {
+                            const name = llvm.valueName(op);
+                            std.log.info("function {s} called with {s}", .{ function_name, name });
+                        }
+                    },
                     llvm.Load => {
                         var operands = Operands.init(i);
                         while (operands.next()) |op| {

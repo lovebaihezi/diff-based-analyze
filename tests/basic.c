@@ -4,7 +4,7 @@ extern int g_2;
 int f1(int *arg1, int arg2, int arg3) {
     g_1 += 1;
     int y = *arg1;
-    y += 1;
+    *arg1 += 1;
     return y;
 }
 
@@ -19,6 +19,12 @@ int f2(int *arg1, int arg2) {
     } else {
         return 0;
     }
+}
+
+void x(int *others) {
+    int** ptr = &others;
+    **ptr += 2;
+    return;
 }
 
 void f(int init) {
@@ -40,5 +46,6 @@ int main(int argc, char *args[]) {
     default:
         f(argc);
     }
+    x(&g_1);
     return 0;
 }
