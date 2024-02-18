@@ -41,7 +41,12 @@ pub const Generator = enum {
         return .Bear;
     }
 
+    fn clean(allocator: Allocator) !void {
+        try std.process.Child.init(.{ "rm", "-rf", "Build" }, allocator).spawnAndWait();
+    }
+
     pub fn generate(self: @This(), allocator: Allocator) !void {
+        clean(allocator);
         switch (self) {
             .Meson => {
                 const setup = std.process.Child.init(.{ "meson", "setup", "Build" }, allocator);

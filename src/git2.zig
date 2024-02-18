@@ -13,6 +13,7 @@ pub const Error = error{
     CommitTreeCreationFailed,
     CommitLookupFailed,
     DiffTree2TreeFailed,
+    CheckoutFailed,
 };
 
 pub const Repo = *c.git_repository;
@@ -132,6 +133,14 @@ pub fn treeDiff(repo: Repo, lhs: Tree, rhs: Tree) Error!Diff {
 
 pub fn freeDiff(diff: Diff) void {
     c.git_diff_free(diff);
+}
+
+pub fn checkout(repo: Repo, oid: *OID) Error!void {
+    const commit = try commitLookup(repo, &oid);
+    const checkout_result = c.git_checkout_tree(repo, @ptrCast(commit), null);
+    if (checkout_result != 0) {
+        return error.CheckoutFailed;
+    }
 }
 
 test "open repo" {}
