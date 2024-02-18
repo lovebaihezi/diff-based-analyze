@@ -19,6 +19,45 @@ pub fn fromCompleteInput(allocator: Allocator, slice: []const u8) ParseError!Par
     return std.json.parseFromSlice(CommandSeq, allocator, slice, .{});
 }
 
+pub const Generator = enum {
+    Meson,
+    CMake,
+    // TODO
+    Bear,
+
+    pub fn inferFromProject(path: []const u8) std.fs.File.OpenError!@This() {
+        var dir = try std.fs.openDirAbsolute(path, .{});
+        defer dir.close();
+        if (dir.access("meson.text", .{})) |_| {
+            return .Meson;
+        } else |meson_err| {
+            std.log.info("not use meson cause {s}", .{@errorName(meson_err)});
+            if (dir.access("CMakeLists.txt")) |_| {
+                return .CMake;
+            } else |cmake_err| {
+                std.log.info("not use CMakeLists cause {s}", .{@errorName(cmake_err)});
+            }
+        }
+        return .Bear;
+    }
+
+    pub fn generate(self: @This(), allocator: Allocator) !void {
+        switch (self) {
+            .Meson => {
+                const setup = std.process.Child.init(.{ "meson", "setup", "Build" }, allocator);
+                _ = try setup.spawnAndWait();
+            },
+            .CMake => {
+                const setup = std.process.Child.init(.{ "cmake", "-GNinja", "-BBuild" }, allocator);
+                _ = try setup.spawnAndWait();
+            },
+            .Bear => {
+                @panic("unimplemented!");
+            },
+        }
+    }
+};
+
 pub fn CommandReader(comptime reader_type: type) type {
     const Token = std.json.Token;
     return struct {
