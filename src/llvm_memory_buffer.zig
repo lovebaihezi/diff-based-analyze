@@ -54,7 +54,6 @@ pub fn initWithContent(name: []const u8, buffer: []const u8) LLVMContentError!Me
 
 /// Make sure you init the struct
 pub fn deinit(mem: MemoryBuf) void {
-    _ = mem;
     // TODO: this will cause seg, find out why
-    // llvm_c.LLVMDisposeMemoryBuffer(mem.mem_buf);
+    llvm_c.LLVMDisposeMemoryBuffer(mem.mem_buf);
 }

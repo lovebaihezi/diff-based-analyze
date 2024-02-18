@@ -6,18 +6,15 @@ const Instruction = @import("llvm_instruction.zig");
 const Profile = @import("profile.zig");
 const BitCode = @import("llvm_bitecode.zig");
 const MemoryBuffer = @import("llvm_memory_buffer.zig");
-const IR = @import("llvm_ir.zig");
+const IR = @import("llvm_parse_ir.zig");
 const Operands = @import("llvm_operands.zig");
 const VariableInfo = @import("variable_info.zig");
 const GlobalVar = @import("llvm_global_var.zig");
 
-pub fn main() void {
+pub fn app(allocator: std.mem.Allocator) !void {
     const stdout = std.io.getStdOut().writer();
     var bw = std.io.bufferedWriter(stdout);
     const out = bw.writer();
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator();
     const mem_buf = MemoryBuffer.initWithStdin() catch {
         std.log.err("failed create memory buffer from stdin", .{});
         std.os.exit(255);

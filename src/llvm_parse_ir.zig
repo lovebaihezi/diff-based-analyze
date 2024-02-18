@@ -3,21 +3,10 @@ const llvm = @import("llvm.zig");
 const llvm_c = llvm.c;
 
 const IR = @This();
+
 pub const LLVMError = error{
     parse_bit_code_failed,
 };
-
-pub const LLVMStdinError = error{
-    create_mem_buf_with_stdin_failed,
-} || LLVMError;
-
-pub const LLVMFileError = error{
-    create_mem_buf_with_file_failed,
-} || LLVMError;
-
-pub const LLVMContentError = error{
-    create_mem_buf_with_content_failed,
-} || LLVMError;
 
 mod_ref: llvm.NonNullModule = undefined,
 
@@ -35,7 +24,7 @@ pub fn parseIR(ctx: llvm.Context, mem_buf: llvm.MemoryBuffer) LLVMError!IR {
 
 /// Make sure you init the struct
 pub fn deinit(ir: *IR) void {
-    ir.mod_ref = undefined;
+    llvm_c.LLVMDisposeModule(ir.mod_ref);
 }
 
 // test "init with memory" {
