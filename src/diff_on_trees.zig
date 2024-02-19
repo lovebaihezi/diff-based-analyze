@@ -75,8 +75,13 @@ pub fn app(allocator: Allocator, path: []const u8) !void {
 
     if (oid) |*id| {
         const generator = try CompileCommands.Generator.inferFromProject(path);
+        var i: usize = 0;
 
         while (try Git.revwalkNext(revwalk, id)) |_| {
+            if (i > 1) {
+                break;
+            }
+            i += 1;
             try Git.checkout(repo, id);
             try generator.generate(allocator);
             const seq = try CompileCommands.fromLocalFile(allocator, json_path);

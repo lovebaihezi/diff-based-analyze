@@ -7,10 +7,10 @@ const ParseError = std.json.ParseError(Scanner);
 const ParsedCommands = std.json.Parsed(CommandSeq);
 
 pub const Command = struct {
-    file: []u8,
-    command: []u8,
-    directory: []u8,
-    output: []u8,
+    file: []const u8,
+    command: []const u8,
+    directory: []const u8,
+    output: []const u8,
 };
 
 pub const CommandSeq = []Command;
@@ -76,7 +76,7 @@ pub fn CommandReader(comptime reader_type: type) type {
     const Token = std.json.Token;
     return struct {
         pub const InitError = std.json.Scanner.SkipError;
-        pub const FetchError = std.json.Scanner.NextError || error{NoCommand};
+        pub const FetchError = std.json.Scanner.NextError || error{ NoCommand, UnknownField };
 
         reader: std.json.Reader(std.json.default_buffer_size, reader_type),
 
@@ -101,17 +101,41 @@ pub fn CommandReader(comptime reader_type: type) type {
                 .object_begin => token = try self.reader.next(),
                 else => return error.NoCommand,
             }
-            while (token != Token.object_end) {
-                // TODO:
-                std.debug.print("\n{s}", .{@tagName(token)});
-                token = try self.reader.next();
-            }
-            return .{
+            const eql = std.mem.eql;
+            var cmd = Command{
                 .output = "",
                 .file = "",
                 .command = "",
                 .directory = "",
             };
+
+            if (token != Token.string) {
+                return null;
+            }
+
+            while (token != Token.object_end and token != Token.array_end and token != Token.end_of_document) {
+                const field = token.string;
+                const value = try self.reader.next();
+                const field_value = value.string;
+                token = try self.reader.next();
+                if (eql(u8, field, "command")) {
+                    cmd.command = field_value;
+                    continue;
+                } else if (eql(u8, field, "directory")) {
+                    cmd.directory = field_value;
+                    continue;
+                } else if (eql(u8, field, "file")) {
+                    cmd.file = field_value;
+                    continue;
+                } else if (eql(u8, field, "output")) {
+                    cmd.output = field_value;
+                    continue;
+                } else {
+                    std.debug.print("\n{s} {s} {s} {s}\n", .{ @tagName(token), @tagName(value), field, field_value });
+                    return error.UnknownField;
+                }
+            }
+            return cmd;
         }
 
         // pub fn fetchAll(self: *@This()) CommandSeq {}
@@ -132,6 +156,14 @@ const raw =
 ;
 
 test "fetch mode: empty array" {
+    var stream = std.io.fixedBufferStream("[]");
+    const reader = stream.reader();
+    var commands = commandReader(std.testing.allocator, reader);
+    defer commands.deinit();
+    try std.testing.expectEqual(commands.fetch(), null);
+}
+
+test "fetch mode: raw" {
     var stream = std.io.fixedBufferStream(raw);
     const reader = stream.reader();
     var commands = commandReader(std.testing.allocator, reader);
