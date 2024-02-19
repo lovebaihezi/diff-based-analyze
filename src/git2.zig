@@ -136,7 +136,7 @@ pub fn freeDiff(diff: Diff) void {
 }
 
 pub fn checkout(repo: Repo, oid: *OID) Error!void {
-    const commit = try commitLookup(repo, &oid);
+    const commit = try commitLookup(repo, oid);
     const checkout_result = c.git_checkout_tree(repo, @ptrCast(commit), null);
     if (checkout_result != 0) {
         return error.CheckoutFailed;

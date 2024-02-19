@@ -15,6 +15,14 @@ pub const Command = struct {
 
 pub const CommandSeq = []Command;
 
+pub fn fromLocalFile(allocator: Allocator, path: []const u8) !ParsedCommands {
+    const cwd = std.fs.cwd();
+    const file = try cwd.openFile(path, .{});
+    const metadata = try file.metadata();
+    const buf = try file.readToEndAlloc(allocator, metadata.size());
+    return fromCompleteInput(allocator, buf);
+}
+
 pub fn fromCompleteInput(allocator: Allocator, slice: []const u8) ParseError!ParsedCommands {
     return std.json.parseFromSlice(CommandSeq, allocator, slice, .{});
 }
@@ -26,34 +34,35 @@ pub const Generator = enum {
     Bear,
 
     pub fn inferFromProject(path: []const u8) std.fs.File.OpenError!@This() {
-        var dir = try std.fs.openDirAbsolute(path, .{});
+        var dir = try std.fs.cwd().openDir(path, .{});
         defer dir.close();
         if (dir.access("meson.text", .{})) |_| {
             return .Meson;
         } else |meson_err| {
-            std.log.info("not use meson cause {s}", .{@errorName(meson_err)});
-            if (dir.access("CMakeLists.txt")) |_| {
+            std.log.debug("not use meson cause {s}", .{@errorName(meson_err)});
+            if (dir.access("CMakeLists.txt", .{})) |_| {
                 return .CMake;
             } else |cmake_err| {
-                std.log.info("not use CMakeLists cause {s}", .{@errorName(cmake_err)});
+                std.log.debug("not use CMakeLists cause {s}", .{@errorName(cmake_err)});
             }
         }
         return .Bear;
     }
 
     fn clean(allocator: Allocator) !void {
-        try std.process.Child.init(.{ "rm", "-rf", "Build" }, allocator).spawnAndWait();
+        var rm = std.process.Child.init(&[3][]const u8{ "rm", "-rf", "Build" }, allocator);
+        _ = try rm.spawnAndWait();
     }
 
     pub fn generate(self: @This(), allocator: Allocator) !void {
-        clean(allocator);
+        try clean(allocator);
         switch (self) {
             .Meson => {
-                const setup = std.process.Child.init(.{ "meson", "setup", "Build" }, allocator);
+                var setup = std.process.Child.init(&[3][]const u8{ "meson", "setup", "Build" }, allocator);
                 _ = try setup.spawnAndWait();
             },
             .CMake => {
-                const setup = std.process.Child.init(.{ "cmake", "-GNinja", "-BBuild" }, allocator);
+                var setup = std.process.Child.init(&[3][]const u8{ "cmake", "-GNinja", "-BBuild" }, allocator);
                 _ = try setup.spawnAndWait();
             },
             .Bear => {
@@ -72,7 +81,7 @@ pub fn CommandReader(comptime reader_type: type) type {
         reader: std.json.Reader(std.json.default_buffer_size, reader_type),
 
         pub fn init(allocator: Allocator, reader: reader_type) @This() {
-            const self = @This(){ .reader = std.json.reader(allocator, reader) };
+            const self = .{ .reader = std.json.reader(allocator, reader) };
             return self;
         }
 

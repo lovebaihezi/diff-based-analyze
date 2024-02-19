@@ -1,6 +1,7 @@
 const Git = @import("git2.zig");
 const std = @import("std");
 const CompileCommands = @import("compile_commands.zig");
+const Allocator = std.mem.Allocator;
 
 fn anyOfIt(slice: []const u8) bool {
     const meson = std.mem.indexOf(u8, slice, "meson.build");
@@ -33,6 +34,7 @@ pub fn skipUntilCommitContainsGenerator(repo: Git.Repo, revwalk: Git.Revwalk) Gi
     var previous_tree: Git.Tree = try Git.commitTree(previous_commit);
 
     while (try Git.revwalkNext(revwalk, &oid)) |_| {
+        std.debug.print("not find first commit contains changes of meson or cmake\n", .{});
         const commit = try Git.commitLookup(repo, &oid);
         const tree = try Git.commitTree(commit);
         const diff = try Git.treeDiff(repo, previous_tree, tree);
@@ -53,9 +55,13 @@ pub fn skipUntilCommitContainsGenerator(repo: Git.Repo, revwalk: Git.Revwalk) Gi
     return null;
 }
 
-pub fn app(path: []const u8) !void {
+pub fn app(allocator: Allocator, path: []const u8) !void {
     try Git.init();
     defer _ = Git.depose();
+
+    const paths: [3][]const u8 = .{ path, "Build", "compile_commands.json" };
+    const json_path = try std.fs.path.join(allocator, &paths);
+    defer allocator.free(json_path);
 
     const repo = try Git.openRepoAt(path);
     defer Git.freeRepo(repo);
@@ -65,13 +71,28 @@ pub fn app(path: []const u8) !void {
 
     try Git.revwalkPushHead(revwalk);
 
-    var oid = skipUntilCommitContainsGenerator(repo, revwalk);
+    var oid = try skipUntilCommitContainsGenerator(repo, revwalk);
 
-    const generator = try CompileCommands.Generator.inferFromProject(".");
+    if (oid) |*id| {
+        const generator = try CompileCommands.Generator.inferFromProject(path);
 
-    while (try Git.revwalkNext(revwalk, &oid)) |_| {
-        try Git.checkout(repo, oid);
-        try generator.generate();
-        // collect needed info
+        while (try Git.revwalkNext(revwalk, id)) |_| {
+            try Git.checkout(repo, id);
+            try generator.generate(allocator);
+            const seq = try CompileCommands.fromLocalFile(allocator, json_path);
+            defer seq.deinit();
+            std.debug.print("{}\n", .{seq.value.len});
+            // collect needed info
+        }
+    } else {
+        return error.CanNotFindFirstCommit;
     }
+}
+
+test "test local clone dir" {
+    std.debug.print("\ntest\n", .{});
+    var dir = try std.fs.cwd().openDir("../curl", .{});
+    defer dir.close();
+    try dir.setAsCwd();
+    try app(std.testing.allocator, ".");
 }
