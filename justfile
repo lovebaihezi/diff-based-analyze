@@ -5,5 +5,8 @@ release:
   zig build -Doptimize=ReleaseSafe
 
 install: release
-  cp zig-out/bin/analysis-ir ~/.local/bin
-  cp zig-out/bin/versions ~/.local/bin
+  cp zig-out/bin/* ~/.local/bin
+
+clean:
+  rm -rf zig-cache
+  rm -rf zig-out
