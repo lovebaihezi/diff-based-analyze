@@ -59,10 +59,14 @@ pub const Generator = enum {
         switch (self) {
             .Meson => {
                 var setup = std.process.Child.init(&[3][]const u8{ "meson", "setup", "Build" }, allocator);
+                setup.stdout_behavior = std.process.Child.StdIo.Close;
+                setup.stderr_behavior = std.process.Child.StdIo.Close;
                 _ = try setup.spawnAndWait();
             },
             .CMake => {
                 var setup = std.process.Child.init(&[3][]const u8{ "cmake", "-GNinja", "-BBuild" }, allocator);
+                setup.stdout_behavior = std.process.Child.StdIo.Close;
+                setup.stderr_behavior = std.process.Child.StdIo.Close;
                 _ = try setup.spawnAndWait();
             },
             .Bear => {
