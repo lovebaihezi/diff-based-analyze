@@ -3,6 +3,8 @@ const std = @import("std");
 const CompileCommands = @import("compile_commands.zig");
 const Allocator = std.mem.Allocator;
 
+limit: ?usize = null,
+
 fn anyOfIt(slice: []const u8) bool {
     const meson = std.mem.indexOf(u8, slice, "meson.build");
     const cmake = std.mem.indexOf(u8, slice, "CMakeLists.txt");
@@ -55,7 +57,7 @@ pub fn skipUntilCommitContainsGenerator(repo: Git.Repo, revwalk: Git.Revwalk) Gi
     return null;
 }
 
-pub fn app(allocator: Allocator, path: []const u8) !void {
+pub fn app(self: @This(), allocator: Allocator, path: []const u8) !void {
     try Git.init();
     defer _ = Git.depose();
 
@@ -78,12 +80,14 @@ pub fn app(allocator: Allocator, path: []const u8) !void {
         var i: usize = 0;
 
         while (try Git.revwalkNext(revwalk, id)) |_| {
-            if (i > 1) {
-                break;
+            if (self.limit) |limit| {
+                if (i > limit) {
+                    break;
+                }
             }
             i += 1;
             try Git.checkout(repo, id);
-            try generator.generate(allocator);
+            try generator.generate(allocator, id);
             const seq = try CompileCommands.fromLocalFile(allocator, json_path);
             defer seq.deinit();
             std.debug.print("{}\n", .{seq.value.len});
@@ -92,12 +96,4 @@ pub fn app(allocator: Allocator, path: []const u8) !void {
     } else {
         return error.CanNotFindFirstCommit;
     }
-}
-
-test "test local clone dir" {
-    std.debug.print("\ntest\n", .{});
-    var dir = try std.fs.cwd().openDir("../curl", .{});
-    defer dir.close();
-    try dir.setAsCwd();
-    try app(std.testing.allocator, ".");
 }

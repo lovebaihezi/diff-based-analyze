@@ -5,6 +5,10 @@ const ParseOptions = std.json.ParseOptions;
 const Scanner = std.json.Scanner;
 const ParseError = std.json.ParseError(Scanner);
 const ParsedCommands = std.json.Parsed(CommandSeq);
+const mkdir = @import("mkdir_no_exist.zig").mkdirIfNExist;
+const Git = @import("git2.zig");
+
+const OUTPUT_FILE = "build";
 
 pub const Command = struct {
     file: []const u8,
@@ -25,6 +29,50 @@ pub fn fromLocalFile(allocator: Allocator, path: []const u8) !ParsedCommands {
 
 pub fn fromCompleteInput(allocator: Allocator, slice: []const u8) ParseError!ParsedCommands {
     return std.json.parseFromSlice(CommandSeq, allocator, slice, .{});
+}
+
+pub fn compile_mv_files_name(allocator: Allocator, oid: *Git.OID) Allocator.Error![2][]u8 {
+    var buf: [Git.c.GIT_OID_SHA1_SIZE + 5]u8 = undefined;
+    Git.commitStr(oid, buf[0..]);
+    const len = std.mem.indexOf(u8, buf[0..], &.{0}) orelse 20;
+    std.debug.assert(len <= Git.c.GIT_OID_SHA1_SIZE);
+    std.debug.assert(std.mem.endsWith(u8, buf[0..], &.{ 0x0, 0xaa, 0xaa, 0xaa, 0xaa }));
+    @memcpy(buf[len .. len + 5], ".json");
+    const file = buf[0 .. len + 5];
+    std.debug.assert(std.mem.endsWith(u8, file, ".json"));
+    std.debug.print("\n{s}\n", .{file});
+    const old_file = try std.fs.path.join(allocator, &[2][]const u8{ OUTPUT_FILE, "compile_commands.json" });
+    const new_file_name = try std.fs.path.join(allocator, &[2][]const u8{ ".cache", file });
+    return .{ old_file, new_file_name };
+}
+
+test "compile commands mv files name" {
+    var oid: Git.OID = undefined;
+    var prng = std.rand.DefaultPrng.init(12345);
+    const random = prng.random();
+    std.rand.bytes(random, &oid.id);
+    const names = try compile_mv_files_name(std.testing.allocator, &oid);
+    defer {
+        for (names) |name| {
+            std.testing.allocator.free(name);
+        }
+    }
+    const sep = std.fs.path.sep_str;
+    try std.testing.expectEqualStrings(names[0], "build" ++ sep ++ "compile_commands.json");
+    try std.testing.expectStringStartsWith(names[1], ".cache" ++ sep);
+    try std.testing.expectStringEndsWith(names[1], ".json");
+    try std.testing.expectEqual(std.mem.indexOf(u8, names[1], &.{0x0}), null);
+}
+
+fn mv(allocator: Allocator, oid: *Git.OID) !void {
+    const dir = std.fs.cwd();
+    const files = try compile_mv_files_name(allocator, oid);
+    defer {
+        for (files) |file| {
+            allocator.free(file);
+        }
+    }
+    try dir.rename(files[0], files[1]);
 }
 
 pub const Generator = enum {
@@ -50,21 +98,26 @@ pub const Generator = enum {
     }
 
     fn clean(allocator: Allocator) !void {
-        var rm = std.process.Child.init(&[3][]const u8{ "rm", "-rf", "Build" }, allocator);
+        var rm = std.process.Child.init(&[3][]const u8{ "rm", "-rf", OUTPUT_FILE }, allocator);
         _ = try rm.spawnAndWait();
     }
 
-    pub fn generate(self: @This(), allocator: Allocator) !void {
+    pub fn generate(self: @This(), allocator: Allocator, oid: *Git.OID) !void {
         try clean(allocator);
+        try mkdir(".cache");
+        var buf: [2048]u8 = undefined;
+        var fixed_allocator = std.heap.FixedBufferAllocator.init(&buf);
+        const local_allocator = fixed_allocator.allocator();
+        try mv(local_allocator, oid);
         switch (self) {
             .Meson => {
-                var setup = std.process.Child.init(&[3][]const u8{ "meson", "setup", "Build" }, allocator);
+                var setup = std.process.Child.init(&[3][]const u8{ "meson", "setup", OUTPUT_FILE }, allocator);
                 setup.stdout_behavior = std.process.Child.StdIo.Close;
                 setup.stderr_behavior = std.process.Child.StdIo.Close;
                 _ = try setup.spawnAndWait();
             },
             .CMake => {
-                var setup = std.process.Child.init(&[3][]const u8{ "cmake", "-GNinja", "-BBuild" }, allocator);
+                var setup = std.process.Child.init(&[3][]const u8{ "cmake", "-GNinja", "-B" ++ OUTPUT_FILE }, allocator);
                 setup.stdout_behavior = std.process.Child.StdIo.Close;
                 setup.stderr_behavior = std.process.Child.StdIo.Close;
                 _ = try setup.spawnAndWait();

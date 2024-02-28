@@ -137,10 +137,14 @@ pub fn freeDiff(diff: Diff) void {
 
 pub fn checkout(repo: Repo, oid: *OID) Error!void {
     const commit = try commitLookup(repo, oid);
-    const checkout_result = c.git_checkout_tree(repo, @ptrCast(commit), null);
+    const checkout_result = c.git_checkout_tree(repo, @ptrCast(commit), &.{});
     if (checkout_result != 0) {
         return error.CheckoutFailed;
     }
+}
+
+pub fn commitStr(oid: *OID, str: []u8) void {
+    _ = c.git_oid_tostr(str.ptr, @min(str.len, c.GIT_OID_MAX_SIZE + 1), oid);
 }
 
 test "open repo" {}
