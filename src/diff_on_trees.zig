@@ -35,8 +35,9 @@ pub fn skipUntilCommitContainsGenerator(repo: Git.Repo, revwalk: Git.Revwalk) Gi
     var previous_commit: Git.Commit = try Git.commitLookup(repo, &oid);
     var previous_tree: Git.Tree = try Git.commitTree(previous_commit);
 
+    // reset all changes
     while (try Git.revwalkNext(revwalk, &oid)) |_| {
-        std.debug.print("not find first commit contains changes of meson or cmake\n", .{});
+        std.log.debug("not find first commit contains changes of meson or cmake\n", .{});
         const commit = try Git.commitLookup(repo, &oid);
         const tree = try Git.commitTree(commit);
         const diff = try Git.treeDiff(repo, previous_tree, tree);
@@ -61,10 +62,6 @@ pub fn app(self: @This(), allocator: Allocator, path: []const u8) !void {
     try Git.init();
     defer _ = Git.depose();
 
-    const paths: [3][]const u8 = .{ path, "Build", "compile_commands.json" };
-    const json_path = try std.fs.path.join(allocator, &paths);
-    defer allocator.free(json_path);
-
     const repo = try Git.openRepoAt(path);
     defer Git.freeRepo(repo);
 
@@ -81,16 +78,26 @@ pub fn app(self: @This(), allocator: Allocator, path: []const u8) !void {
 
         while (try Git.revwalkNext(revwalk, id)) |_| {
             if (self.limit) |limit| {
-                if (i > limit) {
+                if (i >= limit) {
                     break;
                 }
             }
             i += 1;
-            try Git.checkout(repo, id);
-            try generator.generate(allocator, id);
-            const seq = try CompileCommands.fromLocalFile(allocator, json_path);
+            Git.checkout(repo, id) catch |err| {
+                if (err == Git.Error.CheckoutFailed) {
+                    const err_msg = Git.lastError();
+                    if (err_msg) |msg| {
+                        std.log.err("{s}", .{msg});
+                    } else {
+                        std.log.warn("can not get last error of git", .{});
+                    }
+                }
+                return err;
+            };
+            const final_json_path = try generator.generate(allocator, id);
+            defer allocator.free(final_json_path);
+            const seq = try CompileCommands.fromLocalFile(allocator, final_json_path);
             defer seq.deinit();
-            std.debug.print("{}\n", .{seq.value.len});
             // collect needed info
         }
     } else {

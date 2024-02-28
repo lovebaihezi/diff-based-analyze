@@ -9,7 +9,7 @@ pub fn main() !void {
     defer args.deinit();
     _ = args.next();
     const path = args.next() orelse ".";
-    const diff_on_trees = DiffOnTrees{ .limit = 1 };
+    const diff_on_trees = DiffOnTrees{ .limit = 2 };
     try diff_on_trees.app(allocator, path);
 }
 

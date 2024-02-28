@@ -40,7 +40,6 @@ pub fn compile_mv_files_name(allocator: Allocator, oid: *Git.OID) Allocator.Erro
     @memcpy(buf[len .. len + 5], ".json");
     const file = buf[0 .. len + 5];
     std.debug.assert(std.mem.endsWith(u8, file, ".json"));
-    std.debug.print("\n{s}\n", .{file});
     const old_file = try std.fs.path.join(allocator, &[2][]const u8{ OUTPUT_FILE, "compile_commands.json" });
     const new_file_name = try std.fs.path.join(allocator, &[2][]const u8{ ".cache", file });
     return .{ old_file, new_file_name };
@@ -64,15 +63,12 @@ test "compile commands mv files name" {
     try std.testing.expectEqual(std.mem.indexOf(u8, names[1], &.{0x0}), null);
 }
 
-fn mv(allocator: Allocator, oid: *Git.OID) !void {
+fn mv(allocator: Allocator, oid: *Git.OID) ![2][]u8 {
     const dir = std.fs.cwd();
     const files = try compile_mv_files_name(allocator, oid);
-    defer {
-        for (files) |file| {
-            allocator.free(file);
-        }
-    }
+    std.log.debug("will rename {s} to {s}", .{ files[0], files[1] });
     try dir.rename(files[0], files[1]);
+    return files;
 }
 
 pub const Generator = enum {
@@ -102,13 +98,19 @@ pub const Generator = enum {
         _ = try rm.spawnAndWait();
     }
 
-    pub fn generate(self: @This(), allocator: Allocator, oid: *Git.OID) !void {
+    pub fn generate(self: @This(), allocator: Allocator, oid: *Git.OID) ![]const u8 {
+        var timer = try std.time.Timer.start();
+        defer {
+            const end = timer.read();
+            const fmt = std.fmt.fmtDuration(end);
+            std.log.info("running {s} cost {}", .{ @tagName(self), fmt });
+            timer.reset();
+        }
         try clean(allocator);
         try mkdir(".cache");
-        var buf: [2048]u8 = undefined;
+        var buf: [4096]u8 = undefined;
         var fixed_allocator = std.heap.FixedBufferAllocator.init(&buf);
         const local_allocator = fixed_allocator.allocator();
-        try mv(local_allocator, oid);
         switch (self) {
             .Meson => {
                 var setup = std.process.Child.init(&[3][]const u8{ "meson", "setup", OUTPUT_FILE }, allocator);
@@ -117,7 +119,9 @@ pub const Generator = enum {
                 _ = try setup.spawnAndWait();
             },
             .CMake => {
-                var setup = std.process.Child.init(&[3][]const u8{ "cmake", "-GNinja", "-B" ++ OUTPUT_FILE }, allocator);
+                var setup = std.process.Child.init(&[5][]const u8{ "cmake", "-GNinja", "-B" ++ OUTPUT_FILE, "-DCMAKE_EXPORT_COMPILE_COMMANDS=Yes", "-DCMAKE_BUILD_TYPE=Release" }, allocator);
+                const argv = setup.argv;
+                std.log.debug("run cmd: {s} {s} {s} {s} {s}", .{ argv[0], argv[1], argv[2], argv[3], argv[4] });
                 setup.stdout_behavior = std.process.Child.StdIo.Close;
                 setup.stderr_behavior = std.process.Child.StdIo.Close;
                 _ = try setup.spawnAndWait();
@@ -126,6 +130,11 @@ pub const Generator = enum {
                 @panic("unimplemented!");
             },
         }
+        const files = try mv(local_allocator, oid);
+        // the files is alloc by local_allocator, so we don't need to free it
+        const mem = try allocator.alloc(u8, files[1].len);
+        @memcpy(mem, files[1]);
+        return mem;
     }
 };
 

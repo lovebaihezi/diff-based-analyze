@@ -4,17 +4,7 @@ pub const c = @cImport({
     @cInclude("git2.h");
 });
 
-pub const Error = error{
-    LibraryInitializationFailed,
-    RepositoryOpenFailed,
-    RevwalkCreationFailed,
-    RevwalkPushFailed,
-    RevwalkNextFailed,
-    CommitTreeCreationFailed,
-    CommitLookupFailed,
-    DiffTree2TreeFailed,
-    CheckoutFailed,
-};
+pub const Error = error{ LibraryInitializationFailed, RepositoryOpenFailed, RevwalkCreationFailed, RevwalkPushFailed, RevwalkNextFailed, CommitTreeCreationFailed, CommitLookupFailed, DiffTree2TreeFailed, CheckoutFailed, CheckoutOptionInitFailed };
 
 pub const Repo = *c.git_repository;
 
@@ -135,9 +125,18 @@ pub fn freeDiff(diff: Diff) void {
     c.git_diff_free(diff);
 }
 
+pub fn checkoutOptionsInit(option: *c.git_checkout_options, version: c_uint) Error!void {
+    const res = c.git_checkout_options_init(option, version);
+    if (res != 0) {
+        return error.CheckoutOptionInitFailed;
+    }
+}
+
 pub fn checkout(repo: Repo, oid: *OID) Error!void {
     const commit = try commitLookup(repo, oid);
-    const checkout_result = c.git_checkout_tree(repo, @ptrCast(commit), &.{});
+    var options: c.git_checkout_options = undefined;
+    try checkoutOptionsInit(&options, c.GIT_CHECKOUT_SAFE);
+    const checkout_result = c.git_checkout_tree(repo, @ptrCast(commit), &options);
     if (checkout_result != 0) {
         return error.CheckoutFailed;
     }
@@ -145,6 +144,16 @@ pub fn checkout(repo: Repo, oid: *OID) Error!void {
 
 pub fn commitStr(oid: *OID, str: []u8) void {
     _ = c.git_oid_tostr(str.ptr, @min(str.len, c.GIT_OID_MAX_SIZE + 1), oid);
+}
+
+pub fn lastError() ?[]const u8 {
+    const err = c.git_error_last();
+    if (err != 0x0) {
+        const msg = std.mem.span(err.*.message);
+        return msg;
+    } else {
+        return null;
+    }
 }
 
 test "open repo" {}
