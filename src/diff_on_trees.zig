@@ -2,6 +2,7 @@ const Git = @import("git2.zig");
 const std = @import("std");
 const CompileCommands = @import("compile_commands.zig");
 const Allocator = std.mem.Allocator;
+const resetAllFiles = @import("reset_all_files.zig").resetAllFiles;
 
 limit: ?usize = null,
 
@@ -58,6 +59,25 @@ pub fn skipUntilCommitContainsGenerator(repo: Git.Repo, revwalk: Git.Revwalk) Gi
     return null;
 }
 
+fn actions(allocator: Allocator, repo: Git.Repo, id: *Git.OID, generator: CompileCommands.Generator) !void {
+    Git.checkout(repo, id) catch |err| {
+        if (err == Git.Error.CheckoutFailed) {
+            const err_msg = Git.lastError();
+            if (err_msg) |msg| {
+                std.log.err("{s}", .{msg});
+            } else {
+                std.log.warn("can not get last error of git", .{});
+            }
+        }
+        return err;
+    };
+    const final_json_path = try generator.generate(allocator, id);
+    defer allocator.free(final_json_path);
+    const seq = try CompileCommands.fromLocalFile(allocator, final_json_path);
+    defer seq.deinit();
+    // collect needed info
+}
+
 pub fn app(self: @This(), allocator: Allocator, path: []const u8) !void {
     try Git.init();
     defer _ = Git.depose();
@@ -74,31 +94,19 @@ pub fn app(self: @This(), allocator: Allocator, path: []const u8) !void {
 
     if (oid) |*id| {
         const generator = try CompileCommands.Generator.inferFromProject(path);
-        var i: usize = 0;
-
-        while (try Git.revwalkNext(revwalk, id)) |_| {
-            if (self.limit) |limit| {
+        if (self.limit) |limit| {
+            var i: usize = 0;
+            while (try Git.revwalkNext(revwalk, id)) |_| {
                 if (i >= limit) {
                     break;
                 }
+                i += 1;
+                try actions(allocator, repo, id, generator);
             }
-            i += 1;
-            Git.checkout(repo, id) catch |err| {
-                if (err == Git.Error.CheckoutFailed) {
-                    const err_msg = Git.lastError();
-                    if (err_msg) |msg| {
-                        std.log.err("{s}", .{msg});
-                    } else {
-                        std.log.warn("can not get last error of git", .{});
-                    }
-                }
-                return err;
-            };
-            const final_json_path = try generator.generate(allocator, id);
-            defer allocator.free(final_json_path);
-            const seq = try CompileCommands.fromLocalFile(allocator, final_json_path);
-            defer seq.deinit();
-            // collect needed info
+        } else {
+            while (try Git.revwalkNext(revwalk, id)) |_| {
+                try actions(allocator, repo, id, generator);
+            }
         }
     } else {
         return error.CanNotFindFirstCommit;
