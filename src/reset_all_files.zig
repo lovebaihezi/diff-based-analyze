@@ -2,7 +2,7 @@ const std = @import("std");
 const Git = @import("git2.zig");
 
 pub fn checkoutHard(repo: Git.Repo) !void {
-    var option: Git.c.git_checkout_options = .{ 1, 1 };
+    var option = Git.c.git_checkout_options{};
     option.checkout_strategy = Git.c.GIT_CHECKOUT_FORCE;
     const checkout_head_res = Git.c.git_checkout_head(repo, &option);
     if (checkout_head_res != 0x0) {

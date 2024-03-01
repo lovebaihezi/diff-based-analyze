@@ -22,6 +22,8 @@ pub const Delta = c.git_diff_delta;
 
 pub const OID = c.git_oid;
 
+pub const CheckoutOptions = c.git_checkout_options;
+
 pub fn init() Error!void {
     const init_result = c.git_libgit2_init();
     if (init_result < 0) {
@@ -132,11 +134,9 @@ pub fn checkoutOptionsInit(option: *c.git_checkout_options, version: c_uint) Err
     }
 }
 
-pub fn checkout(repo: Repo, oid: *OID) Error!void {
+pub fn checkout(repo: Repo, oid: *OID, options: *c.git_checkout_options) Error!void {
     const commit = try commitLookup(repo, oid);
-    var options: c.git_checkout_options = undefined;
-    try checkoutOptionsInit(&options, c.GIT_CHECKOUT_SAFE);
-    const checkout_result = c.git_checkout_tree(repo, @ptrCast(commit), &options);
+    const checkout_result = c.git_checkout_tree(repo, @ptrCast(commit), options);
     if (checkout_result != 0) {
         return error.CheckoutFailed;
     }
