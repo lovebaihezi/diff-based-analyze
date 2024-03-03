@@ -2,12 +2,16 @@ const Git = @import("git2.zig");
 const std = @import("std");
 const CompileCommands = @import("compile_commands.zig");
 const SkipCommits = @import("skip_commits.zig");
+const Infer = @import("infer.zig");
+const PThreadLinked = @import("pthread_linked.zig");
 
 const Allocator = std.mem.Allocator;
+const Strategy = Infer.Strategy;
 
 limit: ?usize = null,
+strategy: Strategy = Strategy.Baseline,
 
-fn actions(allocator: Allocator, repo: Git.Repo, id: *Git.OID, generator: CompileCommands.Generator) !void {
+fn actions(self: @This(), allocator: Allocator, repo: Git.Repo, id: *Git.OID, generator: CompileCommands.Generator) !void {
     // We don't need reset now cause use checkout force fit the need
     // try resetAllFiles(repo);
     var options: Git.CheckoutOptions = undefined;
@@ -26,9 +30,29 @@ fn actions(allocator: Allocator, repo: Git.Repo, id: *Git.OID, generator: Compil
     };
     const final_json_path = try generator.generate(allocator, id);
     defer allocator.free(final_json_path);
-    const seq = try CompileCommands.fromLocalFile(allocator, final_json_path);
-    defer seq.deinit();
-    // TODO: Collect Build Seq for Next Move
+    switch (self.strategy) {
+        .Baseline => {
+            const infer = Infer.Infer.baseline(final_json_path);
+            try infer.run(allocator);
+        },
+        .Optimized => {
+            const cwd = std.fs.cwd();
+            const file = try cwd.openFile(final_json_path, .{});
+            defer file.close();
+            const file_reader = std.io.bufferedReader(file.reader());
+            var puller = CompileCommands.commandReader(allocator, file_reader);
+            defer puller.deinit();
+            var pthread_linked = PThreadLinked.init();
+            defer pthread_linked.deinit(allocator);
+            while (try puller.next()) |cmd| {
+                try pthread_linked.addBuildCommand(allocator, cmd);
+            }
+            var iter = pthread_linked.iter();
+            while (iter.next()) |path| {
+                std.log.debug("file {s} linked with pthread or linked with object which linked with pthread", .{path});
+            }
+        },
+    }
 }
 
 pub fn app(self: @This(), allocator: Allocator, path: []const u8) !void {
@@ -58,11 +82,11 @@ pub fn app(self: @This(), allocator: Allocator, path: []const u8) !void {
                     break;
                 }
                 i += 1;
-                try actions(allocator, repo, id, generator);
+                try self.actions(allocator, repo, id, generator);
             }
         } else {
             while (try Git.revwalkNext(revwalk, id)) |_| {
-                try actions(allocator, repo, id, generator);
+                try self.actions(allocator, repo, id, generator);
             }
         }
     } else {

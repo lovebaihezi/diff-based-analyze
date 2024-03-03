@@ -14,3 +14,9 @@ clean:
   rm -rf zig-cache
   rm -rf zig-out
   rm ~/.local/bin/analysis
+
+update-stringzilla:
+  cd src
+  wget https://raw.githubusercontent.com/ashvardanian/StringZilla/main/include/stringzilla/stringzilla.h
+  mv stringzilla.h src
+  zig translate-c src/stringzilla.h -I/usr/include > src/stringzilla.zig

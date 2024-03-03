@@ -1,23 +1,76 @@
 const std = @import("std");
+const mkdir = @import("mkdir_no_exist.zig").mkdirIfNExist;
+const Git = @import("git2.zig");
+const buildin = @import("builtin");
+
+const OUTPUT_FILE = "build";
+const build_mode = buildin.mode;
+
+const Token = std.json.Token;
+
+pub const TokenStr = union(enum) {
+    Normal: []const u8,
+    NeedFree: []u8,
+
+    pub fn empty() @This() {
+        return .{ .Normal = "" };
+    }
+
+    pub fn try_from(token: Token) !@This() {
+        return switch (token) {
+            .string => |s| .{ .Normal = s },
+            .allocated_string => |s| .{
+                .NeedFree = s,
+            },
+            else => {
+                std.log.err("field type wrong: {s}", .{@tagName(token)});
+                return error.WrongFieldValueType;
+            },
+        };
+    }
+
+    pub fn deinit(self: *@This(), allocator: Allocator) void {
+        switch (self.*) {
+            .NeedFree => {
+                allocator.free(self.NeedFree);
+            },
+            else => {},
+        }
+    }
+
+    pub fn str(self: @This()) []const u8 {
+        return switch (self) {
+            .Normal => |s| s,
+            .NeedFree => |s| s,
+        };
+    }
+
+    pub fn len(self: @This()) usize {
+        return self.str().len;
+    }
+};
+pub const Command = struct {
+    file: []u8 = undefined,
+    command: []u8 = undefined,
+    directory: []u8 = undefined,
+    output: []u8 = undefined,
+
+    pub fn deinit(self: *@This(), allocator: Allocator) void {
+        const t = @typeInfo(Command).Struct;
+        inline for (t.fields) |field| {
+            const str: []u8 = @field(self, field.name);
+            allocator.free(str);
+        }
+    }
+};
+
+pub const CommandSeq = []Command;
 const Allocator = std.mem.Allocator;
 const json = std.json;
 const ParseOptions = std.json.ParseOptions;
 const Scanner = std.json.Scanner;
 const ParseError = std.json.ParseError(Scanner);
 const ParsedCommands = std.json.Parsed(CommandSeq);
-const mkdir = @import("mkdir_no_exist.zig").mkdirIfNExist;
-const Git = @import("git2.zig");
-
-const OUTPUT_FILE = "build";
-
-pub const Command = struct {
-    file: []const u8,
-    command: []const u8,
-    directory: []const u8,
-    output: []const u8,
-};
-
-pub const CommandSeq = []Command;
 
 pub fn fromLocalFile(allocator: Allocator, path: []const u8) !ParsedCommands {
     const cwd = std.fs.cwd();
@@ -29,6 +82,11 @@ pub fn fromLocalFile(allocator: Allocator, path: []const u8) !ParsedCommands {
 
 pub fn fromCompleteInput(allocator: Allocator, slice: []const u8) ParseError!ParsedCommands {
     return std.json.parseFromSlice(CommandSeq, allocator, slice, .{});
+}
+
+pub fn fromIOReader(allocator: Allocator, io_reader: anytype) !ParsedCommands {
+    var reader = std.json.reader(allocator, io_reader);
+    return try std.json.parseFromTokenSource(CommandSeq, allocator, &reader, .{});
 }
 
 pub fn compile_mv_files_name(allocator: Allocator, oid: *Git.OID) Allocator.Error![2][]u8 {
@@ -80,7 +138,7 @@ pub const Generator = enum {
     pub fn inferFromProject(path: []const u8) std.fs.File.OpenError!@This() {
         var dir = try std.fs.cwd().openDir(path, .{});
         defer dir.close();
-        if (dir.access("meson.text", .{})) |_| {
+        if (dir.access("meson.build", .{})) |_| {
             return .Meson;
         } else |meson_err| {
             std.log.debug("not use meson cause {s}", .{@errorName(meson_err)});
@@ -114,16 +172,22 @@ pub const Generator = enum {
         switch (self) {
             .Meson => {
                 var setup = std.process.Child.init(&[3][]const u8{ "meson", "setup", OUTPUT_FILE }, allocator);
-                setup.stdout_behavior = std.process.Child.StdIo.Close;
-                setup.stderr_behavior = std.process.Child.StdIo.Close;
+                const argv = setup.argv;
+                std.log.debug("run cmd: {s} {s} {s}", .{ argv[0], argv[1], argv[2] });
+                if (build_mode != std.builtin.OptimizeMode.Debug) {
+                    setup.stdout_behavior = std.process.Child.StdIo.Close;
+                    setup.stderr_behavior = std.process.Child.StdIo.Close;
+                }
                 _ = try setup.spawnAndWait();
             },
             .CMake => {
                 var setup = std.process.Child.init(&[5][]const u8{ "cmake", "-GNinja", "-B" ++ OUTPUT_FILE, "-DCMAKE_EXPORT_COMPILE_COMMANDS=Yes", "-DCMAKE_BUILD_TYPE=Release" }, allocator);
                 const argv = setup.argv;
                 std.log.debug("run cmd: {s} {s} {s} {s} {s}", .{ argv[0], argv[1], argv[2], argv[3], argv[4] });
-                setup.stdout_behavior = std.process.Child.StdIo.Close;
-                setup.stderr_behavior = std.process.Child.StdIo.Close;
+                if (build_mode != std.builtin.OptimizeMode.Debug) {
+                    setup.stdout_behavior = std.process.Child.StdIo.Close;
+                    setup.stderr_behavior = std.process.Child.StdIo.Close;
+                }
                 _ = try setup.spawnAndWait();
             },
             .Bear => {
@@ -139,15 +203,17 @@ pub const Generator = enum {
 };
 
 pub fn CommandReader(comptime reader_type: type) type {
-    const Token = std.json.Token;
     return struct {
-        pub const InitError = std.json.Scanner.SkipError;
-        pub const FetchError = std.json.Scanner.NextError || error{ NoCommand, UnknownField };
+        const Reader = std.json.Reader(std.json.default_buffer_size, reader_type);
 
-        reader: std.json.Reader(std.json.default_buffer_size, reader_type),
+        pub const InitError = std.json.Scanner.SkipError;
+        pub const FetchError = std.json.Scanner.NextError || error{ NoCommand, UnknownField, WrongFieldValueType } || std.fs.File.ReadError || Reader.AllocError;
+
+        reader: Reader,
+        allocator: Allocator,
 
         pub fn init(allocator: Allocator, reader: reader_type) @This() {
-            const self = .{ .reader = std.json.reader(allocator, reader) };
+            const self = .{ .reader = std.json.reader(allocator, reader), .allocator = allocator };
             return self;
         }
 
@@ -155,49 +221,55 @@ pub fn CommandReader(comptime reader_type: type) type {
             self.reader.deinit();
         }
 
-        pub fn fetch(self: *@This()) FetchError!?Command {
-            var token = try self.reader.next();
+        pub fn next(self: *@This()) FetchError!?Command {
+            var token = try self.reader.nextAlloc(self.allocator, std.json.AllocWhen.alloc_always);
             switch (token) {
                 .end_of_document => return null,
                 .array_begin => {
-                    _ = try self.reader.next();
-                    token = try self.reader.next();
+                    _ = try self.reader.nextAlloc(self.allocator, std.json.AllocWhen.alloc_always);
+                    token = try self.reader.nextAlloc(self.allocator, std.json.AllocWhen.alloc_always);
+                },
+                .object_begin => {
+                    token = try self.reader.nextAlloc(self.allocator, std.json.AllocWhen.alloc_always);
                 },
                 .array_end => return null,
-                .object_begin => token = try self.reader.next(),
-                else => return error.NoCommand,
+                else => {
+                    std.log.err("unexpected type {s}", .{@tagName(token)});
+                    return error.NoCommand;
+                },
             }
-            const eql = std.mem.eql;
-            var cmd = Command{
-                .output = "",
-                .file = "",
-                .command = "",
-                .directory = "",
-            };
 
-            if (token != Token.string) {
+            if (token == Token.end_of_document or token == Token.array_end) {
                 return null;
             }
 
-            while (token != Token.object_end and token != Token.array_end and token != Token.end_of_document) {
-                const field = token.string;
-                const value = try self.reader.next();
-                const field_value = value.string;
-                token = try self.reader.next();
-                if (eql(u8, field, "command")) {
-                    cmd.command = field_value;
-                    continue;
-                } else if (eql(u8, field, "directory")) {
-                    cmd.directory = field_value;
-                    continue;
-                } else if (eql(u8, field, "file")) {
-                    cmd.file = field_value;
-                    continue;
-                } else if (eql(u8, field, "output")) {
-                    cmd.output = field_value;
-                    continue;
+            const eql = std.mem.eql;
+            var cmd: Command = .{};
+
+            std.debug.assert(token == .allocated_string);
+
+            while (token != Token.object_end and token != Token.array_end and token != Token.end_of_document) : (token = try self.reader.nextAlloc(self.allocator, std.json.AllocWhen.alloc_always)) {
+                std.debug.assert(token == Token.allocated_string or token == Token.string);
+                const ident_token = token;
+                const ident = if (token == Token.allocated_string) token.allocated_string else token.string;
+                defer {
+                    if (ident_token == Token.allocated_string) {
+                        self.allocator.free(ident_token.allocated_string);
+                    }
+                }
+                token = try self.reader.nextAlloc(self.allocator, std.json.AllocWhen.alloc_always);
+                const str = token.allocated_string;
+                if (eql(u8, ident, "command")) {
+                    cmd.command = str;
+                } else if (eql(u8, ident, "directory")) {
+                    cmd.directory = str;
+                } else if (eql(u8, ident, "file")) {
+                    cmd.file = str;
+                } else if (eql(u8, ident, "output")) {
+                    cmd.output = str;
                 } else {
-                    std.debug.print("\n{s} {s} {s} {s}\n", .{ @tagName(token), @tagName(value), field, field_value });
+                    std.log.debug("field type: {s} ident value: {s} field value: {s}", .{ @tagName(token), ident, str });
+                    std.debug.print("field type: {s} ident value: {s}\n", .{ @tagName(token), ident });
                     return error.UnknownField;
                 }
             }
@@ -221,32 +293,66 @@ const raw =
     \\}]
 ;
 
-test "fetch mode: empty array" {
+const raw2 =
+    \\[{
+    \\  "directory": "/home/bowen/Documents/curl/Build",
+    \\  "command": "/usr/bin/cc -DBUILDING_LIBCURL -DCURL_HIDDEN_SYMBOLS -DHAVE_CONFIG_H -DLDAP_DEPRECATED=1 -Dlibcurl_shared_EXPORTS -I/home/bowen/Documents/curl/include -I/home/bowen/Documents/curl/Build/lib/../include -I/home/bowen/Documents/curl/lib/.. -I/home/bowen/Documents/curl/lib/../include -I/home/bowen/Documents/curl/Build/lib/.. -I/home/bowen/Documents/curl/lib -I/home/bowen/Documents/curl/Build/lib   -W -Wall -pedantic -Wbad-function-cast -Wconversion -Winline -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wno-long-long -Wno-multichar -Wpointer-arith -Wshadow -Wsign-compare -Wundef -Wunused -Wwrite-strings -Waddress -Wattributes -Wcast-align -Wdeclaration-after-statement -Wdiv-by-zero -Wempty-body -Wendif-labels -Wfloat-equal -Wformat-security -Wignored-qualifiers -Wmissing-field-initializers -Wmissing-noreturn -Wno-format-nonliteral -Wno-system-headers -Wold-style-definition -Wredundant-decls -Wsign-conversion -Wno-error=sign-conversion -Wstrict-prototypes -Wtype-limits -Wunreachable-code -Wunused-parameter -Wvla -Wclobbered -Wmissing-parameter-type -Wold-style-declaration -Wstrict-aliasing=3 -Wtrampolines -Wformat=2 -Warray-bounds=2 -ftree-vrp -Wduplicated-cond -Wnull-dereference -fdelete-null-pointer-checks -Wshift-negative-value -Wshift-overflow=2 -Walloc-zero -Wduplicated-branches -Wformat-overflow=2 -Wformat-truncation=2 -Wimplicit-fallthrough -Wrestrict -Warith-conversion -Wdouble-promotion -Wenum-conversion -Wpragmas -Wunused-const-variable -O3 -DNDEBUG -fPIC -fvisibility=hidden -o lib/CMakeFiles/libcurl_shared.dir/altsvc.c.o -c /home/bowen/Documents/curl/lib/altsvc.c",
+    \\  "file": "/home/bowen/Documents/curl/lib/altsvc.c",
+    \\  "output": "lib/CMakeFiles/libcurl_shared.dir/altsvc.c.o"
+    \\},
+    \\{
+    \\  "directory": "/home/bowen/Documents/curl/Build",
+    \\  "command": "/usr/bin/cc -DBUILDING_LIBCURL -DCURL_HIDDEN_SYMBOLS -DHAVE_CONFIG_H -DLDAP_DEPRECATED=1 -Dlibcurl_shared_EXPORTS -I/home/bowen/Documents/curl/include -I/home/bowen/Documents/curl/Build/lib/../include -I/home/bowen/Documents/curl/lib/.. -I/home/bowen/Documents/curl/lib/../include -I/home/bowen/Documents/curl/Build/lib/.. -I/home/bowen/Documents/curl/lib -I/home/bowen/Documents/curl/Build/lib   -W -Wall -pedantic -Wbad-function-cast -Wconversion -Winline -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wno-long-long -Wno-multichar -Wpointer-arith -Wshadow -Wsign-compare -Wundef -Wunused -Wwrite-strings -Waddress -Wattributes -Wcast-align -Wdeclaration-after-statement -Wdiv-by-zero -Wempty-body -Wendif-labels -Wfloat-equal -Wformat-security -Wignored-qualifiers -Wmissing-field-initializers -Wmissing-noreturn -Wno-format-nonliteral -Wno-system-headers -Wold-style-definition -Wredundant-decls -Wsign-conversion -Wno-error=sign-conversion -Wstrict-prototypes -Wtype-limits -Wunreachable-code -Wunused-parameter -Wvla -Wclobbered -Wmissing-parameter-type -Wold-style-declaration -Wstrict-aliasing=3 -Wtrampolines -Wformat=2 -Warray-bounds=2 -ftree-vrp -Wduplicated-cond -Wnull-dereference -fdelete-null-pointer-checks -Wshift-negative-value -Wshift-overflow=2 -Walloc-zero -Wduplicated-branches -Wformat-overflow=2 -Wformat-truncation=2 -Wimplicit-fallthrough -Wrestrict -Warith-conversion -Wdouble-promotion -Wenum-conversion -Wpragmas -Wunused-const-variable -O3 -DNDEBUG -fPIC -fvisibility=hidden -o lib/CMakeFiles/libcurl_shared.dir/altsvc.c.o -c /home/bowen/Documents/curl/lib/altsvc.c",
+    \\  "file": "/home/bowen/Documents/curl/lib/altsvc.c",
+    \\  "output": "lib/CMakeFiles/libcurl_shared.dir/altsvc.c.o"
+    \\}
+    \\]
+;
+
+test "next mode: empty array" {
     var stream = std.io.fixedBufferStream("[]");
     const reader = stream.reader();
     var commands = commandReader(std.testing.allocator, reader);
     defer commands.deinit();
-    try std.testing.expectEqual(commands.fetch(), null);
+    try std.testing.expectEqual(commands.next(), null);
 }
 
-test "fetch mode: raw" {
+test "next mode: raw" {
     var stream = std.io.fixedBufferStream(raw);
     const reader = stream.reader();
     var commands = commandReader(std.testing.allocator, reader);
     defer commands.deinit();
-    _ = try commands.fetch();
-    try std.testing.expectEqual(commands.fetch(), null);
+    var cmd = try commands.next();
+    cmd.?.deinit(std.testing.allocator);
+    try std.testing.expectEqual(commands.next(), null);
 }
 
-test "empty array" {
+test "next mode: raw2" {
+    var stream = std.io.fixedBufferStream(raw2);
+    const reader = stream.reader();
+    var commands = commandReader(std.testing.allocator, reader);
+    defer commands.deinit();
+    var first = try commands.next();
+    try std.testing.expect(first != null);
+    first.?.deinit(std.testing.allocator);
+    var second = try commands.next();
+    second.?.deinit(std.testing.allocator);
+    try std.testing.expect(second != null);
+    try std.testing.expectEqual(try commands.next(), null);
+    try std.testing.expectEqual(try commands.next(), null);
+}
+
+test "parse full: empty array" {
     var seq = try fromCompleteInput(std.testing.allocator, "[]");
     defer seq.deinit();
     try std.testing.expectEqual(seq.value.len, 0);
 }
 
-test "one command" {
+test "parse full: one command" {
     var seq = try fromCompleteInput(std.testing.allocator, raw);
-    defer seq.deinit();
+    defer {
+        seq.deinit();
+    }
     try std.testing.expectEqual(seq.value.len, 1);
     const value = seq.value[0];
     try std.testing.expect(value.file.len > 1);

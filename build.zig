@@ -25,7 +25,7 @@ pub fn build(b: *std.Build) void {
     });
 
     exe.linkLibC();
-    exe.linkSystemLibrary("LLVM");
+    //exe.linkSystemLibrary("LLVM");
     exe.linkSystemLibrary("libgit2");
 
     // This declares intent for the executable to be installed into the
@@ -65,7 +65,7 @@ pub fn build(b: *std.Build) void {
     });
 
     unit_tests.linkLibC();
-    unit_tests.linkSystemLibrary("LLVM");
+    //unit_tests.linkSystemLibrary("LLVM");
     unit_tests.linkSystemLibrary("libgit2");
 
     const run_unit_tests = b.addRunArtifact(unit_tests);
