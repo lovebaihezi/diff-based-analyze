@@ -27,6 +27,7 @@ pub fn build(b: *std.Build) void {
     exe.linkLibC();
     //exe.linkSystemLibrary("LLVM");
     exe.linkSystemLibrary("libgit2");
+    exe.linkSystemLibrary("clang");
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
