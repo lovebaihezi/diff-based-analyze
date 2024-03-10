@@ -6,3 +6,7 @@
 tests/.cache
 tests/build
 compile_commands.json
+*.tar.gz
+/llvm
+/libgit2-*
+/build
