@@ -70,7 +70,7 @@ const json = std.json;
 const ParseOptions = std.json.ParseOptions;
 const Scanner = std.json.Scanner;
 const ParseError = std.json.ParseError(Scanner);
-const ParsedCommands = std.json.Parsed(CommandSeq);
+pub const ParsedCommands = std.json.Parsed(CommandSeq);
 
 pub fn fromLocalFile(allocator: Allocator, path: []const u8) !ParsedCommands {
     const cwd = std.fs.cwd();

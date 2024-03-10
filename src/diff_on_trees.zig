@@ -48,9 +48,13 @@ fn actions(self: @This(), allocator: Allocator, repo: Git.Repo, id: *Git.OID, ge
                 try pthread_linked.addBuildCommand(allocator, cmd);
             }
             var iter = pthread_linked.iter();
+            var array = std.ArrayList(*const CompileCommands.Command).init(allocator);
+            defer array.deinit();
             while (iter.next()) |path| {
-                std.log.debug("file {s} linked with pthread or linked with object which linked with pthread", .{path});
+                try array.append(path);
             }
+            const infer = Infer.Infer.optimized(array.items);
+            try infer.run(allocator);
         },
     }
 }

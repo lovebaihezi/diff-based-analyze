@@ -17,10 +17,12 @@ pub fn parse() !@This() {
             const slice = arg[3..];
             if (std.mem.eql(u8, slice, "baseline")) {
                 self.strategy = Strategy.Baseline;
+                continue;
             } else if (std.mem.eql(u8, slice, "optimized")) {
                 self.strategy = Strategy.Optimized;
+                continue;
             } else {
-                std.log.warn("unknow strategy: {s}, fallback to baseline", .{slice});
+                std.log.warn("unknow strategy: {s}", .{slice});
                 return error.UnknowStrategy;
             }
         } else if (std.mem.startsWith(u8, arg, "-l=")) {

@@ -7,7 +7,7 @@ pub fn main() !void {
     defer arena.deinit();
     const allocator = arena.allocator();
     const args = try exe_args.parse();
-    const diff_on_trees = DiffOnTrees{ .limit = args.limit };
+    const diff_on_trees = DiffOnTrees{ .limit = args.limit, .strategy = args.strategy };
     try diff_on_trees.app(allocator, args.path);
 }
 
