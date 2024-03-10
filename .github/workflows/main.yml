@@ -10,7 +10,7 @@ jobs:
 
     - name: Install Required package
       run: |
-        apt-get install tar
+        apt-get install tar xz-utils
     
     - name: Setup Zig
       uses: goto-bus-stop/setup-zig@v2.2.0
