@@ -1,3 +1,11 @@
+libgit_version         := "1.7.2"
+libgit2_tar            := "v" + libgit_version + ".tar.gz"
+libgit2_url            := "https://github.com/libgit2/libgit2/archive/refs/tags/" + libgit2_tar
+
+# Install libgit2, Install libclang
+init: install-libgit2
+  echo "done"
+
 build:
   zig build
 
@@ -20,6 +28,14 @@ build-example-shared-var:
 
 build-examples: build-example-shared-var
   echo 'build done'
+
+install-libgit2:
+  wget {{libgit2_url}}
+  tar xf {{libgit2_tar}}
+  rm {{libgit2_tar}}
+  cmake -GNinja -Bbuild -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_CLAR=OFF libgit2-1.7.2
+  cmake --build build
+  sudo cmake --install build
 
 update-stringzilla:
   cd src

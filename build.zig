@@ -26,9 +26,6 @@ pub fn build(b: *std.Build) void {
 
     exe.linkLibC();
     //exe.linkSystemLibrary("LLVM");
-    exe.linkSystemLibrary("libgit2");
-    exe.linkSystemLibrary("clang");
-
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
     // step when running `zig build`).
@@ -38,6 +35,27 @@ pub fn build(b: *std.Build) void {
     // step is evaluated that depends on it. The next line below will establish
     // such a dependency.
     const run_cmd = b.addRunArtifact(exe);
+
+    const usr_local_inc_path = "/usr/local/include/";
+    const usr_local_lib_path = "/usr/local/lib/";
+    exe.addIncludePath(.{ .path = usr_local_inc_path });
+    exe.addIncludePath(.{ .path = usr_local_lib_path });
+    exe.addObjectFile(.{ .path = usr_local_lib_path ++ "libgit2.a" });
+
+    // Means We are build Release On Github Actions
+    if (std.os.getenv("LLVM_PATH")) |path| {
+        if (path.len > 0) {
+            const include_path = b.pathJoin(&.{ path, "include" });
+            const library_path = b.pathJoin(&.{ path, "lib" });
+            exe.addIncludePath(.{ .path = include_path });
+            exe.addLibraryPath(.{ .path = library_path });
+            const clang_a = b.pathJoin(&.{ library_path, "libclang.a" });
+            exe.addObjectFile(.{ .path = clang_a });
+        }
+    } else {
+        // TODO
+        exe.linkSystemLibrary("clang");
+    }
 
     // By making the run step depend on the install step, it will be run from the
     // installation directory rather than directly from within the cache directory.
@@ -66,8 +84,7 @@ pub fn build(b: *std.Build) void {
     });
 
     unit_tests.linkLibC();
-    //unit_tests.linkSystemLibrary("LLVM");
-    unit_tests.linkSystemLibrary("libgit2");
+    unit_tests.linkSystemLibrary("git2");
     unit_tests.linkSystemLibrary("clang");
 
     const run_unit_tests = b.addRunArtifact(unit_tests);

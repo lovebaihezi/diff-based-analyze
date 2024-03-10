@@ -7,13 +7,11 @@
 
 ** Use Master Branch of Zig to build **
 
-The `build.zig` will dynamic link the `libgit2` and `libc`.
+The `build.zig` will dynamic link the `libgit2`, `libc` and `libclang`.
 
 ```
 zig build -Doptimize=ReleaseSafe
 ```
-
-Make sure you have `libgit2` and `infer` installed locally
 
 ## Usage
 
@@ -21,4 +19,7 @@ Currently not avaliable
 
 ## Todo
 
-1. Add CI to build libgit2 static library for linking
+[ ] Add CI to build libgit2 static library for linking
+
+[ ] Add CI to build static link llvm binary
+
