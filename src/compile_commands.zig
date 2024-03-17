@@ -84,9 +84,9 @@ pub fn fromCompleteInput(allocator: Allocator, slice: []const u8) ParseError!Par
     return std.json.parseFromSlice(CommandSeq, allocator, slice, .{});
 }
 
-pub fn fromIOReader(allocator: Allocator, io_reader: anytype) !ParsedCommands {
-    var reader = std.json.reader(allocator, io_reader);
-    return try std.json.parseFromTokenSource(CommandSeq, allocator, &reader, .{});
+pub fn fromIOReader(allocator: Allocator, json_reader: anytype) !ParsedCommands {
+    const parsed = try std.json.parseFromTokenSource(CommandSeq, allocator, json_reader, .{});
+    return parsed;
 }
 
 pub fn compile_mv_files_name(allocator: Allocator, oid: *Git.OID) Allocator.Error![2][]u8 {

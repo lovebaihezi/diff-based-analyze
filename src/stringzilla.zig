@@ -26783,14 +26783,14 @@ pub fn _sz_edit_distance_skewed_diagonals_upto65k_avx512(arg_shorter: sz_cptr_t,
     var max_length: sz_size_t = @as(sz_size_t, @bitCast(@as(c_ulong, @as(c_uint, 256) *% @as(c_uint, 256))));
     _ = &max_length;
     while (true) {
-        if (!(!(bound != 0) and ("For bounded search the method should only evaluate one band of the matrix." != null))) {
+        if (bound != 0) {
             _ = fprintf(stderr, "Assertion failed: %s, in file %s, line %d\n", "!bound && \"For bounded search the method should only evaluate one band of the matrix.\"", "src/stringzilla.h", @as(c_int, 4266));
             exit(@as(c_int, 1));
         }
         if (!false) break;
     }
     while (true) {
-        if (!((shorter_length == longer_length) and ("The method hasn't been generalized to different length inputs yet." != null))) {
+        if (shorter_length != longer_length) {
             _ = fprintf(stderr, "Assertion failed: %s, in file %s, line %d\n", "shorter_length == longer_length && \"The method hasn't been generalized to different length inputs yet.\"", "src/stringzilla.h", @as(c_int, 4267));
             exit(@as(c_int, 1));
         }
@@ -32674,21 +32674,21 @@ pub inline fn _sz_prime_mod(x: anytype) @TypeOf(@import("std").zig.c_translation
     _ = &x;
     return @import("std").zig.c_translation.MacroArithmetic.rem(x, SZ_U64_MAX_PRIME);
 }
-pub const __uintr_frame = struct___uintr_frame;
-pub const timeval = struct_timeval;
-pub const timespec = struct_timespec;
-pub const __pthread_internal_list = struct___pthread_internal_list;
-pub const __pthread_internal_slist = struct___pthread_internal_slist;
-pub const __pthread_mutex_s = struct___pthread_mutex_s;
-pub const __pthread_rwlock_arch_t = struct___pthread_rwlock_arch_t;
-pub const __pthread_cond_s = struct___pthread_cond_s;
-pub const random_data = struct_random_data;
-pub const drand48_data = struct_drand48_data;
-pub const __tile1024i_str = struct___tile1024i_str;
-pub const _G_fpos_t = struct__G_fpos_t;
-pub const _G_fpos64_t = struct__G_fpos64_t;
-pub const _IO_marker = struct__IO_marker;
-pub const _IO_codecvt = struct__IO_codecvt;
-pub const _IO_wide_data = struct__IO_wide_data;
-pub const _IO_FILE = struct__IO_FILE;
-pub const _IO_cookie_io_functions_t = struct__IO_cookie_io_functions_t;
+const __uintr_frame = struct___uintr_frame;
+const timeval = struct_timeval;
+const timespec = struct_timespec;
+const __pthread_internal_list = struct___pthread_internal_list;
+const __pthread_internal_slist = struct___pthread_internal_slist;
+const __pthread_mutex_s = struct___pthread_mutex_s;
+const __pthread_rwlock_arch_t = struct___pthread_rwlock_arch_t;
+const __pthread_cond_s = struct___pthread_cond_s;
+const random_data = struct_random_data;
+const drand48_data = struct_drand48_data;
+const __tile1024i_str = struct___tile1024i_str;
+const _G_fpos_t = struct__G_fpos_t;
+const _G_fpos64_t = struct__G_fpos64_t;
+const _IO_marker = struct__IO_marker;
+const _IO_codecvt = struct__IO_codecvt;
+const _IO_wide_data = struct__IO_wide_data;
+const _IO_FILE = struct__IO_FILE;
+const _IO_cookie_io_functions_t = struct__IO_cookie_io_functions_t;
