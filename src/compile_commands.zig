@@ -85,7 +85,7 @@ pub fn fromCompleteInput(allocator: Allocator, slice: []const u8) ParseError!Par
 }
 
 pub fn fromIOReader(allocator: Allocator, json_reader: anytype) !ParsedCommands {
-    const parsed = try std.json.parseFromTokenSource(CommandSeq, allocator, &json_reader, .{});
+    const parsed = try std.json.parseFromTokenSource(CommandSeq, allocator, json_reader, .{});
     return parsed;
 }
 

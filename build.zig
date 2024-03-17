@@ -68,6 +68,7 @@ pub fn build(b: *std.Build) void {
     unit_tests.linkLibC();
     //unit_tests.linkSystemLibrary("LLVM");
     unit_tests.linkSystemLibrary("libgit2");
+    unit_tests.linkSystemLibrary("clang");
 
     const run_unit_tests = b.addRunArtifact(unit_tests);
 
