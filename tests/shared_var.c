@@ -24,7 +24,7 @@ void *increment_thread(void *arg) {
 
 void *init_data(void *arg) {
   Data *data = (Data *)arg;
-  arrays = malloc(sizeof(size_t) * (data->len + 1));
+  arrays = malloc(sizeof(size_t) * data->len);
   return NULL;
 }
 
@@ -63,6 +63,5 @@ int main(int argc, char *argv[]) {
   }
   free(arrays);
   printf("%lld", sum);
-
   return 0;
 }
