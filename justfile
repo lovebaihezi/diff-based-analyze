@@ -15,6 +15,12 @@ clean:
   rm -rf zig-out
   rm ~/.local/bin/analysis
 
+build-example-shared-var:
+  clang tests/shared_var.c -fsanitize=address -fno-omit-frame-pointer -pthread -O3 -o main
+
+build-examples: build-example-shared-var
+  echo 'build done'
+
 update-stringzilla:
   cd src
   wget https://raw.githubusercontent.com/ashvardanian/StringZilla/main/include/stringzilla/stringzilla.h

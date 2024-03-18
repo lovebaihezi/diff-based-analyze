@@ -1,3 +1,7 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java:
+// https://pvs-studio.com
+
 #include <assert.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -34,9 +38,9 @@ int main(int argc, char *argv[]) {
   data->len = argc > 1 ? atoi(argv[1]) : 10;
   data->index = 0;
 
-  pthread_create(&threads[0], NULL, init_data, (void *)data);
+  arrays = malloc(sizeof(size_t) * data->len);
 
-  for (size_t i = 1; i < sizeof(threads) / sizeof(pthread_t); i += 1) {
+  for (size_t i = 0; i < sizeof(threads) / sizeof(pthread_t); i += 1) {
     Data *each_data = (Data *)malloc(sizeof(Data));
 
     assert(each_data != NULL);
@@ -52,13 +56,12 @@ int main(int argc, char *argv[]) {
   }
 
   free(data);
-  free(arrays);
 
   long long sum = 0;
   for (size_t i = 0; i < data->len; i += 1) {
     sum += arrays[i];
   }
+  free(arrays);
   printf("%lld", sum);
-
   return 0;
 }
