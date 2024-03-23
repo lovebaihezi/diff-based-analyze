@@ -19,6 +19,7 @@ void *increment_thread(void *arg) {
   for (size_t i = 0; i < data->len; i++) {
     arrays[i] = i + data->index % 2;
   }
+  free(data);
   return NULL;
 }
 
