@@ -1,35 +1,42 @@
+name: CI
+
 on: [push]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    container: debian:bookworm
-    
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-    - name: Install Required package
-      run: |
-        apt-get install tar xz-utils
-    
-    - name: Setup Zig
-      uses: goto-bus-stop/setup-zig@v2.2.0
+      - uses: extractions/setup-just@v1
 
-    - name: Add llvm pacakge source
-      run: |
-        deb http://apt.llvm.org/bookworm/ llvm-toolchain-bookworm-17 main
-        deb-src http://apt.llvm.org/bookworm/ llvm-toolchain-bookworm-17 main
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2.2.0
 
-    - name: install libclang
-      run: |
-        apt-get install clang-17 clang-tools-17 clang-17-doc libclang-common-17-dev libclang-17-dev libclang1-17 clang-format-17 python3-clang-17 clangd-17 clang-tidy-17
-    
-    - name: install libgit2
-      run: |
-        apt-get install libgit2-dev
-        
-    - name: Build
-      run: zig build -Doptimize=ReleaseSafe
-      
-    - name: Run tests
-      run: zig build test
+      - name: Check Zig ENV
+        run: zig env
+
+      - name: Run zig fmt
+        run: zig fmt --check .
+     
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v1.9.0
+        with:
+          version: "17"
+
+      - name: install CMake, Ninja
+        run: |
+          sudo apt-get update
+          sudo apt-get install cmake ninja-build gcc --yes
+
+      - name: Init
+        run: |
+          echo "Fetch libgit2, compile, Fetch Prebuilt LLVM(TODO)"
+          just init
+
+      - name: Build
+        run: zig build -Doptimize=ReleaseSafe
