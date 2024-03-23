@@ -18,7 +18,7 @@ typedef struct {
 void *increment_thread(void *arg) {
   Data *data = (Data *)arg;
   for (size_t i = 0; i < data->len; i++) {
-    atomic_fetch_add(data->shared_array + i, i + data->index % 2);
+    atomic_store(data->shared_array + i, i + data->index % 2);
   }
   return data;
 }
