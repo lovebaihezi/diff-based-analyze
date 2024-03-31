@@ -6,3 +6,5 @@
 tests/.cache
 tests/build
 compile_commands.json
+pmd-*
+infer-out

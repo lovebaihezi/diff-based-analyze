@@ -2,6 +2,8 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java:
 // https://pvs-studio.com
 
+// Consider a function that will gain some data from OS and process them in different thread
+
 #include <assert.h>
 #include <bits/pthreadtypes.h>
 #include <pthread.h>
@@ -15,7 +17,9 @@ typedef struct {
   size_t index;
 } Data;
 
-void *increment_thread(void *arg) {
+// if modify two atomic and compare them in atomic way then free some data
+
+void *modify(void *arg) {
   Data *data = (Data *)arg;
   for (size_t i = 0; i < data->len; i++) {
     atomic_store(data->shared_array + i, i + data->index % 2);
@@ -43,7 +47,7 @@ int main(int argc, char *argv[]) {
     each_data->index = i;
     each_data->shared_array = arrays;
 
-    pthread_create(&threads[i], NULL, increment_thread, (void *)each_data);
+    pthread_create(&threads[i], NULL, modify, (void *)each_data);
   }
 
   for (size_t i = 0; i < sizeof(threads) / sizeof(pthread_t); i += 1) {

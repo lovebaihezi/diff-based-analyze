@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 typedef struct {
-  pthread_spinlock_t* lock;
+  pthread_mutex_t* lock;
   size_t *shared_array;
   size_t len;
   size_t index;
@@ -19,7 +19,7 @@ typedef struct {
 void *increment_thread(void *arg) {
   Data *data = (Data *)arg;
   for (size_t i = 0; i < data->len; i++) {
-    int ret = pthread_spin_trylock(data->lock);
+    int ret = pthread_mutex_lock(data->lock);
     if (ret == EBUSY) {
       continue;
     }
@@ -29,8 +29,8 @@ void *increment_thread(void *arg) {
 }
 
 int main(int argc, char *argv[]) {
-  pthread_spinlock_t lock;
-  pthread_spin_init(&lock, 31);
+  pthread_mutex_t lock;
+  pthread_mutex_init(&lock, NULL);
 
   pthread_t threads[31];
 
