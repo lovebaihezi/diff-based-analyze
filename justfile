@@ -26,3 +26,8 @@ update-stringzilla:
   wget https://raw.githubusercontent.com/ashvardanian/StringZilla/main/include/stringzilla/stringzilla.h
   mv stringzilla.h src
   zig translate-c src/stringzilla.h -I/usr/include > src/stringzilla.zig
+
+install-pmd:
+  wget https://github.com/pmd/pmd/releases/download/pmd_releases%2F7.0.0/pmd-dist-7.0.0-bin.zip
+  unzip pmd-dist-7.0.0-bin.zip
+  rm pmd-dist-7.0.0-bin.zip
