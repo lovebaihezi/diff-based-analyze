@@ -43,7 +43,8 @@ pub fn build(b: *std.Build) void {
     exe.addObjectFile(.{ .path = usr_local_lib_path ++ "libgit2.a" });
 
     // Means We are build Release On Github Actions
-    if (std.os.getenv("LLVM_PATH")) |path| {
+    const env = try std.process.getEnvMap();
+    if (env.get("LLVM_PATH")) |path| {
         if (path.len > 0) {
             const include_path = b.pathJoin(&.{ path, "include" });
             const library_path = b.pathJoin(&.{ path, "lib" });
