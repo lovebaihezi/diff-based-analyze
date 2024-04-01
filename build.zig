@@ -41,21 +41,23 @@ pub fn build(b: *std.Build) void {
     exe.addIncludePath(.{ .path = usr_local_inc_path });
     exe.addIncludePath(.{ .path = usr_local_lib_path });
     exe.addObjectFile(.{ .path = usr_local_lib_path ++ "libgit2.a" });
+    exe.addObjectFile(.{ .path = usr_local_lib_path ++ "libssl.a" });
 
     // Means We are build Release On Github Actions
-    const env = try std.process.getEnvMap();
-    if (env.get("LLVM_PATH")) |path| {
-        if (path.len > 0) {
-            const include_path = b.pathJoin(&.{ path, "include" });
-            const library_path = b.pathJoin(&.{ path, "lib" });
-            exe.addIncludePath(.{ .path = include_path });
-            exe.addLibraryPath(.{ .path = library_path });
-            const clang_a = b.pathJoin(&.{ library_path, "libclang.a" });
-            exe.addObjectFile(.{ .path = clang_a });
+    if (std.process.getEnvMap(b.allocator) catch null) |env| {
+        if (env.get("LLVM_PATH")) |path| {
+            if (path.len > 0) {
+                const include_path = b.pathJoin(&.{ path, "include" });
+                const library_path = b.pathJoin(&.{ path, "lib" });
+                exe.addIncludePath(.{ .path = include_path });
+                exe.addLibraryPath(.{ .path = library_path });
+                const clang_a = b.pathJoin(&.{ library_path, "libclang.a" });
+                exe.addObjectFile(.{ .path = clang_a });
+            }
+        } else {
+            // TODO
+            exe.linkSystemLibrary("clang");
         }
-    } else {
-        // TODO
-        exe.linkSystemLibrary("clang");
     }
 
     // By making the run step depend on the install step, it will be run from the
