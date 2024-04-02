@@ -35,7 +35,7 @@ install-libgit2:
   wget {{libgit2_url}}
   tar xf {{libgit2_tar}}
   rm {{libgit2_tar}}
-  CC="zig c" CXX="zig c++" cmake -GNinja -Bbuild -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_CLAR=OFF libgit2-1.7.2
+  CC="zig cc" CXX="zig c++" cmake -GNinja -Bbuild -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_CLAR=OFF libgit2-1.7.2
   ninja -C build
   export LIBGIT2_STATIC_PATH=$(find build -e libgit2.a)
   export LIBGIT2_INCLUDE_PATH=$(find build -e include -f d)
