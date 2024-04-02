@@ -40,8 +40,6 @@ pub fn build(b: *std.Build) void {
     const usr_local_lib_path = "/usr/local/lib/";
     exe.addIncludePath(.{ .path = usr_local_inc_path });
     exe.addIncludePath(.{ .path = usr_local_lib_path });
-    exe.addObjectFile(.{ .path = usr_local_lib_path ++ "libgit2.a" });
-    exe.addObjectFile(.{ .path = usr_local_lib_path ++ "libssl.a" });
 
     // Means We are build Release On Github Actions
     if (std.process.getEnvMap(b.allocator) catch null) |env| {
