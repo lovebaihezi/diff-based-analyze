@@ -23,10 +23,32 @@ jobs:
       - name: Run zig fmt
         run: zig fmt --check .
      
-      - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v1.9.0
-        with:
-          version: "17"
+      - name: Install LLVM
+        run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh all
+          
+      - name: Verify LLVM installation
+        run: |  
+          clang --version
+          llvm-config --version
+
+      - name: Check for libclang binary
+        run: |
+          if find /usr -maxdepth 1 -type f -print0 | xargs -0 file | grep -q "libclang"; then
+            echo "Static binary found"
+          else
+            echo "No static binary found"
+          fi
+
+      - name: Check for libclang binary
+        run: |
+          if find /usr -maxdepth 1 -type f -print0 | xargs -0 file | grep -q "libssl"; then
+            echo "Static binary found"
+          else
+            echo "No static binary found"
+          fi
 
       - name: install CMake, Ninja
         run: |
