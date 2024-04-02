@@ -29,7 +29,7 @@ jobs:
           chmod +x llvm.sh
           sudo ./llvm.sh all
           
-      - name: Verify LLVM installation: libclang, clang
+      - name: Verify LLVM installation, libclang and clang
         run: |  
           clang --version
           if find /usr -maxdepth 1 -type f -print0 | xargs -0 file | grep -q "libclang"; then
