@@ -32,7 +32,7 @@ jobs:
       - name: Verify LLVM installation, libclang and clang
         run: |  
           clang-18 --version
-          find /usr -name 'libclang.a' && find /usr -name 'libssl.a' && find /usr -name 'libgit2.a'
+          find /usr/lib -name 'libclang.a' && find /usr/lib -name 'libssl.a' && find /usr/lib -name 'libgit2.a'
 
       - name: install CMake, Ninja
         run: |
