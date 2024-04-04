@@ -40,8 +40,8 @@ install-libgit2:
   cmake --install build --prefix ./libgit2
   export LIB_LIBGIT2_PATH=$(find -name libgit2.a ./libgit2)
   export LIB_LIBGIT2_INCLUDE_PATH="./libgit2"
-  pwd
-  ls
+  file $LIB_LIBGIT2_PATH
+  file $LIB_LIBGIT2_INCLUDE_PATH
 
 update-stringzilla:
   cd src

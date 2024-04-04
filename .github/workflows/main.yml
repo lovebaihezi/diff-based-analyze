@@ -35,6 +35,8 @@ jobs:
           which clang-18
           export LIB_CLANG_PATH=$(find /usr/lib -name 'libclang.a')
           export LIB_SSL_PATH=$(find /usr/lib -name 'libssl.a')
+          file $LIB_CLANG_PATH
+          file $LIB_SSL_PATH
 
       - name: install CMake, Ninja
         run: |
