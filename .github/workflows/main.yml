@@ -32,7 +32,10 @@ jobs:
       - name: Verify LLVM installation, libclang and clang
         run: |  
           clang-18 --version
-          find /usr/lib -name 'libclang.a' && find /usr/lib -name 'libssl.a' && find /usr/lib -name 'libgit2.a'
+          which clang-18
+          apt-file search libclang.a | grep "/libclang\.a"
+          export LIB_CLANG_PATH=$(find /usr/lib -name 'libclang.a')
+          export LIB_SSL_PATH=$(find /usr/lib -name 'libssl.a')
 
       - name: install CMake, Ninja
         run: |
@@ -41,7 +44,7 @@ jobs:
 
       - name: Init
         run: |
-          echo "Fetch libgit2, compile, Fetch Prebuilt LLVM(TODO)"
+          echo "Fetch libgit2, compile"
           just init
 
       - name: Build

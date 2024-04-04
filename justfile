@@ -25,11 +25,11 @@ clean:
   rm -rf zig-out
   rm ~/.local/bin/analysis
 
-build-example-shared-var:
-  clang tests/shared_var.c -fsanitize=address -fno-omit-frame-pointer -pthread -O3 -o main
-
-build-examples: build-example-shared-var
-  echo 'build done'
+# build example tests under tests folder by using meson
+build-examples:
+  cd ./tests/
+  CC="clang" CXX="clang++" meson setup build --wipe
+  ninja -C build
 
 install-libgit2:
   wget {{libgit2_url}}
@@ -37,8 +37,11 @@ install-libgit2:
   rm {{libgit2_tar}}
   CC="clang" CXX="clang++" cmake -GNinja -Bbuild -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_CLAR=OFF libgit2-1.7.2
   ninja -C build
-  export LIBGIT2_STATIC_PATH=$(find build -e libgit2.a)
-  export LIBGIT2_INCLUDE_PATH=$(find build -e include -f d)
+  cmake --install build --prefix ./libgit2
+  export LIB_LIBGIT2_PATH=$(find -name libgit2.a ./libgit2)
+  export LIB_LIBGIT2_INCLUDE_PATH="./libgit2"
+  pwd
+  ls
 
 update-stringzilla:
   cd src

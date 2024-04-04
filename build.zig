@@ -36,27 +36,24 @@ pub fn build(b: *std.Build) void {
     // such a dependency.
     const run_cmd = b.addRunArtifact(exe);
 
-    const usr_local_inc_path = "/usr/local/include/";
-    const usr_local_lib_path = "/usr/local/lib/";
-    exe.addIncludePath(.{ .path = usr_local_inc_path });
-    exe.addIncludePath(.{ .path = usr_local_lib_path });
-
     // Means We are build Release On Github Actions
-    if (std.process.getEnvMap(b.allocator) catch null) |env| {
-        if (env.get("LLVM_PATH")) |path| {
-            if (path.len > 0) {
-                const include_path = b.pathJoin(&.{ path, "include" });
-                const library_path = b.pathJoin(&.{ path, "lib" });
-                exe.addIncludePath(.{ .path = include_path });
-                exe.addLibraryPath(.{ .path = library_path });
-                const clang_a = b.pathJoin(&.{ library_path, "libclang.a" });
-                exe.addObjectFile(.{ .path = clang_a });
-            }
-        } else {
-            // TODO
-            exe.linkSystemLibrary("clang");
-        }
-    }
+    const env = std.process.getEnvMap(b.allocator) catch @panic("failed to get env map");
+
+    const llvm_path = env.get("LLVM_PATH") orelse @panic("failed to get LLVM_PATH env from env map");
+    const include_path = b.pathJoin(&.{ llvm_path, "include" });
+    const library_path = b.pathJoin(&.{ llvm_path, "lib" });
+    exe.addIncludePath(.{ .path = include_path });
+    exe.addLibraryPath(.{ .path = library_path });
+    const clang_a = b.pathJoin(&.{ library_path, "libclang.a" });
+    exe.addObjectFile(.{ .path = clang_a });
+
+    const libgit2_path = env.get("LIB_LIBGIT2_PATH") orelse @panic("failed to get libgit2.a from env map");
+    const libgit2_include_path = env.get("LIB_LIBGIT2_INCLUDE_PATH") orelse @panic("failed to get libgit2 include path from env map");
+    exe.addIncludePath(.{ .path = libgit2_include_path });
+    exe.addObjectFile(.{ .path = libgit2_path });
+
+    const libssl_path = env.get("LIB_SSL_PATH") orelse @panic("failed to get libssl.a from env map");
+    exe.addObjectFile(.{ .path = libssl_path });
 
     // By making the run step depend on the install step, it will be run from the
     // installation directory rather than directly from within the cache directory.
