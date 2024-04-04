@@ -37,8 +37,8 @@ install-libgit2:
   rm {{libgit2_tar}}
   CC="clang" CXX="clang++" cmake -GNinja -Bbuild -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_CLAR=OFF libgit2-1.7.2
   ninja -C build
-  cmake --install build --prefix ./libgit2
-  export LIB_LIBGIT2_PATH=$(find -name libgit2.a ./libgit2)
+  cmake --install build --prefix libgit2
+  export LIB_LIBGIT2_PATH=$(find libgit2 -name libgit2.a )
   export LIB_LIBGIT2_INCLUDE_PATH="./libgit2"
   file $LIB_LIBGIT2_PATH
   file $LIB_LIBGIT2_INCLUDE_PATH
