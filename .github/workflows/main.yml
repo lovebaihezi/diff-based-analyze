@@ -32,16 +32,13 @@ jobs:
       - name: Verify LLVM installation, libclang and clang
         run: |  
           clang-18 --version
-          which clang-18
-          export LIB_CLANG_PATH=$(find /usr/lib -name libclang.a)
-          export LIB_SSL_PATH=$(find /usr/lib -name libssl.a)
-          file $LIB_CLANG_PATH
-          file $LIB_SSL_PATH
+          export CC=clang-18
+          export CXX=clang++-18
 
       - name: install CMake, Ninja
         run: |
           sudo apt-get update
-          sudo apt-get install cmake ninja-build gcc --yes
+          sudo apt-get install cmake ninja-build  --yes
 
       - name: Init
         run: |
