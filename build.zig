@@ -3,9 +3,10 @@ const find = @import("src/find_file.zig").find;
 
 fn addLibs(b: *std.Build, exe: *std.Build.Step.Compile) void {
     exe.linkLibC();
-    const env = std.process.getEnvMap(b.allocator) catch @panic("failed to get env map");
 
-    const llvm_path = env.get("LLVM_PATH") orelse @panic("failed to get LLVM_PATH env from env map");
+    // TODO: add support for building on windows
+
+    const llvm_path = "/usr";
     const include_path = b.pathJoin(&.{ llvm_path, "include" });
     const library_path = b.pathJoin(&.{ llvm_path, "lib" });
     exe.addIncludePath(.{ .path = include_path });

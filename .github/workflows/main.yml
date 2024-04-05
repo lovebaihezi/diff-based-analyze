@@ -32,6 +32,7 @@ jobs:
       - name: Verify LLVM installation, libclang and clang
         run: |  
           clang-18 --version
+          which clang-18
           export CC=clang-18
           export CXX=clang++-18
 

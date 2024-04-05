@@ -28,7 +28,7 @@ clean:
 # build example tests under tests folder by using meson
 build-examples:
   cd ./tests/
-  CC="clang" CXX="clang++" meson setup build --wipe
+  CC="clang-18" CXX="clang++-18" meson setup build --wipe
   ninja -C build
 
 # fetch {{libgit_version}} tar from 
@@ -36,7 +36,7 @@ install-libgit2:
   wget {{libgit2_url}}
   tar xf {{libgit2_tar}}
   rm {{libgit2_tar}}
-  CC="clang" CXX="clang++" cmake -GNinja -Bbuild -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_CLAR=OFF libgit2-1.7.2
+  CC="clang-18" CXX="clang++-18" cmake -GNinja -Bbuild -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_CLAR=OFF libgit2-1.7.2
   ninja -C build
   cmake --install build --prefix libgit2
 
