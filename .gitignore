@@ -10,5 +10,6 @@ pmd-*
 infer-out
 *.tar.gz
 /llvm
-/libgit2-*
+/libgit2*
 /build
+zlib*

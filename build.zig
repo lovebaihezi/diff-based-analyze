@@ -26,8 +26,24 @@ pub fn build(b: *std.Build) void {
     });
 
     exe.linkLibC();
-    exe.linkSystemLibrary2("clang", .{ .preferred_link_mode = .static });
-    exe.linkSystemLibrary2("git2", .{ .preferred_link_mode = .static });
+
+    exe.addLibraryPath(.{ .path = "/usr/lib" });
+    exe.linkSystemLibrary2("ssl", .{ .needed = true });
+    exe.linkSystemLibrary2("crypto", .{ .preferred_link_mode = .static, .needed = true });
+
+    exe.addIncludePath(.{ .path = "./libgit2/include" });
+    exe.addLibraryPath(.{ .path = "./libgit2/lib" });
+    exe.addLibraryPath(.{ .path = "./zlib" });
+    exe.linkSystemLibrary2("git2", .{ .preferred_link_mode = .static, .needed = true });
+    exe.linkSystemLibrary2("z", .{ .preferred_link_mode = .static, .needed = true });
+
+    // TODO: Add Custom Runner to build LLVM
+    exe.addIncludePath(.{ .path = "/usr/lib/llvm16/include" });
+    exe.addLibraryPath(.{ .path = "/usr/lib/llvm16/lib" });
+    exe.linkSystemLibrary2("clang", .{ .preferred_link_mode = .static, .needed = true });
+
+    exe.linkSystemLibrary2("c++", .{ .preferred_link_mode = .static, .needed = true });
+    exe.linkSystemLibrary2("c++abi", .{ .preferred_link_mode = .static, .needed = true });
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
@@ -66,8 +82,24 @@ pub fn build(b: *std.Build) void {
     });
 
     unit_tests.linkLibC();
-    unit_tests.linkSystemLibrary("git2");
-    unit_tests.linkSystemLibrary("clang");
+
+    unit_tests.addLibraryPath(.{ .path = "/usr/lib" });
+    unit_tests.linkSystemLibrary2("ssl", .{ .needed = true });
+    unit_tests.linkSystemLibrary2("crypto", .{ .preferred_link_mode = .static, .needed = true });
+
+    unit_tests.addIncludePath(.{ .path = "./libgit2/include" });
+    unit_tests.addLibraryPath(.{ .path = "./libgit2/lib" });
+    unit_tests.addLibraryPath(.{ .path = "./zlib" });
+    unit_tests.linkSystemLibrary2("git2", .{ .preferred_link_mode = .static, .needed = true });
+    unit_tests.linkSystemLibrary2("z", .{ .preferred_link_mode = .static, .needed = true });
+
+    // TODO: Add Custom Runner to build LLVM
+    unit_tests.addIncludePath(.{ .path = "/usr/lib/llvm16/include" });
+    unit_tests.addLibraryPath(.{ .path = "/usr/lib/llvm16/lib" });
+    unit_tests.linkSystemLibrary2("clang", .{ .preferred_link_mode = .static, .needed = true });
+
+    unit_tests.linkSystemLibrary2("c++", .{ .preferred_link_mode = .static, .needed = true });
+    unit_tests.linkSystemLibrary2("c++abi", .{ .preferred_link_mode = .static, .needed = true });
 
     const run_unit_tests = b.addRunArtifact(unit_tests);
 

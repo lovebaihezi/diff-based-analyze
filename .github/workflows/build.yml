@@ -1,4 +1,4 @@
-name: Build The DBA
+name: build deps and binary
 
 on: [push]
 
@@ -17,10 +17,7 @@ jobs:
       - name: Setup Alpine
         run: |
           apk update
-
-      - name: Install libclang, libgit2
-        run: |
-          apk add clang16-static libclang16-header libgit2-static libgit2-dev
+          apk add ninja-build nodejs cmake wget tar samurai xz just make
 
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v2.2.0
@@ -28,8 +25,24 @@ jobs:
       - name: Check Zig ENV
         run: zig env
 
+      - name: Install libclang and static binaries
+        run: |
+          apk add clang16-dev clang16-static musl-dev libc++-dev libc++-static openssl-dev
+
+      - name: Build libgit2, zlib
+        run: |
+          just install-libgit2 && just build-libgit2
+          just install-zlib && just build-zlib
+
       - name: Run zig fmt
         run: zig fmt --check .
-     
+
       - name: Build
-        run: zig build -Doptimize=ReleaseSafe
+        run: zig build -Doptimize=ReleaseSafe -Dtarget=native-native-musl
+
+      # TODO
+      # Upload to Release
+
+      # TODO
+      # - name: Run zig test
+      #   run: zig test
