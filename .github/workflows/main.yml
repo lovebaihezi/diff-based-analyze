@@ -4,47 +4,6 @@ on: [push]
 
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: extractions/setup-just@v1
-
-      - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v2.2.0
-
-      - name: Check Zig ENV
-        run: zig env
-
-      - name: Run zig fmt
-        run: zig fmt --check .
-     
-      - name: Install LLVM
-        run: |
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh all
-          
-      - name: Verify LLVM installation, libclang and clang
-        run: |  
-          clang-18 --version
-          which clang-18
-          export CC=clang-18
-          export CXX=clang++-18
-
-      - name: install CMake, Ninja
-        run: |
-          sudo apt-get update
-          sudo apt-get install cmake ninja-build  --yes
-
-      - name: Init
-        run: |
-          echo "Fetch libgit2, compile"
-          just init
-
-      - name: Build
-        run: zig build -Doptimize=ReleaseSafe
+    uses: ./build.yml
+  baseline:
+    uses: ./baseline.yml

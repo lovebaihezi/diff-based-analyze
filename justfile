@@ -2,11 +2,16 @@ libgit_version         := "1.7.2"
 libgit2_tar            := "v" + libgit_version + ".tar.gz"
 libgit2_url            := "https://github.com/libgit2/libgit2/archive/refs/tags/" + libgit2_tar
 
+infer_version          := 1.1.0
+
 pmd_version            := "7.0.0"
 
 # Install libgit2, Install libclang
 init: install-libgit2
-  echo "done"
+
+init-infer:
+  wget "https://github.com/facebook/infer/releases/download/v{{ infer_version }}/infer-linux64-v{{ infer_version }}.tar.xz"
+  tar xf infer-linux64-v{{ infer_version }}.tar.xz
 
 build:
   zig build

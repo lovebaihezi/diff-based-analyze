@@ -1,0 +1,29 @@
+name: Build The DBA
+
+on: [push]
+
+jobs:
+  run-baseline:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    container: 
+      image: alpine:3.19
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Alpine
+        run: |
+          apk update
+          apk add nodejs just mold clang musl-dev compiler-rt compiler-rt-static clang16-static clang16-header
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2.2.0
+
+      - name: Check Zig ENV
+        run: zig env
+
+
+

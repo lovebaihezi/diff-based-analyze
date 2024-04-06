@@ -1,0 +1,35 @@
+name: Build The DBA
+
+on: [push]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    container: 
+      image: alpine:3.19
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Alpine
+        run: |
+          apk update
+
+      - name: Install libclang, libgit2
+        run: |
+          apk add clang16-static libclang16-header libgit2-static libgit2-dev
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2.2.0
+
+      - name: Check Zig ENV
+        run: zig env
+
+      - name: Run zig fmt
+        run: zig fmt --check .
+     
+      - name: Build
+        run: zig build -Doptimize=ReleaseSafe

@@ -1,34 +1,6 @@
 const std = @import("std");
 const find = @import("src/find_file.zig").find;
 
-fn addLibs(b: *std.Build, exe: *std.Build.Step.Compile) void {
-    exe.linkLibC();
-
-    // TODO: add support for building on windows
-
-    const llvm_path = "/usr";
-    const include_path = b.pathJoin(&.{ llvm_path, "include" });
-    const library_path = b.pathJoin(&.{ llvm_path, "lib" });
-    exe.addIncludePath(.{ .path = include_path });
-    exe.addLibraryPath(.{ .path = library_path });
-    const clang_a = b.pathJoin(&.{ library_path, "libclang.a" });
-    exe.addObjectFile(.{ .path = clang_a });
-
-    var libgit2 = std.fs.cwd().openDir("libgit2", .{ .iterate = true }) catch @panic("failed to open libgit2");
-    defer libgit2.close();
-    const libgit2_path_or = find(b.allocator, libgit2, "libgit2.a") catch @panic("find libgit2.a in libgit2 dir failed due to other issue");
-    const libgit2_path = libgit2_path_or orelse @panic("there is no libgit2.a under libgit2 and is sub dir");
-    const libgit2_include_path = "./libgit2/include";
-    exe.addIncludePath(.{ .path = libgit2_include_path });
-    exe.addObjectFile(.{ .path = libgit2_path });
-
-    var usr_lib = std.fs.openDirAbsolute("/usr/lib", .{ .iterate = true }) catch @panic("failed to open /usr/lib");
-    defer usr_lib.close();
-    const libssl_path_or = find(b.allocator, usr_lib, "libssl.a") catch @panic("find libssh.a under /usr/lib failed");
-    const libssl_path = libssl_path_or orelse @panic("there is no libssh.a exists under /usr/lib");
-    exe.addObjectFile(.{ .path = libssl_path });
-}
-
 // Although this function looks imperative, note that its job is to
 // declaratively construct a build graph that will be executed by an external
 // runner.
@@ -53,7 +25,9 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    addLibs(b, exe);
+    exe.linkLibC();
+    exe.linkSystemLibrary2("clang", .{ .preferred_link_mode = .static });
+    exe.linkSystemLibrary2("git2", .{ .preferred_link_mode = .static });
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
