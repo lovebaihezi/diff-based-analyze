@@ -17,7 +17,7 @@ jobs:
       - name: Setup Alpine
         run: |
           apk update
-          apk add nodejs just mold clang musl-dev compiler-rt compiler-rt-static clang16-static clang16-header
+          apk add ninja-build nodejs cmake wget tar samurai xz just make
 
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v2.2.0
@@ -25,5 +25,6 @@ jobs:
       - name: Check Zig ENV
         run: zig env
 
-
-
+      - name: Install libclang and static binaries
+        run: |
+          apk add clang16-dev clang16-static musl-dev libc++-dev libc++-static openssl-dev
