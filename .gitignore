@@ -8,3 +8,8 @@ tests/build
 compile_commands.json
 pmd-*
 infer-out
+*.tar.gz
+/llvm
+/libgit2*
+/build
+zlib*
