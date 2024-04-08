@@ -3,12 +3,13 @@
 // https://pvs-studio.com
 
 #include <bits/pthreadtypes.h>
-#include <thpool.h>
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <unistd.h>
+
+#include "thpool.h"
 
 #define PORT 8888
 #define BUFFER_SIZE 1024

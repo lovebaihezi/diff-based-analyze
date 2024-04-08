@@ -1,0 +1,21 @@
+name: Infer RacerD
+
+jobs:
+  run:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    container: 
+      image: alpine:3.19
+    uses: ./.github/workflows/setup-env.yml
+    steps:
+      - name: setup infer
+        run: |
+          just install-infer
+      - name: config and run infer with --racerd-only
+        run: |
+          just config-examples
+          time just run-infer examples-build/compile_commands.json
+

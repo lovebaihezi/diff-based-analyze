@@ -1,7 +1,7 @@
-name : Baseline
+name : Coderrect
 
 jobs:
-  run-baseline:
+  run:
     strategy:
       fail-fast: false
       matrix:
@@ -11,7 +11,7 @@ jobs:
       image: alpine:3.19
     uses: ./.github/workflows/setup-env.yml
     steps:
-      - name: build the test cases, record time by using meson --profile
-        run: |
-          just build-examples
-      
+      - name: coderrect scan
+        uses: coderrect-inc/coderrect-github-action@v1.2
+        with:
+          buildCommand: "just build-examples"

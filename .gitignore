@@ -6,10 +6,12 @@
 tests/.cache
 tests/build
 compile_commands.json
-pmd-*
+/pmd-*
+/infer-*
 infer-out
 *.tar.gz
+pvs-*
 /llvm
 /libgit2*
 /build
-zlib*
+/zlib*

@@ -7,3 +7,15 @@ jobs:
     uses: ./.github/workflows/build.yml
   baseline:
     uses: ./.github/workflows/baseline.yml
+  infer:
+    uses: ./.github/workflows/infer-racerd.yml
+  clang-static-analyzer:
+    uses: ./.github/workflows/clang-static-analyzer.yml
+  coderrect:
+    uses: ./.github/workflows/coderrect.yml
+  coverity:
+    uses: ./.github/workflows/coverity.yml
+  parasoft-test:
+    uses: ./.github/workflows/parasoft-test.yml
+  ikos:
+    uses: ./.github/workflows/ikos.yml

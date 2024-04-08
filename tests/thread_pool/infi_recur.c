@@ -9,9 +9,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <thpool.h>
-#include <types.h>
 #include <unistd.h>
+
+#include "thpool.h"
+#include "types.h"
 
 #define PORT 8888
 #define BUFFER_SIZE 1024

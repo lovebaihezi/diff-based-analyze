@@ -1,4 +1,4 @@
-name : Baseline
+name: Infer RacerD
 
 jobs:
   run-baseline:
@@ -13,5 +13,5 @@ jobs:
     steps:
       - name: build the test cases, record time by using meson --profile
         run: |
-          just build-examples
-      
+          just config-examples
+          time scan-build just build-examples

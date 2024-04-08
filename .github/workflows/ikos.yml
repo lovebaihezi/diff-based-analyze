@@ -1,0 +1,24 @@
+name : IKOS
+
+jobs:
+  run:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    uses: ./.github/workflows/setup-env.yml
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: install ikos
+        run: brew install nasa-sw-vnv/core/ikos
+      
+      - name: run ikos
+        run: |
+          just config-examples
+          ikos-scan just build-examples
