@@ -12,8 +12,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     container: 
       image: alpine:3.19
-    uses: ./.github/workflows/setup-env.yml
     steps:
+      - uses: ./.github/workflows/setup-env.yml
+
       - name: build the test cases, record time by using meson --profile
         run: |
           just build-examples

@@ -12,8 +12,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     container: 
       image: alpine:3.19
-    uses: ./.github/workflows/setup-env.yml
     steps:
+      - uses: ./.github/workflows/setup-env.yml
+
       - name: Build
         run: zig build -Doptimize=ReleaseSafe -Dtarget=native-native-musl
 

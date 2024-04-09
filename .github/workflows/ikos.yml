@@ -10,9 +10,10 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
-    uses: ./.github/workflows/setup-env.yml
     steps:
       - uses: actions/checkout@v4
+
+      - uses: ./.github/workflows/setup-env.yml
 
       - name: Set up Homebrew
         id: set-up-homebrew

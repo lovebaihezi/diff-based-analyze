@@ -12,8 +12,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     container: 
       image: alpine:3.19
-    uses: ./.github/workflows/setup-env.yml
     steps:
+      - uses: ./.github/workflows/setup-env.yml
+
       - name: coderrect scan
         uses: coderrect-inc/coderrect-github-action@v1.2
         with:

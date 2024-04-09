@@ -11,10 +11,11 @@ jobs:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     container: 
-         image: alpine:3.19
-    uses: ./.github/workflows/setup-env.yml
-      steps:
-        - name: setup coverity
-          run: |
-            just install-coverity
+      image: alpine:3.19
+    steps:
+      - uses: ./.github/workflows/setup-env.yml
+
+      - name: setup coverity
+        run: |
+          just install-coverity
     # TODO

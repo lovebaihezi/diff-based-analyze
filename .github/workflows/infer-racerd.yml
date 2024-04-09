@@ -12,8 +12,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     container: 
       image: alpine:3.19
-    uses: ./.github/workflows/setup-env.yml
     steps:
+      - uses: ./.github/workflows/setup-env.yml
       - name: setup infer
         run: |
           just install-infer
