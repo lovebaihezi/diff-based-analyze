@@ -1,5 +1,8 @@
 name: build deps and binary
 
+on:
+  workflow_call:
+
 jobs:
   build:
     strategy:

@@ -1,5 +1,8 @@
 name: Infer RacerD
 
+on:
+  workflow_call:
+
 jobs:
   run:
     strategy:

@@ -1,5 +1,8 @@
 name : IKOS
 
+on:
+  workflow_call:
+
 jobs:
   run:
     strategy:

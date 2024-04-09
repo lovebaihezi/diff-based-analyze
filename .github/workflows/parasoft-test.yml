@@ -1,5 +1,8 @@
 name : Parasoft Test
 
+on:
+  workflow_call:
+
 jobs:
   run:
     strategy:

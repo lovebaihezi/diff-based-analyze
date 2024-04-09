@@ -1,5 +1,8 @@
 name : Coderrect
 
+on:
+  workflow_call:
+
 jobs:
   run:
     strategy:
