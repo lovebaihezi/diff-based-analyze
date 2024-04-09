@@ -13,10 +13,14 @@ jobs:
     container: 
       image: alpine:3.19
     steps:
+      - uses: actions/checkout@v4
+
       - uses: ./.github/workflows/setup-env.yml
+
       - name: setup infer
         run: |
           just install-infer
+
       - name: config and run infer with --racerd-only
         run: |
           just config-examples
