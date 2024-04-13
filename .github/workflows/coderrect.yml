@@ -21,3 +21,4 @@ jobs:
         uses: coderrect-inc/coderrect-github-action@v1.2
         with:
           buildCommand: "just build-examples"
+          cleanCommand: ""
