@@ -20,6 +20,11 @@ jobs:
       - name: Build
         run: zig build -Doptimize=ReleaseSafe -Dtarget=native-native-musl
 
+      - name: Build tests
+        run: |
+          just config-examples
+          just build-examples
+
       # TODO
       # Upload to Release
 
