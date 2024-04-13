@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/workflows/setup-env.yml
+      - uses: ./.github/actions/setup
 
       - name: Set up Homebrew
         id: set-up-homebrew

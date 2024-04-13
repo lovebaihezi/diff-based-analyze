@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/workflows/setup-env.yml
+      - uses: ./.github/actions/setup
 
       - name: coderrect scan
         uses: coderrect-inc/coderrect-github-action@v1.2

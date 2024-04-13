@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/workflows/setup-env.yml@main
+      - uses: ./.github/actions/setup-env
 
       - name: build the test cases, record time by using meson --profile
         run: |
