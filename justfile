@@ -47,7 +47,7 @@ install-zlib:
   tar xf {{libz_tar}}
 
 config-examples:
-  CC="zig cc" CXX="zig c++" CFLAGS="-Dtarget={{zig_target}}" cmake -GNinja -Bexamples-build -DCMAKE_EXPORTS_COMPILE_COMMANDS=YES tests
+  cmake -GNinja -Bexamples-build -DCMAKE_EXPORTS_COMPILE_COMMANDS=YES tests -DCMAKE_BUILD_TYPE=Release
 
 # build example tests under tests folder by using meson
 build-examples:
