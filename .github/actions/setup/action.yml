@@ -20,9 +20,9 @@ runs:
     - name: Install libclang and static binaries
       shell: bash
       run: |
-        apk add clang16-dev clang16-static musl-dev libc++-dev libc++-static openssl-dev
-        echo "CC=clang-16" >> $GITHUB_ENV
-        echo "CXX=clang++-16" >> $GITHUB_ENV
+        apk add clang17-dev clang17-static musl-dev libc++-dev libc++-static openssl-dev clang17-analyzer
+        echo "CC=clang-17" >> $GITHUB_ENV
+        echo "CXX=clang++-17" >> $GITHUB_ENV
 
     - name: Build libgit2, zlib
       shell: bash
