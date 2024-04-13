@@ -26,6 +26,8 @@ install-infer:
   wget "https://github.com/facebook/infer/releases/download/v{{ infer_version }}/infer-linux64-v{{ infer_version }}.tar.xz"
   tar xf infer-linux64-v{{ infer_version }}.tar.xz
   rm infer-linux64-v{{ infer_version }}.tar.xz
+  ls infer-linux64-v{{ infer_version }}/bin/infer
+  infer-linux64-v{{ infer_version }}/bin/infer --version
 
 install-pmd:
   wget https://github.com/pmd/pmd/releases/download/pmd_releases%2F{{pmd_version}}/pmd-dist-{{pmd_version}}-bin.zip
@@ -47,7 +49,7 @@ install-zlib:
   tar xf {{libz_tar}}
 
 config-examples:
-  cmake -GNinja -Bexamples-build -DCMAKE_EXPORTS_COMPILE_COMMANDS=YES tests -DCMAKE_BUILD_TYPE=Release
+  cmake -GNinja -Bexamples-build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON tests -DCMAKE_BUILD_TYPE=Release
 
 # build example tests under tests folder by using meson
 build-examples:
