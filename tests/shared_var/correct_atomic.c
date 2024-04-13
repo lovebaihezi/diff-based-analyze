@@ -5,7 +5,6 @@
 // Consider a function that will gain some data from OS and process them in different thread
 
 #include <assert.h>
-#include <bits/pthreadtypes.h>
 #include <pthread.h>
 #include <stdatomic.h>
 #include <stdio.h>

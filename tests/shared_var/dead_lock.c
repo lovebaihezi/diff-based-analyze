@@ -2,9 +2,7 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java:
 // https://pvs-studio.com
 
-#include <asm-generic/errno-base.h>
 #include <assert.h>
-#include <bits/pthreadtypes.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>

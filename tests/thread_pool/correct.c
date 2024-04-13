@@ -2,7 +2,6 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java:
 // https://pvs-studio.com
 
-#include <bits/pthreadtypes.h>
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>

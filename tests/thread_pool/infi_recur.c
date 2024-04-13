@@ -3,7 +3,6 @@
 // https://pvs-studio.com
 
 #include <arpa/inet.h>
-#include <bits/pthreadtypes.h>
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
