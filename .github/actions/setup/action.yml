@@ -6,10 +6,10 @@ runs:
   using: composite
   steps:
     - name: Setup Alpine
-      shell: bash
+      shell: ash
       run: |
         apk update
-        apk add ninja-build nodejs cmake wget tar samurai xz just make gzip
+        apk add ninja-build nodejs cmake wget tar samurai xz just make gzip bash
 
     - uses: goto-bus-stop/setup-zig@v2.2.0
 
