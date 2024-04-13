@@ -1,10 +1,10 @@
-name: Infer RacerD
+name: Clang Static Analysis
 
 on:
   workflow_call:
 
 jobs:
-  run-baseline:
+  clang-static-analyze:
     strategy:
       fail-fast: false
       matrix:
