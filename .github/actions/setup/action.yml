@@ -11,9 +11,7 @@ runs:
         apk update
         apk add ninja-build nodejs cmake wget tar samurai xz just make gzip
 
-    - name: Setup Zig
-      shell: bash
-      uses: goto-bus-stop/setup-zig@v2.2.0
+    - uses: goto-bus-stop/setup-zig@v2.2.0
 
     - name: Check Zig ENV
       shell: bash
