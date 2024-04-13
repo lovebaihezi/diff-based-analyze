@@ -3,12 +3,13 @@
 // https://pvs-studio.com
 
 #include <assert.h>
+#include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 typedef struct {
-  pthread_spinlock_t* lock;
+  pthread_spinlock_t *lock;
   size_t *shared_array;
   size_t len;
   size_t index;
@@ -54,9 +55,9 @@ int main(int argc, char *argv[]) {
   }
 
   for (size_t i = 0; i < sizeof(threads) / sizeof(pthread_t); i += 1) {
-    Data* returned = 0x0;
+    Data *returned = 0x0;
 
-    pthread_join(threads[i], (void*)&returned);
+    pthread_join(threads[i], (void *)&returned);
 
     if (returned != 0x0) {
       free(returned);
@@ -65,7 +66,7 @@ int main(int argc, char *argv[]) {
   }
 
   long long sum = 0;
-  
+
   for (size_t i = 0; i < len; i += 1) {
     sum += arrays[i];
   }
