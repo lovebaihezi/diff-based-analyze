@@ -6,7 +6,7 @@ runs:
   using: composite
   steps:
     - name: Setup Alpine
-      shell: ash
+      shell: sh
       run: |
         apk update
         apk add ninja-build nodejs cmake wget tar samurai xz just make gzip bash
