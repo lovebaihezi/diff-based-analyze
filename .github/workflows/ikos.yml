@@ -16,7 +16,7 @@ jobs:
       - uses: ./.github/actions/setup
 
       - name: install ikos
-        run: brew install nasa-sw-vnv/core/ikos
+        run: nix profile install nixpkgs#ikos
       
       - name: run ikos
         run: |

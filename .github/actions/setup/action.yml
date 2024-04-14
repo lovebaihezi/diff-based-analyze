@@ -9,21 +9,18 @@ runs:
       shell: sh
       run: |
         apk update
-        apk add ninja-build nodejs cmake wget tar samurai xz just make gzip bash git
+        apk add ninja-build nodejs cmake wget tar samurai xz just make gzip bash git shadow
 
-    - name: Setup HomeBrew
+    - name: Setup Nix
       shell: bash
       run: |
-        git clone https://github.com/Homebrew/brew ~/.linuxbrew/Homebrew
-        mkdir ~/.linuxbrew/bin
-        ln -s ../Homebrew/bin/brew ~/.linuxbrew/bin
-        eval $(~/.linuxbrew/bin/brew shellenv)
+        yes | sh <(curl -L https://nixos.org/nix/install) --daemon
 
-    - name: Verify HomeBrew
+    - name: Configure Nix
       shell: bash
       run: |
-        brew --version
-        brew doctor
+        mkdir -p ~/.config/nix
+        echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
 
     - uses: goto-bus-stop/setup-zig@v2.2.0
 
