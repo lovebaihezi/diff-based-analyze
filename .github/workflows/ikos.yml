@@ -15,10 +15,6 @@ jobs:
 
       - uses: ./.github/actions/setup
 
-      - name: Set up Homebrew
-        id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@master
-
       - name: install ikos
         run: brew install nasa-sw-vnv/core/ikos
       
