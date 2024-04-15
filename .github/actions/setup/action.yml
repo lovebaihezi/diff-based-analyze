@@ -19,7 +19,7 @@ runs:
     - name: Check Nix
       shell: bash
       run: |
-        sudo nix-daemon
+        nix-daemon
         nix-shell -p nix-info --run "nix-info -m"
 
     - name: Configure Nix
