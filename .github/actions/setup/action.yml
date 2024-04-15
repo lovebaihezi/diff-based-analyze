@@ -9,7 +9,7 @@ runs:
       shell: sh
       run: |
         apk update
-        apk add ninja-build nodejs cmake wget tar samurai xz just make gzip bash git shadow curl
+        apk add ninja-build nodejs cmake wget tar samurai xz just make gzip bash git shadow curl fish
 
     - name: Setup Nix
       shell: bash
@@ -17,7 +17,7 @@ runs:
         sh <(curl -L https://nixos.org/nix/install) --daemon --yes
 
     - name: Check Nix
-      shell: bash
+      shell: fish 
       run: |
         nix-daemon
         nix-shell -p nix-info --run "nix-info -m"
