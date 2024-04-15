@@ -3,7 +3,7 @@ name: CI
 on: [push]
 
 jobs:
-  build:
+  zig-build:
     uses: ./.github/workflows/build.yml
   infer:
     uses: ./.github/workflows/infer-racerd.yml
