@@ -16,6 +16,12 @@ runs:
       run: |
         echo 'NIX_PATH="nixpkgs=channel:nixos-unstable"' >> $GITHUB_ENV
         scripts/install-nix.sh
+      env:
+        INPUT_EXTRA_NIX_CONFIG: ""
+        INPUT_INSTALL_OPTIONS: ""
+        INPUT_INSTALL_URL: ""
+        INPUT_NIX_PATH: ""
+        GITHUB_TOKEN: ${{ github.token }}
 
     - name: Setup Opam
       shell: bash
