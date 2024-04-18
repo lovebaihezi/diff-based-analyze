@@ -1,0 +1,24 @@
+name : IKOS
+
+on:
+  workflow_call:
+
+jobs:
+  ikos:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup
+
+      - name: install Frama-C
+        run: |
+          eval $(opam env)
+          opam init --compiler 4.14.1
+          opam install frama-c
+
+

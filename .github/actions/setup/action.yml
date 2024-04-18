@@ -17,6 +17,25 @@ runs:
         echo 'NIX_PATH="nixpkgs=channel:nixos-unstable"' >> $GITHUB_ENV
         scripts/install-nix.sh
 
+    - name: Setup Opam
+      shell: bash
+      run: |
+        apk add opam m4 make gcc g++ musl-dev linux-headers
+
+    - name: Initialize OPAM
+      shell: bash
+      run: opam init --disable-sandboxing --kind=local
+
+    - name: Update OPAM Repository
+      shell: bash
+      run: opam update
+
+    - name: Install OCaml Compiler
+      shell: bash
+      run: |
+        opam switch create 4.14.1+musl+static+flambda
+        eval $(opam env)
+
     - name: Check Nix
       shell: fish 
       run: |
