@@ -14,6 +14,7 @@ runs:
     - name: Setup Nix
       shell: bash
       run: |
+        echo 'NIX_PATH="nixpkgs=channel:nixos-unstable"' >> $GITHUB_ENV
         scripts/install-nix.sh
 
     - name: Check Nix
