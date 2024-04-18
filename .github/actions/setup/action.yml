@@ -14,13 +14,16 @@ runs:
     - name: Setup Nix
       shell: bash
       run: |
-        sh <(curl -L https://nixos.org/nix/install) --daemon --yes
+        scripts/install-nix.sh
 
     - name: Check Nix
       shell: fish 
       run: |
-        nix-daemon
-        nix-shell -p nix-info --run "nix-info -m"
+        if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
+          . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
+        fi
+        source ~/.bashrc
+        nix --versoin
 
     - name: Configure Nix
       shell: bash
