@@ -9,7 +9,7 @@ runs:
       shell: sh
       run: |
         apk update
-        apk add ninja-build nodejs cmake wget tar samurai xz just make gzip bash git shadow curl fish
+        apk add ninja-build nodejs cmake wget tar samurai xz just make gzip bash git shadow curl fish sudo
 
     - name: Setup Nix
       shell: bash
