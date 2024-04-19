@@ -39,7 +39,7 @@ runs:
     - name: Install OCaml Compiler
       shell: bash
       run: |
-        opam switch create 4.14.1+musl+static+flambda
+        opam switch create 4.13.1
         eval $(opam env)
 
     - name: Check Nix
