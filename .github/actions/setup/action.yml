@@ -43,7 +43,7 @@ runs:
         eval $(opam env)
 
     - name: Check Nix
-      shell: fish 
+      shell: bash
       run: |
         if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
           . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
