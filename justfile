@@ -1,4 +1,4 @@
-set shell := ["bash", "-euo", "pipefail"] 
+set shell := ["bash", "-euo"] 
 
 libgit_version  := "1.7.2"
 libgit2_tar     := "v" + libgit_version + ".tar.gz"
