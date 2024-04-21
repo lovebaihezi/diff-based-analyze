@@ -13,10 +13,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: extractions/setup-just@v2
+
       - name: install cmake 
         run: |
           sudo apt-get update
-          sudo apt-get install cmake just --yes
+          sudo apt-get install cmake ninja-build --yes
 
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v2.2.0
