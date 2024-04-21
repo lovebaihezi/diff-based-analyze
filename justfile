@@ -1,5 +1,3 @@
-set shell := ["bash", "-euoc"] 
-
 libgit_version  := "1.7.2"
 libgit2_tar     := "v" + libgit_version + ".tar.gz"
 libgit2_url     := "https://github.com/libgit2/libgit2/archive/refs/tags/" + libgit2_tar
