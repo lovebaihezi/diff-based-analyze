@@ -15,6 +15,8 @@ jobs:
 
       - uses: ./.github/actions/setup
 
+      - uses: ./.github/actions/nix
+
       - name: install ikos
         run: nix profile install nixpkgs#ikos
       

@@ -1,0 +1,30 @@
+name: Install Nix
+
+description: Install Nix
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Nix
+      shell: bash
+      run: |
+        echo 'NIX_PATH="nixpkgs=channel:nixos-unstable"' >> $GITHUB_ENV
+        scripts/install-nix.sh
+      env:
+        INPUT_EXTRA_NIX_CONFIG: ""
+        INPUT_INSTALL_OPTIONS: ""
+        INPUT_INSTALL_URL: ""
+        INPUT_NIX_PATH: ""
+        GITHUB_TOKEN: ${{ github.token }}
+
+    - name: Configure Nix
+      shell: bash
+      run: |
+        mkdir -p ~/.config/nix
+        echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
+
+    - name: Check Nix
+      shell: bash
+      run: |
+        . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
+        echo ':q' | nix repl

@@ -21,16 +21,13 @@ jobs:
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v2.2.0
 
-      - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v2.2.0
-
       - name: Check Zig ENV
         run: zig env
 
       - name: configure
         run: just config-examples
 
-      - name: Run C/C++test
+      - name: Parasoft C/C++test
         uses: parasoft/run-cpptest-action@2.0.1
         with:
           input: examples-build/compile_commands.json

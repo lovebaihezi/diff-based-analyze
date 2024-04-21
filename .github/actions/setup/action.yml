@@ -76,5 +76,3 @@ runs:
     - name: Run zig fmt
       shell: bash
       run: zig fmt --check .
-
-
