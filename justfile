@@ -52,7 +52,7 @@ install-zlib:
   tar xf {{libz_tar}}
 
 config-examples:
-  cmake -GNinja -Bexamples-build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON tests -DCMAKE_BUILD_TYPE=Release
+  cmake -GNinja -Bexamples-build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release tests 
 
 # build example tests under tests folder by using meson
 build-examples:
