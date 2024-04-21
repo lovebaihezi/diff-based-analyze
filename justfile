@@ -35,7 +35,7 @@ install-pmd:
   rm pmd-dist-{{pmd_version}}-bin.zip
 
 run-infer path:
-  infer-linux64-v{{infer_version}}/bin/infer --racerd-only --compilation-database {{ path }}
+  ./infer-linux64-v{{ infer_version }}/lib/infer/infer/bin/infer --racerd-only --compilation-database {{ path }}
 
 pvs_cre:
   {{ pvs_name }}/bin/pvs-studio-analyzer credentials PVS-Studio {{ pvs_cre_type }} {{ pvs_credentials }}
