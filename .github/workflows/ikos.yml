@@ -19,6 +19,8 @@ jobs:
             experimental-features = nix-command flakes
             allow-unfree = true
 
+      - run: echo "NIXPKGS_ALLOW_UNFREE=1" >> $GITHUB_ENV
+
       - name: install ikos
         run: nix profile install nixpkgs#ikos
       
