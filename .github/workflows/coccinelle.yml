@@ -1,10 +1,10 @@
-name : Frama-C
+name : Coccinelle
 
 on:
   workflow_call:
 
 jobs:
-  frama-c-baseline:
+  coccinelle-baseline:
     strategy:
       fail-fast: false
       matrix:
@@ -17,10 +17,10 @@ jobs:
 
       - uses: ./.github/actions/ocaml
 
-      - name: install Frama-C
+      - name: install coccinelle
         run: |
           eval $(opam env)
           opam init --compiler 4.14.1
-          opam install frama-c
+          opam install coccinelle
 
 

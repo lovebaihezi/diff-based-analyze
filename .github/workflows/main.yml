@@ -19,3 +19,5 @@ jobs:
     uses: ./.github/workflows/ikos.yml
   frama-c:
     uses: ./.github/workflows/frama-c.yml
+  coccinelle:
+    uses: ./.github/workflows/coccinelle.yml
