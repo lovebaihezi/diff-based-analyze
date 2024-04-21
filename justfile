@@ -26,11 +26,8 @@ install-infer:
   wget "https://github.com/facebook/infer/releases/download/v{{ infer_version }}/infer-linux64-v{{ infer_version }}.tar.xz"
   tar xf infer-linux64-v{{ infer_version }}.tar.xz
   rm infer-linux64-v{{ infer_version }}.tar.xz
-  ls
-  ls ./infer-linux64-v{{ infer_version }}/
-  ls ./infer-linux64-v{{ infer_version }}/bin/
-  ls ./infer-linux64-v{{ infer_version }}/bin/infer
-  ./infer-linux64-v{{ infer_version }}/bin/infer --version
+  file ./infer-linux64-v{{ infer_version }}/bin/infer
+  exec ./infer-linux64-v{{ infer_version }}/bin/infer --version
 
 install-pmd:
   wget https://github.com/pmd/pmd/releases/download/pmd_releases%2F{{pmd_version}}/pmd-dist-{{pmd_version}}-bin.zip
