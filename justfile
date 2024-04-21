@@ -27,6 +27,7 @@ install-infer:
   tar xf infer-linux64-v{{ infer_version }}.tar.xz
   ls
   rm infer-linux64-v{{ infer_version }}.tar.xz
+  file ./infer-linux64-v{{ infer_version }}/bin/infer
   ./infer-linux64-v{{ infer_version }}/bin/infer --version
 
 install-pmd:
