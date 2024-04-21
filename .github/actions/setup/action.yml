@@ -52,7 +52,7 @@ runs:
       shell: bash
       run: |
         . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
-        nix --versoin
+        echo ':q' | nix repl
 
     - uses: goto-bus-stop/setup-zig@v2.2.0
 
