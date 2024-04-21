@@ -17,3 +17,5 @@ jobs:
     uses: ./.github/workflows/parasoft-test.yml
   ikos:
     uses: ./.github/workflows/ikos.yml
+  frama-c:
+    uses: ./.github/workflows/frama-c.yml
