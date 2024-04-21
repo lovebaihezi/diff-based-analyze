@@ -24,10 +24,3 @@ jobs:
         run: |
           just config-examples
           just build-examples
-
-      # TODO
-      # Upload to Release
-
-      # TODO
-      # - name: Run zig test
-      #   run: zig test

@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 jobs:
-  infer:
+  infer-baseline:
     strategy:
       fail-fast: false
       matrix:
@@ -12,6 +12,28 @@ jobs:
     runs-on: ${{ matrix.os }}
     container: 
       image: alpine:3.19
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup
+
+      - name: setup infer
+        run: |
+          just install-infer
+
+      - name: config and run infer with --racerd-only
+        run: |
+          just config-examples
+          time just run-infer examples-build/compile_commands.json
+
+  infer-optimized:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+      runs-on: ${{ matrix.os }}
+      container:
+        image: alpine:3.19
     steps:
       - uses: actions/checkout@v4
 

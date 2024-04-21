@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 jobs:
-  coderrect:
+  coderrect-baseline:
     strategy:
       fail-fast: false
       matrix:
