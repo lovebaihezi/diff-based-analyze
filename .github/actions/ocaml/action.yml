@@ -1,5 +1,5 @@
 name: Install Ocaml
-description: Install Zig, Alpine, libgit2, zlib, libclang
+description: Install Ocaml throught opam
 runs:
   using: composite
   steps:
@@ -18,7 +18,10 @@ runs:
       run: |
         opam switch create 4.13.1
         eval $(opam env)
+        opam env
         env >> $GITHUB_ENV
+        echo $PATH
+        cat $GITHUB_ENV
         ocaml --version
     - name: Check OCaml
       shell: bash
