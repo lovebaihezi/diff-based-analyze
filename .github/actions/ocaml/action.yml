@@ -19,6 +19,7 @@ runs:
         opam switch create 4.13.1
         eval $(opam env)
         opam env
+        echo "" >> $GITHUB_ENV
         env >> $GITHUB_ENV
         echo $PATH
         cat $GITHUB_ENV
