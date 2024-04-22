@@ -9,7 +9,7 @@ runs:
         echo 'NIX_PATH="nixpkgs=channel:nixos-unstable"' >> $GITHUB_ENV
         scripts/install-nix.sh
       env:
-        INPUT_EXTRA_NIX_CONFIG: "allow-free=tree"
+        INPUT_EXTRA_NIX_CONFIG: "allow-unfree=true"
         INPUT_INSTALL_OPTIONS: ""
         INPUT_INSTALL_URL: ""
         INPUT_NIX_PATH: ""

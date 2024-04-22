@@ -20,7 +20,9 @@ jobs:
       - name: install ikos
         shell: bash
         run: |
-          NIXPKGS_ALLOW_UNFREE=1 nix profile install nixpkgs#ikos
+          nix profile install nixpkgs#ikos
+        env:
+          NIXPKGS_ALLOW_UNFREE: "1"
       - name: run ikos
         run: |
           just config-examples
