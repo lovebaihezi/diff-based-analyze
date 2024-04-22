@@ -1,8 +1,6 @@
 name: Clang Static Analysis
-
 on:
   workflow_call:
-
 jobs:
   clang-static-analyze-baseline:
     strategy:
@@ -10,13 +8,11 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
-    container: 
+    container:
       image: alpine:3.19
     steps:
       - uses: actions/checkout@v4
-
       - uses: ./.github/actions/setup
-
       - name: build the test cases, record time by using meson --profile
         run: |
           just config-examples

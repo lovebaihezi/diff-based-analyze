@@ -1,8 +1,6 @@
-name : Coderrect
-
+name: Coderrect
 on:
   workflow_call:
-
 jobs:
   coderrect-baseline:
     strategy:
@@ -10,13 +8,11 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
-    container: 
+    container:
       image: alpine:3.19
     steps:
       - uses: actions/checkout@v4
-
       - uses: ./.github/actions/setup
-
       - name: coderrect scan
         uses: coderrect-inc/coderrect-github-action@v1.2
         with:

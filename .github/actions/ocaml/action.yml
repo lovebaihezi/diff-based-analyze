@@ -1,7 +1,5 @@
 name: Install Ocaml
-
 description: Install Zig, Alpine, libgit2, zlib, libclang
-
 runs:
   using: composite
   steps:
@@ -9,15 +7,12 @@ runs:
       shell: bash
       run: |
         apk add opam m4 make gcc g++ musl-dev linux-headers
-
     - name: Initialize OPAM
       shell: bash
       run: opam init --disable-sandboxing --kind=local
-
     - name: Update OPAM Repository
       shell: bash
       run: opam update
-
     - name: Install OCaml Compiler
       shell: bash
       run: |
@@ -25,9 +20,6 @@ runs:
         eval $(opam env)
         opam env >> $GITHUB_ENV
         ocaml --version
-    
     - name: Check OCaml
       shell: bash
       run: ocaml --version
-
-

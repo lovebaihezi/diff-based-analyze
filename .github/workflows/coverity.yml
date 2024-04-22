@@ -1,8 +1,6 @@
-name : Coverity
-
+name: Coverity
 on:
   workflow_call:
-
 jobs:
   coverity-baseline:
     strategy:
@@ -10,13 +8,11 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
-    container: 
+    container:
       image: alpine:3.19
     steps:
       - uses: actions/checkout@v4
-
       - uses: ./.github/actions/setup
-
       - name: setup coverity
         run: |
           just install-coverity

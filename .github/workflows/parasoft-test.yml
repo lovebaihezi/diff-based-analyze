@@ -1,8 +1,6 @@
-name : Parasoft Test
-
+name: Parasoft Test
 on:
   workflow_call:
-
 jobs:
   parasoft-baseline:
     strategy:
@@ -12,23 +10,17 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: extractions/setup-just@v2
-
-      - name: install cmake 
+      - name: install cmake
         run: |
           sudo apt-get update
           sudo apt-get install cmake ninja-build --yes
-
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v2.2.0
-
       - name: Check Zig ENV
         run: zig env
-
       - name: configure
         run: just config-examples
-
       - name: Parasoft C/C++test
         uses: parasoft/run-cpptest-action@2.0.1
         with:

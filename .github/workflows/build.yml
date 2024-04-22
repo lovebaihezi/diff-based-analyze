@@ -1,8 +1,6 @@
 name: build deps and binary
-
 on:
   workflow_call:
-
 jobs:
   build:
     strategy:
@@ -10,16 +8,13 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
-    container: 
+    container:
       image: alpine:3.19
     steps:
       - uses: actions/checkout@v4
-
       - uses: ./.github/actions/setup
-
       - name: Build
         run: zig build -Doptimize=ReleaseSafe -Dtarget=native-native-musl
-
       - name: Build tests
         run: |
           just config-examples

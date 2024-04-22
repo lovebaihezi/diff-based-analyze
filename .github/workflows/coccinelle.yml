@@ -1,8 +1,6 @@
-name : Coccinelle
-
+name: Coccinelle
 on:
   workflow_call:
-
 jobs:
   coccinelle-baseline:
     strategy:
@@ -10,19 +8,14 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
-    container: 
+    container:
       image: alpine:3.19
     steps:
       - uses: actions/checkout@v4
-
       - uses: ./.github/actions/setup
-
       - uses: ./.github/actions/ocaml
-
       - name: install coccinelle
         run: |
           eval $(opam env)
           opam init --compiler 4.14.1
           opam install coccinelle
-
-
