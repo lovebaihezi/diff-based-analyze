@@ -23,6 +23,8 @@ runs:
       run: |
         opam switch create 4.13.1
         eval $(opam env)
+        opam env >> $GITHUB_ENV
+        ocaml --version
     
     - name: Check OCaml
       shell: bash
