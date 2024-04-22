@@ -1,3 +1,4 @@
+set shell := ["bash", "-uc"]
 libgit_version  := "1.7.2"
 libgit2_tar     := "v" + libgit_version + ".tar.gz"
 libgit2_url     := "https://github.com/libgit2/libgit2/archive/refs/tags/" + libgit2_tar
@@ -23,32 +24,39 @@ install-pvs:
   tar xf {{ pvs_tar }}
 
 install-infer:
+  #!/usr/bin/env bash
   wget "https://github.com/facebook/infer/releases/download/v{{ infer_version }}/infer-linux64-v{{ infer_version }}.tar.xz"
   tar xf infer-linux64-v{{ infer_version }}.tar.xz
   rm infer-linux64-v{{ infer_version }}.tar.xz
-  file ./infer-linux64-v{{ infer_version }}/lib/infer/infer/bin/infer
-  ./infer-linux64-v{{ infer_version }}/lib/infer/infer/bin/infer --version
+  file {{invocation_directory()}}/infer-linux64-v{{ infer_version }}/lib/infer/infer/bin/infer
+  {{invocation_directory()}}/infer-linux64-v{{ infer_version }}/lib/infer/infer/bin/infer --version
 
 install-pmd:
+  #!/usr/bin/env bash
   wget https://github.com/pmd/pmd/releases/download/pmd_releases%2F{{pmd_version}}/pmd-dist-{{pmd_version}}-bin.zip
   unzip pmd-dist-{{pmd_version}}-bin.zip
   rm pmd-dist-{{pmd_version}}-bin.zip
 
 run-infer path:
-  ./infer-linux64-v{{ infer_version }}/lib/infer/infer/bin/infer --racerd-only --compilation-database {{ path }}
+  #!/usr/bin/env bash
+  {{invocation_directory()}}/infer-linux64-v{{ infer_version }}/lib/infer/infer/bin/infer --racerd-only --compilation-database {{ path }}
 
 pvs_cre:
+  #!/usr/bin/env bash
   {{ pvs_name }}/bin/pvs-studio-analyzer credentials PVS-Studio {{ pvs_cre_type }} {{ pvs_credentials }}
 
 install-libgit2:
+  #!/usr/bin/env bash
   wget {{libgit2_url}}
   tar xf {{libgit2_tar}}
 
 install-zlib:
+  #!/usr/bin/env bash
   wget {{libz_url}}
   tar xf {{libz_tar}}
 
 config-examples:
+  #!/usr/bin/env bash
   cmake -GNinja -Bexamples-build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release tests 
 
 # build example tests under tests folder by using meson

@@ -18,6 +18,7 @@ jobs:
       - run: echo "NIXPKGS_ALLOW_UNFREE=1" >> $GITHUB_ENV
       - run: env
       - name: install ikos
+        shell: bash
         run: |
           NIXPKGS_ALLOW_UNFREE=1 nix profile install nixpkgs#ikos
       - name: run ikos
