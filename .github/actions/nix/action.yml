@@ -18,6 +18,8 @@ runs:
       shell: bash
       run: |
         mkdir -p ~/.config/nix
+        mkdir -p ~/.config/nixpkgs
+        echo "{ allowUnfree = true; }" > ~/.config/nixpkgs/config.nix
         echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
     - name: Check Nix
       shell: bash
