@@ -16,6 +16,7 @@ jobs:
       - uses: ./.github/actions/ocaml
       - name: install Frama-C
         run: |
-          eval $(opam env)
           opam init --compiler 4.14.1
           opam install frama-c
+          eval $(opam env)
+          frama-c --version

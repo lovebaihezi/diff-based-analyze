@@ -13,17 +13,3 @@ runs:
     - name: Update OPAM Repository
       shell: bash
       run: opam update
-    - name: Install OCaml Compiler
-      shell: bash
-      run: |
-        opam switch create 4.13.1
-        eval $(opam env)
-        opam env
-        echo "" >> $GITHUB_ENV
-        env >> $GITHUB_ENV
-        echo $PATH
-        cat $GITHUB_ENV
-        ocaml --version
-    - name: Check OCaml
-      shell: bash
-      run: ocaml --version

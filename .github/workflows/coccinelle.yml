@@ -16,6 +16,6 @@ jobs:
       - uses: ./.github/actions/ocaml
       - name: install coccinelle
         run: |
-          eval $(opam env)
           opam init --compiler 4.14.1
           opam install coccinelle
+          eval $(opam env)
