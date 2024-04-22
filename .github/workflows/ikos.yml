@@ -14,16 +14,17 @@ jobs:
         with:
           extra_nix_config: |
             experimental-features = nix-command flakes
-            allow-unfree = true
+            allow-unfree = "true"
       - run: echo "NIXPKGS_ALLOW_UNFREE=1" >> $GITHUB_ENV
       - run: env
       - name: install ikos
         shell: bash
         run: |
-          export NIXPKGS_ALLOW_UNFREE=1
+          export NIXPKGS_ALLOW_UNFREE="1"
+          echo $NIXPKGS_ALLOW_UNFREE
           env nix profile install nixpkgs#ikos
         env:
-          NIXPKGS_ALLOW_UNFREE: 1
+          NIXPKGS_ALLOW_UNFREE: "1"
       - name: run ikos
         run: |
           just config-examples
