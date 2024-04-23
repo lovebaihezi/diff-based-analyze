@@ -15,6 +15,7 @@ jobs:
       - uses: ./.github/actions/setup
       - name: setup infer
         run: |
+          apk add gcompat gmp-dev sqlite-dev
           just install-infer
       - name: config and run infer with --racerd-only
         run: |
