@@ -25,11 +25,13 @@ install-pvs:
 
 install-infer:
   #!/usr/bin/env bash
-  wget "https://github.com/facebook/infer/releases/download/v{{ infer_version }}/infer-linux64-v{{ infer_version }}.tar.xz"
-  tar xf infer-linux64-v{{ infer_version }}.tar.xz
-  rm infer-linux64-v{{ infer_version }}.tar.xz
-  file {{invocation_directory()}}/infer-linux64-v{{ infer_version }}/lib/infer/infer/bin/infer
-  {{invocation_directory()}}/infer-linux64-v{{ infer_version }}/lib/infer/infer/bin/infer --version
+  git clone https://github.com/facebook/infer.git
+  cd infer
+  # Compile Infer
+  ./build-infer.sh c++
+  # install Infer system-wide...
+  make install
+  infer --version
 
 install-pmd:
   #!/usr/bin/env bash
@@ -39,7 +41,7 @@ install-pmd:
 
 run-infer path:
   #!/usr/bin/env bash
-  {{invocation_directory()}}/infer-linux64-v{{ infer_version }}/lib/infer/infer/bin/infer --racerd-only --compilation-database {{ path }}
+  infer --racerd-only --compilation-database {{ path }}
 
 pvs_cre:
   #!/usr/bin/env bash
