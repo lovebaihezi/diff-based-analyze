@@ -28,7 +28,7 @@ install-infer:
   git clone https://github.com/facebook/infer.git
   cd infer
   # Compile Infer
-  ./build-infer.sh c++
+  ./build-infer.sh clang
   # install Infer system-wide...
   make install
   infer --version
