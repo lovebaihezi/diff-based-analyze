@@ -26,12 +26,12 @@ install-pvs:
 install-infer:
   #!/usr/bin/env bash
   git clone https://github.com/facebook/infer.git
-  (
-    # Compile Infer
-    infer/build-infer.sh clang
-    # install Infer system-wide...
-    make install -C infer
-  )
+  cd infer
+  # Compile Infer
+  ./build-infer.sh clang
+  # install Infer system-wide...
+  cp -a infer/bin/* /usr/bin/
+  cp -a infer/lib/* /usr/lib/
   infer --version
 
 install-pmd:
