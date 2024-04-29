@@ -63,7 +63,7 @@ config-examples:
   cmake -GNinja -Bexamples-build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release tests 
 
 # build example tests under tests folder by using meson
-build-examples:
+build-examples: config-examples
   time ninja -C examples-build
 
 build-libgit2:

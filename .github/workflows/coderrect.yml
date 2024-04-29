@@ -8,11 +8,11 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
-    container:
-      image: alpine:3.19
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
+      - uses: extractions/setup-just@v2
+      - run: sudo apt-get update
+      - run: sudo apt-get install build-essential
       - name: coderrect scan
         uses: coderrect-inc/coderrect-github-action@v1.2
         with:
