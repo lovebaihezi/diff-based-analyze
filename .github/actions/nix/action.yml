@@ -20,7 +20,7 @@ runs:
         mkdir -p ~/.config/nix
         mkdir -p ~/.config/nixpkgs
         echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
-        echo "{ allowUnfree = true; }" >> ~/.config/nixpkgs/config.nix.
+        echo "{ allowUnfree = true; }" >> ~/.config/nixpkgs/config.nix
     - name: Check Nix
       shell: bash
       run: |
