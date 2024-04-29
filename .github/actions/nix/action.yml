@@ -9,7 +9,7 @@ runs:
         echo 'NIX_PATH="nixpkgs=channel:nixos-unstable"' >> $GITHUB_ENV
         scripts/install-nix.sh
       env:
-        INPUT_EXTRA_NIX_CONFIG: "allow-unfree=true"
+        INPUT_EXTRA_NIX_CONFIG: "allowUnfree=true"
         INPUT_INSTALL_OPTIONS: ""
         INPUT_INSTALL_URL: ""
         INPUT_NIX_PATH: ""
@@ -19,7 +19,6 @@ runs:
       run: |
         mkdir -p ~/.config/nix
         mkdir -p ~/.config/nixpkgs
-        echo "{ allowUnfree = true; }" > ~/.config/nixpkgs/config.nix
         echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
     - name: Check Nix
       shell: bash
