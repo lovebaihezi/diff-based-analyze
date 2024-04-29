@@ -31,7 +31,6 @@ pub fn build(b: *std.Build) void {
     exe.linkSystemLibrary2("ssl", .{ .needed = true });
     exe.linkSystemLibrary2("crypto", .{ .preferred_link_mode = .static, .needed = true });
     exe.linkSystemLibrary2("pcre", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("regex", .{ .preferred_link_mode = .static, .needed = true });
     exe.addIncludePath(.{ .path = "./libgit2/include" });
     exe.addLibraryPath(.{ .path = "./libgit2/lib" });
     exe.addLibraryPath(.{ .path = "./zlib" });
@@ -87,7 +86,7 @@ pub fn build(b: *std.Build) void {
     unit_tests.addLibraryPath(.{ .path = "/usr/lib" });
     unit_tests.linkSystemLibrary2("ssl", .{ .needed = true });
     unit_tests.linkSystemLibrary2("crypto", .{ .preferred_link_mode = .static, .needed = true });
-
+    unit_tests.linkSystemLibrary2("pcre", .{ .preferred_link_mode = .static, .needed = true });
     unit_tests.addIncludePath(.{ .path = "./libgit2/include" });
     unit_tests.addLibraryPath(.{ .path = "./libgit2/lib" });
     unit_tests.addLibraryPath(.{ .path = "./zlib" });
