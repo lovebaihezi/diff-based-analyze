@@ -21,7 +21,5 @@ jobs:
           yes | opam install frama-c --yes
           eval $(opam env)
           frama-c --version
-      - name: run frama-c
-        run: |
           just config-examples
           frama-c -deadlock -json-compilation-database

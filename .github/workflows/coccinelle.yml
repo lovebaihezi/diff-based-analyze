@@ -23,9 +23,6 @@ jobs:
           env >> $GITHUB_ENV
           # check coccinelle
           spatch --version
-      - name: Run Coccinelle on Coccinellery
-        run: |
-          cd tests
           # check
           spatch --sp-file coccinellery/mutex/mutex.cocci --dir tests
           spatch --sp-file coccinellery/mutex2/mutex2.cocci --dir tests
