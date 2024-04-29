@@ -15,9 +15,13 @@ jobs:
       - uses: ./.github/actions/setup
       - uses: ./.github/actions/ocaml
       - run: apk add cairo-dev gmp-dev graphviz gtk+3.0-dev gtksourceview-dev zlib-dev z3-dev
-      - name: install Frama-C
+      - name: Install Frama-C and run
         run: |
           yes | opam init --compiler 4.14.1
+          yes | opam install why3 --yes
+          yes | opam install z3 --yes
+          why3 config --detect
+          why3 --list-provers
           yes | opam install frama-c --yes
           eval $(opam env)
           frama-c --version
