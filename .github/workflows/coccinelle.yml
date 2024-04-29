@@ -24,5 +24,6 @@ jobs:
           # check coccinelle
           spatch --version
           # check
+          ls
           spatch --sp-file $PWD/coccinellery/mutex/mutex.cocci --dir tests
           spatch --sp-file $PWD/coccinellery/mutex2/mutex2.cocci --dir tests
