@@ -19,3 +19,8 @@ jobs:
           yes | opam init --compiler 4.14.1
           yes | opam install coccinelle --yes
           eval $(opam env)
+          # check coccinelle
+          spatch --version
+          cd tests
+          # check
+          ./scripts/coccicheck --mode=report --cocci=scripts/coccinelle/mini_lock.cocci 
