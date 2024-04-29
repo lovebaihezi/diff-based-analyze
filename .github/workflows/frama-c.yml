@@ -22,4 +22,4 @@ jobs:
           eval $(opam env)
           frama-c --version
           just config-examples
-          frama-c -deadlock -json-compilation-database
+          frama-c -deadlock -wp -wp-rte -json-compilation-database
