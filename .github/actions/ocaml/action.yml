@@ -13,3 +13,8 @@ runs:
     - name: Update OPAM Repository
       shell: bash
       run: opam update
+    - name: Add Opam ENV to $GITHUB_ENV
+      shell: bash
+      run: |
+        eval $(opam env)
+        env >> $GITHUB_ENV
