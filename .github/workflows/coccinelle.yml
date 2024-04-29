@@ -23,6 +23,5 @@ jobs:
           env >> $GITHUB_ENV
           # check coccinelle
           spatch --version
-          spatch --sync --dir tests
-          #spatch --sp-file $PWD/coccinellery/mutex/mut.cocci --dir tests
-          #spatch --sp-file $PWD/coccinellery/mutex2/mutex2.cocci --dir tests
+          spatch --sp-file $PWD/coccinellery/mutex/mut.cocci --dir tests
+          spatch --sp-file $PWD/coccinellery/mutex2/mutex2.cocci --dir tests
