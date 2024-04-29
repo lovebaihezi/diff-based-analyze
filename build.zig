@@ -30,7 +30,8 @@ pub fn build(b: *std.Build) void {
     exe.addLibraryPath(.{ .path = "/usr/lib" });
     exe.linkSystemLibrary2("ssl", .{ .needed = true });
     exe.linkSystemLibrary2("crypto", .{ .preferred_link_mode = .static, .needed = true });
-
+    exe.linkSystemLibrary2("pcre", .{ .preferred_link_mode = .static, .needed = true });
+    exe.linkSystemLibrary2("regex", .{ .preferred_link_mode = .static, .needed = true });
     exe.addIncludePath(.{ .path = "./libgit2/include" });
     exe.addLibraryPath(.{ .path = "./libgit2/lib" });
     exe.addLibraryPath(.{ .path = "./zlib" });

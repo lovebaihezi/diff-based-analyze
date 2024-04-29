@@ -7,8 +7,7 @@ runs:
       shell: sh
       run: |
         apk update
-        apk add ninja-build nodejs cmake wget tar samurai xz just make gzip bash git shadow curl sudo file
-        apk add -i autoconf automake pcre-dev python3-dev
+        apk add ninja-build nodejs cmake wget tar samurai xz just make gzip bash git shadow curl sudo file autoconf automake pcre-dev python3-dev
     - uses: goto-bus-stop/setup-zig@v2.2.0
     - name: Check Zig ENV
       shell: bash
