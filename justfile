@@ -24,7 +24,6 @@ install-pvs:
   tar xf {{ pvs_tar }}
 
 install-infer:
-  #!/usr/bin/env bash
   git clone https://github.com/facebook/infer.git
   cd infer
   # Compile Infer
@@ -83,3 +82,5 @@ update-stringzilla:
   mv stringzilla.h src
   zig translate-c src/stringzilla.h -I/usr/include > src/stringzilla.zig
 
+fetch-cocci:
+  git clone https://github.com/coccinelle/coccinellery

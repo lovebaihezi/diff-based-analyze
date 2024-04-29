@@ -14,6 +14,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - uses: ./.github/actions/ocaml
+      - run: just fetch-cocci
       - name: install coccinelle
         run: |
           yes | opam init --compiler 4.14.1
@@ -21,6 +22,9 @@ jobs:
           eval $(opam env)
           # check coccinelle
           spatch --version
+      - name: Run Coccinelle on Coccinellery
+        run: |
           cd tests
           # check
-          ./scripts/coccicheck --mode=report --cocci=scripts/coccinelle/mini_lock.cocci 
+          spatch --sp-file coccinellery/mutex/mutex.cocci --dir tests
+          spatch --sp-file coccinellery/mutex2/mutex2.cocci --dir tests
