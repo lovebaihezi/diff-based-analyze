@@ -21,8 +21,6 @@ jobs:
           yes | opam install why3 --yes
           yes | opam install z3 --yes
           eval $(opam env)
-          why3 config detect
-          why3 --list-provers
           yes | opam install frama-c --yes
           eval $(opam env)
           frama-c --version
