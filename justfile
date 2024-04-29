@@ -24,12 +24,14 @@ install-pvs:
   tar xf {{ pvs_tar }}
 
 install-infer:
+  #!/usr/bin/env bash
   git clone https://github.com/facebook/infer.git
-  cd infer
-  # Compile Infer
-  ./build-infer.sh clang
-  # install Infer system-wide...
-  make install
+  (
+    # Compile Infer
+    infer/build-infer.sh clang
+    # install Infer system-wide...
+    make install -C infer
+  )
   infer --version
 
 install-pmd:
