@@ -26,4 +26,4 @@ jobs:
           eval $(opam env)
           frama-c --version
           just config-examples
-          frama-c -mthread -wp -wp-rte -json-compilation-database examples-build/compile_commands.json
+          frama-c -aorai-automata -eva -wp -wp-rte -json-compilation-database examples-build/compile_commands.json
