@@ -16,6 +16,7 @@ jobs:
       - name: setup infer
         run: |
           apk add gcompat gmp-dev sqlite-dev musl-obstack 
+          apk add autoconf automake libtool openjdk8 python3 clang cmake opam
           just install-infer
       - name: config and run infer with --racerd-only
         run: |
