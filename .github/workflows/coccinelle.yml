@@ -23,7 +23,11 @@ jobs:
           env >> $GITHUB_ENV
           # check coccinelle
           spatch --version
+          apk add exa
           # check
-          ls
-          spatch --sp-file $PWD/coccinellery/mutex/mutex.cocci --dir tests
+          exa $PWD
+          exa $PWD/coccinellery/
+          exa $PWD/coccinellery/mutex
+          exa $PWD/coccinellery/mutex/mutex.cocci
+          exaatch --sp-file $PWD/coccinellery/mutex/mutex.cocci --dir tests
           spatch --sp-file $PWD/coccinellery/mutex2/mutex2.cocci --dir tests
