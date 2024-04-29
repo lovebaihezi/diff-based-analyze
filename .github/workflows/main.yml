@@ -13,3 +13,5 @@ jobs:
     uses: ./.github/workflows/frama-c.yml
   coccinelle:
     uses: ./.github/workflows/coccinelle.yml
+  coderrect:
+    uses: ./.github/workflows/coderrect.yml
