@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: extractions/setup-just@v2
       - run: sudo apt-get update
-      - run: sudo apt-get install build-essential
+      - run: sudo apt-get install build-essential cmake ninja-build clang
       - run: just config-examples
       - name: coderrect scan
         uses: coderrect-inc/coderrect-github-action@v1.2
