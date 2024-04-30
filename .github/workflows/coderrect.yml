@@ -13,8 +13,9 @@ jobs:
       - uses: extractions/setup-just@v2
       - run: sudo apt-get update
       - run: sudo apt-get install build-essential
+      - run: just config-examples
       - name: coderrect scan
         uses: coderrect-inc/coderrect-github-action@v1.2
         with:
-          buildCommand: "just build-examples"
+          buildCommand: "ninja -C examples-build"
           cleanCommand: ""
