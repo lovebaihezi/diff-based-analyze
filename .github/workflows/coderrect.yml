@@ -22,4 +22,4 @@ jobs:
           env >> $GITHUB_ENV
       - name: run coderrect
         run: |
-          coderrect ninja -C examples-build
+          coderrect examples-build/wrong_atomic_cpp,examples-build/wrong_atomic_2_cpp,examples-build/wrong_atomic_2,examples-build/wrong_atomic,examples-build/protect_by_lock,examples-build/privileges,examples-build/paramaters,examples-build/infi_recur,examples-build/global,examples-build/dead_lock,examples-build/correct_atomic,examples-build/correct ninja -C examples-build
