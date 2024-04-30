@@ -23,4 +23,15 @@ jobs:
       - name: run coderrect
         run: |
           cd examples-build
-          coderrect ninja
+          coderrect -e wrong_atomic_cpp ninja
+          coderrect -e wrong_atomic_2_cpp ninja
+          coderrect -e wrong_atomic_2 ninja
+          coderrect -e wrong_atomic ninja
+          coderrect -e protect_by_lock ninja
+          coderrect -e privileges ninja
+          coderrect -e paramaters ninja
+          coderrect -e infi_recur ninja
+          coderrect -e global ninja
+          coderrect -e dead_lock ninja
+          coderrect -e correct_atomic ninja
+          coderrect -e correct ninja
