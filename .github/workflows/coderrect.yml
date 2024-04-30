@@ -14,8 +14,12 @@ jobs:
       - run: sudo apt-get update
       - run: sudo apt-get install build-essential cmake ninja-build clang
       - run: just config-examples
-      - name: coderrect scan
-        uses: coderrect-inc/coderrect-github-action@v1.2
-        with:
-          buildCommand: "ninja -C examples-build"
-          cleanCommand: ""
+      - name: install coderrect
+        run: |
+          wget https://coderrect.com/x/coderrect-linux-1.2.0.tar.gz
+          tar zxf coderrect-linux-1.2.0.tar.gz
+          export PATH=$PWD/coderrect-linux-1.2.0/bin:$PATH 
+          env >> $GITHUB_ENV
+      - name: run coderrect
+        run: |
+          coderrect ninja -C examples-build
