@@ -1,8 +1,8 @@
-name: build deps and binary
+name: Clang Static Analysis
 on:
   workflow_call:
 jobs:
-  build:
+  clang-static-analyze-baseline:
     strategy:
       fail-fast: false
       matrix:
@@ -13,9 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - name: Build
-        run: zig build -Doptimize=ReleaseSafe -Dtarget=native-native-musl
-      - name: Build tests
+      - name: build the test cases, record time by using meson --profile
         run: |
           just config-examples
-          just build-examples
+          time scan-build just build-examples

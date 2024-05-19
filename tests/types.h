@@ -1,4 +1,4 @@
-#include <sched.h>
+#include <unistd.h>
 #include <stdatomic.h>
 
 typedef struct Data {

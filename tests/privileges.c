@@ -7,9 +7,10 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <thpool.h>
-#include <types.h>
 #include <unistd.h>
+
+#include "thpool.h"
+#include "types.h"
 
 void thread_set_mask(void *arg) {
   NotAtomicProtect *data = (NotAtomicProtect *)arg;

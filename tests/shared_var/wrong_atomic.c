@@ -3,7 +3,6 @@
 // https://pvs-studio.com
 
 #include <assert.h>
-#include <bits/pthreadtypes.h>
 #include <pthread.h>
 #include <stdatomic.h>
 #include <stdio.h>

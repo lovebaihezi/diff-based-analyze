@@ -1,8 +1,8 @@
-name: build deps and binary
+name: Coverity
 on:
   workflow_call:
 jobs:
-  build:
+  coverity-baseline:
     strategy:
       fail-fast: false
       matrix:
@@ -13,9 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - name: Build
-        run: zig build -Doptimize=ReleaseSafe -Dtarget=native-native-musl
-      - name: Build tests
+      - name: setup coverity
         run: |
-          just config-examples
-          just build-examples
+          just install-coverity
+    # TODO

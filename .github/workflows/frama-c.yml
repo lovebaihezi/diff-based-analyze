@@ -1,0 +1,29 @@
+name: Frama-C
+on:
+  workflow_call:
+jobs:
+  frama-c-baseline:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    container:
+      image: alpine:3.19
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: ./.github/actions/ocaml
+      - run: apk add cairo-dev gmp-dev graphviz gtk+3.0-dev gtksourceview-dev zlib-dev z3-dev
+      - name: Install Frama-C and run
+        run: |
+          yes | opam init --compiler 4.14.1
+          yes | opam install why3 --yes
+          eval $(opam env)
+          why3 config detect
+          why3 config list-provers
+          yes | opam install frama-c --yes
+          eval $(opam env)
+          frama-c --version
+          just config-examples
+          frama-c -aorai-automata -eva -wp -wp-rte -json-compilation-database examples-build/compile_commands.json

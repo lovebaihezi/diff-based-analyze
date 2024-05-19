@@ -1,4 +1,4 @@
-# [WIP] Single Thread Profile Guided Data Racing analyze
+# [WIP] Data Racing analyze
 
 > [!NOTE]
 > Still in progress.
@@ -7,9 +7,8 @@
 
 ** Use Master Branch of Zig to build **
 
-The `build.zig` will dynamic link the `libgit2`, `libc` and `libclang`.
-
 ```
+just install-deps
 zig build -Doptimize=ReleaseSafe
 ```
 
@@ -19,7 +18,7 @@ Currently not avaliable
 
 ## Todo
 
-[ ] Add CI to build libgit2 static library for linking
+- [x] Add CI to build libgit2 static library for linking
 
-[ ] Add CI to build static link llvm binary
+- ~~[x] Add CI to build static link llvm binary~~
 

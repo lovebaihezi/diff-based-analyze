@@ -1,0 +1,27 @@
+name: Coccinelle
+on:
+  workflow_call:
+jobs:
+  coccinelle-baseline:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    container:
+      image: alpine:3.19
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: ./.github/actions/ocaml
+      - run: just fetch-cocci
+      - name: install coccinelle
+        run: |
+          yes | opam init --compiler 4.14.1
+          yes | opam install coccinelle --yes
+          eval $(opam env)
+          env >> $GITHUB_ENV
+          # check coccinelle
+          spatch --version
+          spatch --sp-file $PWD/coccinellery/mutex/mut.cocci --dir tests
+          spatch --sp-file $PWD/coccinellery/mutex2/mutex2.cocci --dir tests

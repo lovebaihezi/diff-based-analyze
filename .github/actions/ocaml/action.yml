@@ -1,0 +1,20 @@
+name: Install Ocaml
+description: Install Ocaml throught opam
+runs:
+  using: composite
+  steps:
+    - name: Setup Opam
+      shell: bash
+      run: |
+        apk add opam m4 make gcc g++ musl-dev linux-headers
+    - name: Initialize OPAM
+      shell: bash
+      run: opam init --disable-sandboxing --kind=local
+    - name: Update OPAM Repository
+      shell: bash
+      run: opam update
+    - name: Add Opam ENV to $GITHUB_ENV
+      shell: bash
+      run: |
+        eval $(opam env)
+        env >> $GITHUB_ENV
