@@ -51,11 +51,11 @@ int main(int argc, char *argv[]) {
   }
 
   for (size_t i = 0; i < sizeof(threads) / sizeof(pthread_t); i += 1) {
-    Data *returned = 0x0;
+    Data *returned = NULL;
 
     pthread_join(threads[i], (void *)&returned);
 
-    if (returned != 0x0) {
+    if (returned != NULL) {
       free(returned);
     }
   }
