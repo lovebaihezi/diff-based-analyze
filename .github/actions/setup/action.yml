@@ -7,7 +7,7 @@ runs:
       shell: sh
       run: |
         sudo apt-get update
-        sudo apt-get install wget tar gzip bash git curl file autoconf automake cmake ninja-build libzstd-dev build-essential
+        sudo apt-get install wget tar gzip bash git curl file autoconf automake cmake ninja-build libzstd-dev build-essential libc++-dev
     - uses: goto-bus-stop/setup-zig@v2.2.0
     - uses: extractions/setup-just@v2
     - uses: KyleMayes/install-llvm-action@v2

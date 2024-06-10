@@ -67,7 +67,8 @@ pub fn build(b: *std.Build) void {
     exe.linkSystemLibrary2("LLVMCodeGenTypes", .{ .preferred_link_mode = .static, .needed = true });
     exe.linkSystemLibrary2("LLVMIRReader", .{ .preferred_link_mode = .static, .needed = true });
     exe.linkSystemLibrary2("LLVMIRPrinter", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("stdc++", .{ .preferred_link_mode = .static, .needed = true });
+    exe.linkSystemLibrary2("c++", .{ .preferred_link_mode = .static, .needed = true });
+    exe.linkSystemLibrary2("c++abi", .{ .preferred_link_mode = .static, .needed = true });
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
