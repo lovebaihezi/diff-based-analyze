@@ -10,12 +10,17 @@ runs:
         sudo apt-get install wget tar gzip bash git curl file autoconf automake cmake ninja-build
     - uses: goto-bus-stop/setup-zig@v2.2.0
     - uses: extractions/setup-just@v2    
+    - uses: KyleMayes/install-llvm-action@v2
+      with:
+        versoin: "17.0.6"
     - name: Check Zig ENV
       shell: bash
       run: zig env
     - name: Build libgit2, zlib
       shell: bash
       run: |
+        echo CC=clang >> $GITHUB_ENV
+        echo CXX=clang++ >> $GITHUB_ENV
         just install-libgit2 && just build-libgit2
         just install-zlib && just build-zlib
     - name: Run zig fmt
