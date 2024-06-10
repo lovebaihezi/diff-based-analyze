@@ -7,17 +7,12 @@ runs:
       shell: sh
       run: |
         sudo apt-get update
-        sudo apt-get install ninja-build nodejs cmake wget tar samurai xz just make gzip bash git shadow curl sudo file autoconf automake pcre-dev python3-dev
+        sudo apt-get install wget tar gzip bash git curl file autoconf automake
     - uses: goto-bus-stop/setup-zig@v2.2.0
+    - uses: extractions/setup-just@v2    
     - name: Check Zig ENV
       shell: bash
       run: zig env
-    - name: Install libclang and static binaries
-      shell: bash
-      run: |
-        sudo apt-get install clang17-dev clang17-static musl-dev libc++-dev libc++-static openssl-dev clang17-analyzer
-        echo "CC=clang-17" >> $GITHUB_ENV
-        echo "CXX=clang++-17" >> $GITHUB_ENV
     - name: Build libgit2, zlib
       shell: bash
       run: |
