@@ -7,14 +7,14 @@ runs:
       shell: sh
       run: |
         sudo apt-get update
-        sudo apt-get install wget tar gzip bash git curl file autoconf automake cmake ninja-build libzstd-dev build-essential libc++-dev libstdc++-11-dev
+        sudo apt-get install wget tar gzip bash git curl file autoconf automake cmake ninja-build libzstd-dev build-essential libc++-dev libstdc++-11-dev llvm-dev libclang-dev
     - uses: goto-bus-stop/setup-zig@v2.2.0
     - uses: extractions/setup-just@v2
-    - uses: KyleMayes/install-llvm-action@v2
-      with:
-        version: "17"
-        env: true
-        directory: ${{ github.workspace }}/llvm
+    #- uses: KyleMayes/install-llvm-action@v2
+    #  with:
+    #    version: "17"
+    #    env: true
+    #    directory: ${{ github.workspace }}/llvm
     - name: Check Zig ENV
       shell: bash
       run: zig env

@@ -27,6 +27,7 @@ pub fn build(b: *std.Build) void {
 
     exe.linkLibC();
     // exe.linkLibCpp();
+    exe.linkSystemLibrary2("stdc++", .{ .preferred_link_mode = .dynamic, .needed = true });
 
     exe.linkSystemLibrary2("ssl", .{ .needed = true });
     exe.linkSystemLibrary2("crypto", .{ .preferred_link_mode = .static, .needed = true });
@@ -35,9 +36,9 @@ pub fn build(b: *std.Build) void {
     exe.addIncludePath(b.path("./libgit2/include"));
     exe.addLibraryPath(b.path("./libgit2/lib"));
     exe.addLibraryPath(b.path("./zlib"));
-    exe.addLibraryPath(b.path("./llvm/lib"));
-    exe.addIncludePath(b.path("./llvm/include"));
-    //exe.addLibraryPath(b.path("."));
+    // exe.addLibraryPath(b.path("./llvm/lib"));
+    // exe.addIncludePath(b.path("./llvm/include"));
+    // exe.addLibraryPath(b.path("."));
 
     exe.linkSystemLibrary2("git2", .{ .preferred_link_mode = .static, .needed = true });
     exe.linkSystemLibrary2("z", .{ .preferred_link_mode = .dynamic, .needed = true });
@@ -68,7 +69,6 @@ pub fn build(b: *std.Build) void {
     exe.linkSystemLibrary2("LLVMCodeGenTypes", .{ .preferred_link_mode = .dynamic, .needed = true });
     exe.linkSystemLibrary2("LLVMIRReader", .{ .preferred_link_mode = .dynamic, .needed = true });
     exe.linkSystemLibrary2("LLVMIRPrinter", .{ .preferred_link_mode = .dynamic, .needed = true });
-    exe.linkSystemLibrary2("stdc++", .{ .preferred_link_mode = .dynamic, .needed = true });
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
