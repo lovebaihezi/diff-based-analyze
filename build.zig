@@ -35,6 +35,8 @@ pub fn build(b: *std.Build) void {
     exe.addIncludePath(b.path("./libgit2/include"));
     exe.addLibraryPath(b.path("./libgit2/lib"));
     exe.addLibraryPath(b.path("./zlib"));
+    exe.addLibraryPath(b.path("./llvm/lib"));
+    exe.addIncludePath(b.path("./llvm/include"));
 
     exe.linkSystemLibrary2("git2", .{ .preferred_link_mode = .static, .needed = true });
     exe.linkSystemLibrary2("z", .{ .preferred_link_mode = .static, .needed = true });
