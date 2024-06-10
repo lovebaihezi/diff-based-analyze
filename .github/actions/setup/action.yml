@@ -18,13 +18,6 @@ runs:
     - name: Check Zig ENV
       shell: bash
       run: zig env
-    - name: Check LLVM, clang, etc
-      shell: bash
-      run: |
-        ls -al
-        ls -al ${{ github.workspace }}
-        ls -al llvm
-        ls -al llvm/lib
     - name: Build libgit2, zlib
       shell: bash
       run: |
