@@ -24,6 +24,7 @@ runs:
         ls -al 
         ls -al ${{ github.workspace }}
         ls -al llvm
+        ls -al llvm/lib
     - name: Build libgit2, zlib
       shell: bash
       run: |
