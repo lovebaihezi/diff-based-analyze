@@ -40,7 +40,7 @@ pub fn build(b: *std.Build) void {
     //exe.addLibraryPath(b.path("."));
 
     exe.linkSystemLibrary2("git2", .{ .preferred_link_mode = .static, .needed = true });
-    // exe.linkSystemLibrary2("z", .{ .preferred_link_mode = .static, .needed = true });
+    exe.linkSystemLibrary2("z", .{ .preferred_link_mode = .dynamic, .needed = true });
     //exe.linkSystemLibrary2("compile2ir", .{ .preferred_link_mode = .static, .needed = true });
     exe.linkSystemLibrary2("clangTooling", .{ .preferred_link_mode = .static, .needed = true });
     exe.linkSystemLibrary2("clangFrontend", .{ .preferred_link_mode = .static, .needed = true });
