@@ -59,9 +59,13 @@ pub fn build(b: *std.Build) void {
     exe.linkSystemLibrary2("clangAST", .{ .preferred_link_mode = .static, .needed = true });
     exe.linkSystemLibrary2("clangLex", .{ .preferred_link_mode = .static, .needed = true });
     exe.linkSystemLibrary2("clangBasic", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("LLVMIRPrinter", .{ .preferred_link_mode = .static, .needed = true });
+    exe.linkSystemLibrary2("LLVMCore", .{ .preferred_link_mode = .static, .needed = true });
+    exe.linkSystemLibrary2("LLVMCodeGen", .{ .preferred_link_mode = .static, .needed = true });
+    exe.linkSystemLibrary2("LLVMSupport", .{ .preferred_link_mode = .static, .needed = true });
+    exe.linkSystemLibrary2("LLVMCodeGenTypes", .{ .preferred_link_mode = .static, .needed = true });
     exe.linkSystemLibrary2("LLVMIRReader", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("LLVM", .{ .preferred_link_mode = .static, .needed = true });
+    exe.linkSystemLibrary2("LLVMIRPrinter", .{ .preferred_link_mode = .static, .needed = true });
+    exe.linkSystemLibrary2("LLVMIRParser", .{ .preferred_link_mode = .static, .needed = true });
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
