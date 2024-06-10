@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Build
-        run: zig build -Doptimize=ReleaseSafe -Dtarget=native-native-musl
+        run: zig build -Doptimize=ReleaseSafe
       - name: Build tests
         run: |
           just config-examples

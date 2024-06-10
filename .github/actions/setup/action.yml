@@ -3,7 +3,7 @@ description: Install Zig, Alpine, libgit2, zlib, libclang
 runs:
   using: composite
   steps:
-    - name: Setup Alpine
+    - name: Setup Base ENV
       shell: sh
       run: |
         sudo apt-get update
