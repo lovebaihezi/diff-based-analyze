@@ -14,7 +14,7 @@ runs:
       with:
         version: "17"
         env: true
-        directory: ${GITHUB_WORKSPACE}/llvm
+        directory: ${{env.GITHUB_WORKSPACE}}/llvm
     - name: Check Zig ENV
       shell: bash
       run: zig env
@@ -24,6 +24,8 @@ runs:
         pwd
         ls -al $GITHUB_WORKSPACE
         ls -al $GITHUB_WORKSPACE/llvm
+        ls -al ${{env.GITHUB_WORKSPACE}}
+        ls -al ${{env.GITHUB_WORKSPACE}}/llvm
     - name: Build libgit2, zlib
       shell: bash
       run: |
