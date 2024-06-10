@@ -68,7 +68,7 @@ pub fn build(b: *std.Build) void {
     exe.linkSystemLibrary2("LLVMCodeGenTypes", .{ .preferred_link_mode = .dynamic, .needed = true });
     exe.linkSystemLibrary2("LLVMIRReader", .{ .preferred_link_mode = .dynamic, .needed = true });
     exe.linkSystemLibrary2("LLVMIRPrinter", .{ .preferred_link_mode = .dynamic, .needed = true });
-    exe.addLibraryPath(b.install_path("/lib"));
+    exe.addLibraryPath(b.path("/lib"));
     exe.linkSystemLibrary2("c++", .{ .preferred_link_mode = .dynamic, .needed = true });
     exe.linkSystemLibrary2("c++abi", .{ .preferred_link_mode = .dynamic, .needed = true });
 
