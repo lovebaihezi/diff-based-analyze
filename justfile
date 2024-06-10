@@ -72,6 +72,10 @@ config-examples:
 build-examples: config-examples
   time ninja -C examples-build
 
+build-lib:
+  clang++ -o compile2ir.o -c src/compile2ir.cpp
+  ar rcs libcompile2ir.a compile2ir.o ./zlib/libz.a ./llvm/lib/libclangTooling.a ./llvm/lib/libclangFrontend.a ./llvm/lib/libclangFrontendTool.a ./llvm/lib/libclangDriver.a ./llvm/lib/libclangSerialization.a ./llvm/lib/libclangCodeGen.a ./llvm/lib/libclangParse.a ./llvm/lib/libclangSema.a ./llvm/lib/libclangStaticAnalyzerFrontend.a ./llvm/lib/libclangStaticAnalyzerCheckers.a ./llvm/lib/libclangStaticAnalyzerCore.a ./llvm/lib/libclangAnalysis.a ./llvm/lib/libclangARCMigrate.a ./llvm/lib/libclangRewrite.a ./llvm/lib/libclangRewriteFrontend.a ./llvm/lib/libclangEdit.a ./llvm/lib/libclangAST.a ./llvm/lib/libclangLex.a ./llvm/lib/libclangBasic.a ./llvm/lib/libLLVMCore.a ./llvm/lib/libLLVMCodeGen.a ./llvm/lib/libLLVMSupport.a ./llvm/lib/libLLVMCodeGenTypes.a ./llvm/lib/libLLVMIRReader.a ./llvm/lib/libLLVMIRPrinter.a ./llvm/lib/libLLVMCoverage.a
+
 build-libgit2:
   rm -rf libgit2-build
   cmake -GNinja -Blibgit2-build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTS=OFF -DBUILD_CLAR=OFF libgit2-{{libgit_version}}

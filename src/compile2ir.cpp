@@ -4,7 +4,7 @@
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 #include <clang/Lex/PreprocessorOptions.h>
 #include <llvm/IR/Module.h>
-#include <llvm/Support/Host.h>
+#include <llvm/TargetParser/Host.h>
 #include <llvm/Support/TargetSelect.h>
 #include <string>
 #include "compile2ir.h"
@@ -81,7 +81,9 @@ extern "C" const IRResult *compileC2IR(const char *code_input, size_t len,
     auto *irRes = new IRResult();
     raw_string_ostream BufferStream(*(irRes->data));
     mod->print(BufferStream, nullptr);
-    *output_len = irRes->data->length();
+    if (output_len) {
+      *output_len = irRes->data->length();
+    }
     return irRes;
   }
   return nullptr;
