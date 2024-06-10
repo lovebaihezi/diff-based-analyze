@@ -12,7 +12,8 @@ runs:
     - uses: extractions/setup-just@v2    
     - uses: KyleMayes/install-llvm-action@v2
       with:
-        version: "17.0.6"
+        version: "17"
+        env: true
     - name: Check Zig ENV
       shell: bash
       run: zig env
