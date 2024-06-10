@@ -4,7 +4,7 @@
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 #include <clang/Lex/PreprocessorOptions.h>
 #include <llvm/IR/Module.h>
-#include <llvm/TargetParser/Host.h>
+#include <llvm/Support/Host.h>
 #include <llvm/Support/TargetSelect.h>
 #include <string>
 #include "compile2ir.h"
