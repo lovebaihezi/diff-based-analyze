@@ -172,10 +172,3 @@ pub fn addExistingBasicBlock(func: Function, block: BasicBlock) void {
 pub fn addFunction(module: Module, name: []const u8, ty: Value) Function {
     return c.LLVMAddFunction(module, name, ty);
 }
-
-pub fn initLLVM() void {
-    c.LLVMInitializeCore(c.LLVMGetGlobalPassRegistry());
-    c.LLVMInitializeNativeTarget();
-    c.LLVMInitializeNativeAsmPrinter();
-    c.LLVMInitializeNativeAsmParser();
-}
