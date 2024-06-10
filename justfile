@@ -15,7 +15,7 @@ pvs_cre_type    := "Free"
 pvs_credentials := "FREE-FREE-FREE-FREE"
 coverity_url    := "https://scan.coverity.com/download/cxx/linux64"
 llvm_version    := "17.0.6"
-llvm_url        := "https://github.com/llvm/llvm-project/releases/download/llvmorg-" + llvm_versoin + "/clang+llvm-" + llvm_version + "-x86_64-linux-gnu-ubuntu-22.04.tar.xz"
+llvm_url        := "https://github.com/llvm/llvm-project/releases/download/llvmorg-" + llvm_version + "/clang+llvm-" + llvm_version + "-x86_64-linux-gnu-ubuntu-22.04.tar.xz"
 
 install-tools: install-pmd install-infer install-pvs
 
