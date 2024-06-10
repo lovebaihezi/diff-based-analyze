@@ -6,7 +6,7 @@ runs:
     - name: Setup Opam
       shell: bash
       run: |
-        apk add opam m4 make gcc g++ musl-dev linux-headers
+        sudo apt-get install opam m4 make gcc g++ musl-dev linux-headers
     - name: Initialize OPAM
       shell: bash
       run: opam init --disable-sandboxing --kind=local

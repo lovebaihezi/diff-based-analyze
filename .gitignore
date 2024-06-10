@@ -16,3 +16,4 @@ pvs-*
 /libgit2*
 /build
 /zlib*
+/clang+llvm*

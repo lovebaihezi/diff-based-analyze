@@ -8,8 +8,6 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
-    container:
-      image: alpine:3.19
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
