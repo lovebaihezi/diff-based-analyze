@@ -74,13 +74,13 @@ build-examples: config-examples
 
 build-libgit2:
   rm -rf libgit2-build
-  CC="zig cc" CXX="zig c++" cmake -GNinja -Blibgit2-build -DCMKAE_C_FLAGS="-Dtarget={{zig_target}}" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTS=OFF -DBUILD_CLAR=OFF libgit2-{{libgit_version}}
+  cmake -GNinja -Blibgit2-build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTS=OFF -DBUILD_CLAR=OFF libgit2-{{libgit_version}}
   ninja -C libgit2-build
   cmake --install libgit2-build --prefix libgit2
 
 build-zlib:
   rm -rf zlib-build zlib
-  CC="zig cc" CXX="zig c++" cmake -GNinja -Bzlib-build -DCMAKE_C_FLAGS="-Dtarget={{zig_target}}" -DCMAKE_BUILD_TYPE=Release -DZLIB_BUILD_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX=$PWD/zlib zlib-{{zlib_version}}
+  cmake -GNinja -Bzlib-build -DCMAKE_BUILD_TYPE=Release -DZLIB_BUILD_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX=$PWD/zlib zlib-{{zlib_version}}
   cmake --build zlib-build
   mkdir zlib
   mv zlib-build/libz.a zlib
