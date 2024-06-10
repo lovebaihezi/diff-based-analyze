@@ -69,7 +69,6 @@ pub fn build(b: *std.Build) void {
     exe.linkSystemLibrary2("LLVMIRReader", .{ .preferred_link_mode = .dynamic, .needed = true });
     exe.linkSystemLibrary2("LLVMIRPrinter", .{ .preferred_link_mode = .dynamic, .needed = true });
     exe.linkSystemLibrary2("stdc++", .{ .preferred_link_mode = .dynamic, .needed = true });
-    exe.linkSystemLibrary2("stdc++abi", .{ .preferred_link_mode = .dynamic, .needed = true });
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
