@@ -12,5 +12,6 @@ pub fn main() !void {
 }
 
 test {
+    _ = @import("compile2ir.zig");
     std.testing.refAllDecls(@This());
 }

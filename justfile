@@ -27,11 +27,13 @@ install-llvm:
   wget {{llvm_url}}
   tar xf clang+llvm-{{llvm_version}}-x86_64-linux-gnu-ubuntu-22.04.tar.xz
 
-build-llvm:
+fetch-llvm:
   wget {{llvm_src_url}}
   tar xf llvm-project-{{llvm_src_version}}.src.tar.xz
+
+build-llvm:
   cd llvm-project-{{llvm_src_version}}.src
-  CC="zig cc" CXX="zig c++" cmake -GNinja -BBuild -S llvm -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang"
+  CC="zig cc" CXX="zig c++" cmake -S llvm -G Ninja -B build -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang"
   ninja -C build
 
 install-pvs:

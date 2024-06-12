@@ -17,3 +17,4 @@ pvs-*
 /build
 /zlib*
 /clang+llvm*
+/llvm-*

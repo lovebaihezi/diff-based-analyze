@@ -26,13 +26,13 @@ pub fn build(b: *std.Build) void {
     });
 
     exe.linkLibC();
-    // exe.linkLibCpp();
-    exe.linkSystemLibrary2("stdc++", .{ .preferred_link_mode = .dynamic, .needed = true });
+    exe.linkLibCpp();
+    // exe.linkSystemLibrary2("stdc++", .{ .preferred_link_mode = .dynamic, .needed = true });
 
     exe.linkSystemLibrary2("ssl", .{ .needed = true });
     exe.linkSystemLibrary2("crypto", .{ .preferred_link_mode = .static, .needed = true });
     exe.linkSystemLibrary2("pcre", .{ .preferred_link_mode = .static, .needed = true });
-    exe.addCSourceFile(.{ .file = b.path("./src/compile2ir.cpp"), .flags = &.{ "-std=c++17", "-O3" } });
+    // exe.addCSourceFile(.{ .file = b.path("./src/compile2ir.cpp"), .flags = &.{ "-std=c++17", "-O3" } });
     exe.addIncludePath(b.path("./libgit2/include"));
     exe.addLibraryPath(b.path("./libgit2/lib"));
     exe.addLibraryPath(b.path("./zlib"));
@@ -42,27 +42,27 @@ pub fn build(b: *std.Build) void {
 
     exe.linkSystemLibrary2("git2", .{ .preferred_link_mode = .static, .needed = true });
     exe.linkSystemLibrary2("z", .{ .preferred_link_mode = .dynamic, .needed = true });
-    exe.linkSystemLibrary2("clang", .{ .preferred_link_mode = .static, .needed = true });
+    exe.linkSystemLibrary2("clang", .{ .preferred_link_mode = .dynamic, .needed = true });
     //exe.linkSystemLibrary2("compile2ir", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("clangTooling", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("clangFrontend", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("clangFrontendTool", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("clangDriver", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("clangSerialization", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("clangCodeGen", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("clangParse", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("clangSema", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("clangStaticAnalyzerFrontend", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("clangStaticAnalyzerCheckers", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("clangStaticAnalyzerCore", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("clangAnalysis", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("clangARCMigrate", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("clangRewrite", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("clangRewriteFrontend", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("clangEdit", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("clangAST", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("clangLex", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("clangBasic", .{ .preferred_link_mode = .static, .needed = true });
+    //exe.linkSystemLibrary2("clangTooling", .{ .preferred_link_mode = .static, .needed = true });
+    //exe.linkSystemLibrary2("clangFrontend", .{ .preferred_link_mode = .static, .needed = true });
+    //exe.linkSystemLibrary2("clangFrontendTool", .{ .preferred_link_mode = .static, .needed = true });
+    //exe.linkSystemLibrary2("clangDriver", .{ .preferred_link_mode = .static, .needed = true });
+    //exe.linkSystemLibrary2("clangSerialization", .{ .preferred_link_mode = .static, .needed = true });
+    //exe.linkSystemLibrary2("clangCodeGen", .{ .preferred_link_mode = .static, .needed = true });
+    //exe.linkSystemLibrary2("clangParse", .{ .preferred_link_mode = .static, .needed = true });
+    //exe.linkSystemLibrary2("clangSema", .{ .preferred_link_mode = .static, .needed = true });
+    //exe.linkSystemLibrary2("clangStaticAnalyzerFrontend", .{ .preferred_link_mode = .static, .needed = true });
+    //exe.linkSystemLibrary2("clangStaticAnalyzerCheckers", .{ .preferred_link_mode = .static, .needed = true });
+    //exe.linkSystemLibrary2("clangStaticAnalyzerCore", .{ .preferred_link_mode = .static, .needed = true });
+    //exe.linkSystemLibrary2("clangAnalysis", .{ .preferred_link_mode = .static, .needed = true });
+    //exe.linkSystemLibrary2("clangARCMigrate", .{ .preferred_link_mode = .static, .needed = true });
+    //exe.linkSystemLibrary2("clangRewrite", .{ .preferred_link_mode = .static, .needed = true });
+    //exe.linkSystemLibrary2("clangRewriteFrontend", .{ .preferred_link_mode = .static, .needed = true });
+    //exe.linkSystemLibrary2("clangEdit", .{ .preferred_link_mode = .static, .needed = true });
+    //exe.linkSystemLibrary2("clangAST", .{ .preferred_link_mode = .static, .needed = true });
+    //exe.linkSystemLibrary2("clangLex", .{ .preferred_link_mode = .static, .needed = true });
+    //exe.linkSystemLibrary2("clangBasic", .{ .preferred_link_mode = .static, .needed = true });
     exe.linkSystemLibrary2("LLVM", .{ .preferred_link_mode = .dynamic, .needed = true });
 
     // This declares intent for the executable to be installed into the
