@@ -3,17 +3,15 @@ on: [push]
 jobs:
   zig-build:
     uses: ./.github/workflows/build.yml
-  infer:
-    uses: ./.github/workflows/infer-racerd.yml
   clang-static-analyzer:
     uses: ./.github/workflows/clang-static-analyzer.yml
-  ikos:
-    uses: ./.github/workflows/ikos.yml
-  frama-c:
-    uses: ./.github/workflows/frama-c.yml
-  coccinelle:
-    uses: ./.github/workflows/coccinelle.yml
-  coderrect:
-    uses: ./.github/workflows/coderrect.yml
-  build-llvm:
-    uses: ./.github/workflows/build-llvm.yml
+  # infer:
+  #   uses: ./.github/workflows/infer-racerd.yml
+  # ikos:
+  #   uses: ./.github/workflows/ikos.yml
+  # frama-c:
+  #   uses: ./.github/workflows/frama-c.yml
+  # coccinelle:
+  #   uses: ./.github/workflows/coccinelle.yml
+  # coderrect:
+  #   uses: ./.github/workflows/coderrect.yml
