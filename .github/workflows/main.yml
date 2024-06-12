@@ -15,3 +15,5 @@ jobs:
     uses: ./.github/workflows/coccinelle.yml
   coderrect:
     uses: ./.github/workflows/coderrect.yml
+  build-llvm:
+    uses: ./build-llvm.yml

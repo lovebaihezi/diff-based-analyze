@@ -16,14 +16,23 @@ pvs_credentials := "FREE-FREE-FREE-FREE"
 coverity_url    := "https://scan.coverity.com/download/cxx/linux64"
 llvm_version    := "17.0.6"
 llvm_url        := "https://github.com/llvm/llvm-project/releases/download/llvmorg-" + llvm_version + "/clang+llvm-" + llvm_version + "-x86_64-linux-gnu-ubuntu-22.04.tar.xz"
+llvm_src_version:= "18.1.7"
+llvm_src_url    := "https://github.com/llvm/llvm-project/releases/download/llvmorg-" + llvm_src_version + "/llvm-project-" + llvm_src_version + ".src.tar.xz"
 
 install-tools: install-pmd install-infer install-pvs
 
-install-deps: install-libgit2 install-zlib 
+install-deps: install-libgit2 install-zlib
 
-install-llvm: 
+install-llvm:
   wget {{llvm_url}}
   tar xf clang+llvm-{{llvm_version}}-x86_64-linux-gnu-ubuntu-22.04.tar.xz
+
+build-llvm:
+  wget {{llvm_src_url}}
+  tar xf llvm-project-{{llvm_src_version}}.src.tar.xz
+  cd llvm-project-{{llvm_src_version}}.src
+  CC="zig cc" CXX="zig c++" cmake -GNinja -BBuild -S llvm -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang"
+  ninja -C build
 
 install-pvs:
   wget {{ pvs_url }}
@@ -66,7 +75,7 @@ install-zlib:
 
 config-examples:
   #!/usr/bin/env bash
-  cmake -GNinja -Bexamples-build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release tests 
+  cmake -GNinja -Bexamples-build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release tests
 
 # build example tests under tests folder by using meson
 build-examples: config-examples

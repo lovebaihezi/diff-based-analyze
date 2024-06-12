@@ -1,0 +1,14 @@
+name: Build LLVM
+on:
+  workflow_call:
+jobs:
+  build-LLVM-Clang:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: just build-llvm
