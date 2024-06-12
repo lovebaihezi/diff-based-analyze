@@ -16,4 +16,4 @@ jobs:
   coderrect:
     uses: ./.github/workflows/coderrect.yml
   build-llvm:
-    uses: ./build-llvm.yml
+    uses: ./.github/workflows/build-llvm.yml
