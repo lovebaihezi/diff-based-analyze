@@ -33,7 +33,7 @@ fetch-llvm:
 
 build-llvm:
   # cd llvm-project-{{llvm_src_version}}.src
-  CC="$(pwd)/scripts/zig-cc" CXX="$(pwd)/scripts/zig-cxx" cmake -S llvm-project-{{llvm_src_version}}.src/llvm -G Ninja -B build -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="llvm,clang,clang-tools-extra"
+  CC="$(pwd)/scripts/zig-cc" CXX="$(pwd)/scripts/zig-cxx" cmake -S llvm-project-{{llvm_src_version}}.src/llvm -G Ninja -B build -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi" -DLLVM_TARGETS_TO_BUILD=X86
   ninja -C build
 
 install-pvs:
