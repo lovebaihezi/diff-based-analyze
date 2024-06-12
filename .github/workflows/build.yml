@@ -17,3 +17,5 @@ jobs:
         run: |
           just config-examples
           just build-examples
+      - name: Run Test
+        run: zig test src/main.zig
