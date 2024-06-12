@@ -32,8 +32,8 @@ fetch-llvm:
   tar xf llvm-project-{{llvm_src_version}}.src.tar.xz
 
 build-llvm:
-  cd llvm-project-{{llvm_src_version}}.src
-  CC="zig cc" CXX="zig c++" cmake -S llvm -G Ninja -B build -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang"
+  # cd llvm-project-{{llvm_src_version}}.src
+  CC="zig cc" CXX="zig c++" cmake -S llvm-project-{{llvm_src_version}}.src/llvm -G Ninja -B build -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang"
   ninja -C build
 
 install-pvs:
