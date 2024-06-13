@@ -7,6 +7,8 @@ pub const c = @cImport({
     @cInclude("llvm-c/Types.h");
     @cInclude("llvm-c/DataTypes.h");
     @cInclude("llvm-c/IRReader.h");
+    @cInclude("llvm-c/Analysis.h");
+    @cInclude("llvm-c/BitWriter.h");
 });
 
 pub const MaxParam = 64;
@@ -157,4 +159,16 @@ pub fn nextInstruction(ref: Instruction) Instruction {
 
 pub fn instructionCode(ref: Instruction) Opcode {
     return c.LLVMGetInstructionOpcode(ref);
+}
+
+pub fn addBasicBlock(func: Function, name: []const u8) BasicBlock {
+    return c.LLVMAppendBasicBlock(func, name);
+}
+
+pub fn addExistingBasicBlock(func: Function, block: BasicBlock) void {
+    return c.LLVMInsertExistingBasicBlock(func, block);
+}
+
+pub fn addFunction(module: Module, name: []const u8, ty: Value) Function {
+    return c.LLVMAddFunction(module, name, ty);
 }

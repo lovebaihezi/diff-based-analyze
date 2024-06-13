@@ -18,7 +18,7 @@ jobs:
         run: |
           wget https://coderrect.com/x/coderrect-linux-1.1.3.tar.gz
           tar zxf coderrect-linux-1.1.3.tar.gz
-          export PATH=$PWD/coderrect-linux-1.1.3/bin:$PATH 
+          export PATH=$PWD/coderrect-linux-1.1.3/bin:$PATH
           env >> $GITHUB_ENV
       - name: run coderrect
         run: |

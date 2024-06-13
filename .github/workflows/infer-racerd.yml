@@ -8,16 +8,11 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
-    container:
-      image: alpine:3.19
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: setup infer
         run: |
-          apk add gcompat gmp-dev sqlite-dev musl-obstack 
-          apk add -i autoconf automake libtool openjdk8 python3 clang cmake opam
-          apk add -i linux-headers zlib-dev
           just install-infer
       - name: config and run infer with --racerd-only
         run: |

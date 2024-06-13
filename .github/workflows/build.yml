@@ -8,14 +8,14 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
-    container:
-      image: alpine:3.19
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Build
-        run: zig build -Doptimize=ReleaseSafe -Dtarget=native-native-musl
+        run: zig build -Doptimize=ReleaseSafe --verbose-link --search-prefix /usr/lib/llvm-14
       - name: Build tests
         run: |
           just config-examples
           just build-examples
+      - name: Run Test
+        run: zig build test --search-prefix /usr/lib/llvm-14

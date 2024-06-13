@@ -34,7 +34,7 @@ pub fn initWithStdin() LLVMStdinError!MemoryBuf {
     return self;
 }
 
-pub fn initWithFile(path: []const u8) LLVMFileError!MemoryBuf {
+pub fn initWithFile(path: [*c]const u8) LLVMFileError!MemoryBuf {
     var self: MemoryBuf = .{};
     var out_msg: [*c]u8 = 0x0;
     if (llvm_c.LLVMCreateMemoryBufferWithContentsOfFile(path, &self.mem_buf, &out_msg) != 0) {

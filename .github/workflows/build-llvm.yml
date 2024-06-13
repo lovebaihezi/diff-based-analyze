@@ -1,8 +1,8 @@
-name: Coverity
+name: Build LLVM
 on:
   workflow_call:
 jobs:
-  coverity-baseline:
+  build-LLVM-Clang:
     strategy:
       fail-fast: false
       matrix:
@@ -11,7 +11,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - name: setup coverity
-        run: |
-          just install-coverity
-    # TODO
+      - run: just fetch-llvm
+      - run: just build-llvm
