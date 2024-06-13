@@ -15,7 +15,7 @@ runs:
     - uses: KyleMayes/install-llvm-action@v2
       with:
         version: "17"
-        env: true
+        env: false
         directory: ${{ github.workspace }}/llvm
     - name: Check Zig ENV
       shell: bash
@@ -23,8 +23,8 @@ runs:
     - name: Build libgit2, zlib
       shell: bash
       run: |
-        echo CC="${{ github.workspace }}/scripts/zigcc" >> $GITHUB_ENV
-        echo CXX="${{ github.workspace }}/scripts/zigcxx" >> $GITHUB_ENV
+        echo CC="${{ github.workspace }}/scripts/zig-cc" >> $GITHUB_ENV
+        echo CXX="${{ github.workspace }}/scripts/zig-cxx" >> $GITHUB_ENV
         just install-libgit2 && just build-libgit2
         just install-zlib && just build-zlib
     - name: Run zig fmt
