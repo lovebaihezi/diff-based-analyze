@@ -18,4 +18,4 @@ jobs:
           just config-examples
           just build-examples
       - name: Run Test
-        run: zig build test
+        run: zig build test --search-prefix /usr/lib/llvm-14
