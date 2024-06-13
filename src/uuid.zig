@@ -161,8 +161,11 @@ test "check to_string works" {
     uuid1.to_string(&string1);
     uuid1.to_string(&string2);
 
-    std.debug.print("\nUUID {s} \n", .{uuid1});
-    std.debug.print("\nFirst  call to_string {s} \n", .{string1});
-    std.debug.print("Second call to_string {s} \n", .{string2});
+    var arr = std.ArrayList(u8).init(std.testing.allocator);
+    defer arr.deinit();
+
+    try std.fmt.format(arr.writer(), "\nUUID {s} \n", .{uuid1});
+    try std.fmt.format(arr.writer(), "\nFirst  call to_string {s} \n", .{string1});
+    try std.fmt.format(arr.writer(), "Second call to_string {s} \n", .{string2});
     try testing.expectEqual(string1, string2);
 }
