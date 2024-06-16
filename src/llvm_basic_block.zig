@@ -1,4 +1,4 @@
-const llvm = @import("llvm.zig");
+const llvm = @import("llvm_wrap.zig");
 const Function = @import("llvm_function.zig");
 
 function: llvm.NonNullFunction = undefined,

@@ -1,4 +1,4 @@
-const llvm = @import("llvm.zig");
+const llvm = @import("llvm_wrap.zig");
 const BasicBlock = @import("llvm_basic_block.zig");
 
 basic_block: llvm.NonNullBasicBlock = undefined,

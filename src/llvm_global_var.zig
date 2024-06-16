@@ -1,5 +1,5 @@
 const std = @import("std");
-const llvm = @import("llvm.zig");
+const llvm = @import("llvm_wrap.zig");
 
 module: llvm.NonNullModule = undefined,
 current: ?llvm.NonNullFunction = null,
