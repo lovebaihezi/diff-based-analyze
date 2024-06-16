@@ -1,5 +1,5 @@
 const compileToIr = @import("compile2ir.zig");
-const llvm = @import("llvm.zig");
+const llvm = @import("llvm_wrap.zig");
 const std = @import("std");
 const Function = @import("llvm_function.zig");
 const BasicBlock = @import("llvm_basic_block.zig");
@@ -11,17 +11,21 @@ const IR = @import("llvm_parse_ir.zig");
 const Operands = @import("llvm_operands.zig");
 const VariableInfo = @import("variable_info.zig");
 const GlobalVar = @import("llvm_global_var.zig");
+const compile2ir = @import("compile2ir.zig");
 
 const Allocator = std.mem.Allocator;
 
 /// 如果有同时有Read Write, 就把Write自动移动到thread里面
-pub fn applyVulnerbilties(allocator: Allocator, ir_module: llvm.NonNullModule) !void {
+pub fn applyVulnerbilties(input_allocator: Allocator, ir_module: llvm.NonNullModule) !void {
+    var arena = std.heap.ArenaAllocator.init(input_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
     var global_vars = GlobalVar.init(ir_module);
     var function = Function.init(ir_module);
     var global_map = std.StringArrayHashMap(VariableInfo).init(allocator);
     defer global_map.deinit();
     while (global_vars.next()) |g| {
-        const name = llvm.valueName(g);
+        const name = llvm.llvmValueName(g);
         const info = VariableInfo.init(allocator);
         global_map.put(name, info) catch unreachable;
     }
@@ -32,11 +36,11 @@ pub fn applyVulnerbilties(allocator: Allocator, ir_module: llvm.NonNullModule) !
         const len = parameters.len;
         if (len > 0) {
             for (parameters[0 .. len - 1]) |param| {
-                const name = llvm.valueName(param);
+                const name = llvm.llvmValueName(param);
                 const info = VariableInfo.init(allocator);
                 map.put(name, info) catch unreachable;
             }
-            const name = llvm.valueName(parameters[len - 1]);
+            const name = llvm.llvmValueName(parameters[len - 1]);
             const info = VariableInfo.init(allocator);
             map.put(name, info) catch unreachable;
         } else {}
@@ -50,14 +54,14 @@ pub fn applyVulnerbilties(allocator: Allocator, ir_module: llvm.NonNullModule) !
                         const function_name = llvm.functionName(i);
                         var operands = Operands.init(i);
                         while (operands.next()) |op| {
-                            const name = llvm.valueName(op);
+                            const name = llvm.llvmValueName(op);
                             std.log.info("function {s} called with {s}", .{ function_name, name });
                         }
                     },
                     llvm.Load => {
                         var operands = Operands.init(i);
                         while (operands.next()) |op| {
-                            const name = llvm.valueName(op);
+                            const name = llvm.llvmValueName(op);
                             if (map.getPtr(name) orelse global_map.getPtr(name)) |info| {
                                 info.add_write_operand(op);
                                 if (info.read_count() == 0) {
@@ -72,7 +76,7 @@ pub fn applyVulnerbilties(allocator: Allocator, ir_module: llvm.NonNullModule) !
                     llvm.Store => {
                         var operands = Operands.init(i);
                         while (operands.next()) |op| {
-                            const name = llvm.valueName(op);
+                            const name = llvm.llvmValueName(op);
                             if (map.getPtr(name) orelse global_map.getPtr(name)) |info| {
                                 info.add_read_operand(op);
                                 break;
@@ -82,7 +86,7 @@ pub fn applyVulnerbilties(allocator: Allocator, ir_module: llvm.NonNullModule) !
                         }
                     },
                     llvm.Alloca => {
-                        const name = llvm.valueName(i);
+                        const name = llvm.llvmValueName(i);
                         const info = VariableInfo.init(allocator);
                         map.put(name, info) catch unreachable;
                     },
@@ -90,6 +94,14 @@ pub fn applyVulnerbilties(allocator: Allocator, ir_module: llvm.NonNullModule) !
                 }
             }
         }
+
+        for (map.values()) |*info| {
+            info.deinit();
+        }
+    }
+
+    for (global_map.values()) |*value| {
+        value.deinit();
     }
 }
 
@@ -141,7 +153,9 @@ test "auto apply vulnerbilties" {
     ;
     const allocator = std.testing.allocator;
     const tree_path: [:0]const u8 = "tree.c";
-    const buf = try mem_buf.initWithContent(tree_path, tree_source);
+    const compiled = try compile2ir.compileByCMD(allocator, tree_source, .{ .compiler = .Clang, .source_file_name = "tree.c", .output_file_name = "tree.ll" });
+    defer allocator.free(compiled);
+    const buf = try mem_buf.initWithContent(tree_path, compiled);
     const ctx = llvm.createContext();
     defer llvm.destoryContext(ctx);
     var ir_module = try IR.parseIR(ctx, buf.mem_buf);

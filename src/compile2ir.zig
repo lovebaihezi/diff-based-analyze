@@ -1,7 +1,7 @@
 const c = @cImport(.{@cInclude("./compile2ir.h")});
 const std = @import("std");
 const uuid = @import("uuid.zig").UUID;
-const llvm = @import("llvm.zig");
+const llvm = @import("llvm_wrap.zig");
 const llvmMemBuf = @import("llvm_memory_buffer.zig");
 const Allocator = std.mem.Allocator;
 const IR = @import("llvm_parse_ir.zig");
@@ -15,6 +15,8 @@ pub const Compiler = enum {
 
 pub const Options = struct {
     compiler: Compiler,
+    source_file_name: ?[]const u8 = null,
+    output_file_name: ?[]const u8 = null,
     pub fn getCompiler(self: @This()) []const u8 {
         const compiler = switch (self.compiler) {
             Compiler.Clang => "clang",
@@ -128,12 +130,12 @@ test "compile simple function to IR str" {
     try std.testing.expect(output.len > 100);
 }
 
-// test "compile simple function IR Module" {
-//     const ctx = llvm.createContext();
-//     defer llvm.destoryContext(ctx);
-//     const allocator = std.testing.allocator;
-//     const mem_buf = try createCompiledMemBuf(allocator, "static int x;", .{ .compiler = Compiler.Clang });
-//     defer mem_buf.deinit();
-//     try std.testing.expect(mem_buf.mem_buf != null);
-//     _ = try IR.parseIR(ctx, mem_buf.mem_buf);
-// }
+test "compile simple function IR Module" {
+    const ctx = llvm.createContext();
+    defer llvm.destoryContext(ctx);
+    const allocator = std.testing.allocator;
+    const mem_buf = try createCompiledMemBuf(allocator, "static int x;", .{ .compiler = Compiler.Clang });
+    // defer mem_buf.deinit();
+    try std.testing.expect(mem_buf.mem_buf != null);
+    _ = try IR.parseIR(ctx, mem_buf.mem_buf);
+}

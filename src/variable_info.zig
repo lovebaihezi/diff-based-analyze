@@ -1,5 +1,5 @@
 const std = @import("std");
-const llvm = @import("llvm.zig");
+const llvm = @import("llvm_wrap.zig");
 const Allocator = std.mem.Allocator;
 
 const ValueSeq = std.ArrayListUnmanaged(llvm.Value);

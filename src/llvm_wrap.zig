@@ -106,11 +106,13 @@ pub fn instOperandCount(value: Value) usize {
 }
 
 pub fn instNthOperand(value: Value, index: usize) Value {
+    std.debug.assert(value != null);
     const operand = c.LLVMGetOperand(value, @intCast(index));
     return operand;
 }
 
-pub fn valueName(value: Value) []const u8 {
+pub fn llvmValueName(value: Value) []const u8 {
+    std.debug.assert(value != null);
     var len: usize = 0;
     const ptr = c.LLVMGetValueName2(value, &len);
     return if (ptr != 0x0)
@@ -120,8 +122,9 @@ pub fn valueName(value: Value) []const u8 {
 }
 
 pub fn functionName(value: Value) []const u8 {
+    std.debug.assert(value != null);
     const function_value = c.LLVMGetCalledValue(value);
-    const name = valueName(function_value);
+    const name = llvmValueName(function_value);
     return name;
 }
 

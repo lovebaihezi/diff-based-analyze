@@ -1,4 +1,4 @@
-const llvm = @import("llvm.zig");
+const llvm = @import("llvm_wrap.zig");
 const Instruction = @import("llvm_instruction.zig");
 
 instruction: llvm.NonNullInstruction = undefined,

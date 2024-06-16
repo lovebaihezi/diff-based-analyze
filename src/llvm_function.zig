@@ -1,5 +1,5 @@
 const std = @import("std");
-const llvm = @import("llvm.zig");
+const llvm = @import("llvm_wrap.zig");
 
 module: llvm.NonNullModule = undefined,
 current: ?llvm.NonNullFunction = null,
@@ -26,7 +26,7 @@ pub fn currentParameters(self: *@This()) []llvm.Param {
     self.parameter_count = function_paramter_count;
     llvm.functionParameters(self.current.?, &self.parameters);
     if (function_paramter_count > llvm.MaxParam) {
-        std.log.err("function {s} paramater way too large:{d} then {d}", .{ llvm.valueName(f), function_paramter_count, llvm.MaxParam });
+        std.log.err("function {s} paramater way too large:{d} then {d}", .{ llvm.llvmValueName(f), function_paramter_count, llvm.MaxParam });
         @panic("function paramater way too large");
     }
     return self.parameters[0..self.parameter_count];
