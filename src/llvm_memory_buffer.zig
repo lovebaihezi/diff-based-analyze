@@ -46,7 +46,7 @@ pub fn initWithFile(path: [*c]const u8) LLVMFileError!MemoryBuf {
     return self;
 }
 
-pub fn initWithContent(name: []const u8, buffer: []const u8) LLVMContentError!MemoryBuf {
+pub fn initWithContent(name: [:0]const u8, buffer: []const u8) LLVMContentError!MemoryBuf {
     var self: MemoryBuf = .{};
     self.mem_buf = llvm_c.LLVMCreateMemoryBufferWithMemoryRange(buffer.ptr, buffer.len, name.ptr, 0);
     return self;

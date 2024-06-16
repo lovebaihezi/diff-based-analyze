@@ -172,3 +172,12 @@ pub fn addExistingBasicBlock(func: Function, block: BasicBlock) void {
 pub fn addFunction(module: Module, name: []const u8, ty: Value) Function {
     return c.LLVMAddFunction(module, name, ty);
 }
+
+pub fn outputIRToStr(module: Module) []const u8 {
+    const ptr = c.LLVMPrintModuleToString(module);
+    const len = std.mem.len(ptr);
+    return if (ptr != 0x0)
+        ptr[0..len]
+    else
+        "";
+}
