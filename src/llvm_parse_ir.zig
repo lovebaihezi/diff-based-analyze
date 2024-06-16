@@ -11,14 +11,13 @@ pub const LLVMError = error{
 
 mod_ref: llvm.NonNullModule = undefined,
 
-pub fn parseIR(ctx: llvm.Context, mem_buf: llvm.MemoryBuffer) LLVMError!IR {
+pub fn parseIR(ctx: llvm.Context, mem_buf: llvm.MemoryBuffer) !IR {
     var out_msg: [*c]u8 = 0x0;
     var ref: llvm.Module = undefined;
     if (llvm_c.LLVMParseIRInContext(ctx, mem_buf, &ref, &out_msg) != 0) {
         if (out_msg != 0x0) {
             std.log.err("failed to read bitcode from stdin, output message: {s}", .{out_msg});
         }
-        return error.parse_bit_code_failed;
     }
     return .{ .mod_ref = ref orelse unreachable };
 }
