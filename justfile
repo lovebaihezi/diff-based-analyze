@@ -16,6 +16,7 @@ pvs_credentials := "FREE-FREE-FREE-FREE"
 coverity_url    := "https://scan.coverity.com/download/cxx/linux64"
 llvm_version    := "17.0.6"
 llvm_url        := "https://github.com/llvm/llvm-project/releases/download/llvmorg-" + llvm_version + "/clang+llvm-" + llvm_version + "-x86_64-linux-gnu-ubuntu-22.04.tar.xz"
+zig_llvm_url    := "https://github.com/lovebaihezi/diff-based-analyze/releases/download/amd64/zig-llvm-amd64.7z"
 llvm_src_version:= "18.1.7"
 llvm_src_url    := "https://github.com/llvm/llvm-project/releases/download/llvmorg-" + llvm_src_version + "/llvm-project-" + llvm_src_version + ".src.tar.xz"
 
@@ -107,3 +108,34 @@ update-stringzilla:
 
 fetch-cocci:
   git clone https://github.com/coccinelle/coccinellery
+
+build-script:
+  clang++ src/AutoApplyVulnerbilities.cpp -Illvm/include -Lllvm/lib $(./llvm/bin/llvm-config --cxxflags) -lc++ --std=c++2a \
+    -lclangTooling \
+    -lclangFrontend \
+    -lclangFrontendTool \
+    -lclangDriver \
+    -lclangSerialization \
+    -lclangCodeGen \
+    -lclangParse \
+    -lclangSema \
+    -lclangStaticAnalyzerFrontend \
+    -lclangStaticAnalyzerCheckers \
+    -lclangStaticAnalyzerCore \
+    -lclangAnalysis \
+    -lclangARCMigrate \
+    -lclangRewrite \
+    -lclangRewriteFrontend \
+    -lclangEdit \
+    -lclangAST \
+    -lclangLex \
+    -lclangBasic \
+    -lLLVMCore \
+    -lLLVMCodeGen \
+    -lLLVMSupport \
+    -lLLVMCodeGenTypes \
+    -lLLVMIRReader \
+    -lLLVMIRPrinter \
+    -lLLVMCoverage \
+    -lz
+
