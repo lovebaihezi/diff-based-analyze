@@ -1,92 +1,94 @@
 import { Edit, Lang, parse, SgNode } from "@ast-grep/napi";
 
-const apply = (root: SgNode): string => {
-  const firstFunction = findFirstFunction(root);
-  const insertIndex = firstFunction.range().start.index - 1;
-  const nodes = root.findAll("$TYPE $ID = $EXPR;");
-  for (const node of nodes) {
-    const nextNode = node.next();
-    if (!nextNode) {
-      continue;
-      // throw new Error("can not find next if statement");
-    }
-    const ifStat = nextNode.find("if ($A == $B) { $C }");
-    if (!ifStat) {
-      continue;
-      // throw new Error("can not find if stat");
-    }
-    const leftVar = ifStat.getMatch("A");
-    // const rightVar = ifStat.getMatch("B");
-    const assignID = node.getMatch("ID");
-    if (!leftVar) {
-      throw new Error("no left var");
-    }
-    if (!assignID) {
-      throw new Error("no assign id");
-    }
-    if (leftVar.text() == assignID.text()) {
-      // handle not pointer version
-      continue
-    }
+const applyForFunctionInit = (root: SgNode): string => {
+    // const firstFunction = findFirstFunction(root);
+    // const insertIndex = firstFunction.range().start.index - 1;
+    const nodes = root.findAll("$TYPE $ID = $FUNC($$$ARGS);");
+    for (const node of nodes) {
+        const nextNode = node.next();
+        if (!nextNode) {
+            continue;
+            // throw new Error("can not find next if statement");
+        }
+        const ifStat = nextNode.find("if ($A == $B) { $C }");
+        if (!ifStat) {
+            continue;
+            // throw new Error("can not find if stat");
+        }
+        const leftVar = ifStat.getMatch("A");
+        // const rightVar = ifStat.getMatch("B");
+        const assignID = node.getMatch("ID");
+        if (!leftVar) {
+            throw new Error("no left var");
+        }
+        if (!assignID) {
+            throw new Error("no assign id");
+        }
+        if (leftVar.text() == assignID.text()) {
+            // handle not pointer version
+            continue;
+        }
 
-    if ("* " + leftVar.text() == assignID.text()) {
-      const type = node.getMatch("TYPE");
-      if (!type) {
-        throw new Error("no type");
-      }
-      const expr = node.getMatch("EXPR");
-      if (!expr) {
-        throw new Error("no expr");
-      }
-      // step 1: Modify the old init, call the pthread join
-      const callPthread: Edit = {
-        "position": expr.range().end.index + 1,
-        "deletedLength": expr.range().end.index - expr.range().start.index,
-        "insertedText": `
-pthread_t thread;
-${type.text()}*${assignID.text()}_ptr;
-pthread_create(&thread, NULL, _ADDED_FUNCTION, &${assignID.text()}_ptr);
-pthread_join(thread, NULL);
-`,
-      };
-      const replaceEdit = node.replace(`
-${type.text()}${assignID.text()};
-pthread_t thread;
-${type.text()}*${assignID.text()}_ptr;
-pthread_create(&thread, NULL, _ADDED_FUNCTION, &${assignID.text().slice(2)}_ptr);
-pthread_join(thread, NULL);
-`
-)
-
-      // step 2: create functoin that init the variable
-      const initFunctionEdit: Edit = {
-        "position": insertIndex,
-        "deletedLength": 0,
-        "insertedText": `
-#include <pthread.h>
-void* _ADDED_FUNCTION(void* arg) {
-  ${type.text()}*${assignID.text()} = arg;
-  *data = ${expr.text()};
+        if ("* " + leftVar.text() == assignID.text()) {
+            const type = node.getMatch("TYPE");
+            if (!type) {
+                throw new Error("no type");
+            }
+            const func = node.getMatch("FUNC");
+            if (!func) {
+                throw new Error("no func");
+            }
+            const args = node.getMultipleMatches("ARGS");
+            const fields: [string, string, string][] = args
+                .filter((arg) => arg.text().trim() != ",")
+                .map((arg, i) => {
+                    // NOTE: dont need to handle constant string or number
+                    if (
+                        arg.text().startsWith(`"`) ||
+                        /\d/.test(arg.text()[0])
+                    ) {
+                        return [
+                            `/* skip ${i}th ${arg.text()} */`,
+                            "",
+                            arg.text(),
+                        ] as const;
+                    }
+                    return [
+                        `typeof(${arg.text()}) var_${i};`,
+                        `arg.var_${i} = ${arg.text()};`,
+                        `args->var_${i}`,
+                    ] as const;
+                });
+            // NOTE: init the variable need extra args, so you will a struct to wrap them
+            const edited = node.replace(`
+struct _ONLY_FORVUL_ARG {
+  ${fields.map(([field]) => field).join("\n")}
+  // Used for Return
+  ${type.text()}${assignID.text()};
+};
+void* ONLY_FOR_VUL(struct _ONLY_FORVUL_ARG* args) {
+  args->${assignID.text().slice(2)} = ${func.text()}(${fields
+                .map(([_, __, field]) => field)
+                .join(", ")});
   return NULL;
-}`,
-      };
-      const rootCommited = root.commitEdits([replaceEdit,initFunctionEdit]);
-      return rootCommited;
+}
+pthread_t SPECIFIC_THREAD;
+${type.text()}${assignID.text()};
+struct _ONLY_FORVUL_ARG arg;
+${fields.map(([_, field]) => field).join("\n")}
+pthread_create(&SPECIFIC_THREAD, NULL, (void*)ONLY_FOR_VUL, (void*) &(arg));
+`);
+            const callJoinAtLast = ifStat.replace(`${ifStat.text()}
+pthread_join(SPECIFIC_THREAD, NULL);`);
+            const rootCommited = root.commitEdits([edited, callJoinAtLast]);
+            return rootCommited;
+        }
     }
-  }
-  throw new Error("can not find one pattern for insert");
+    throw new Error("can not find one pattern for insert");
 };
 
-const findFirstFunction = (root: SgNode): SgNode => {
-  const nodes = root.findAll("$RET_TYPE $F_NAME($$$ARGS) { $BODY }");
-  if (nodes.length == 0) {
-    throw new Error("can not find main function");
-  }
-  return nodes[0];
-};
-
-const main = () => {
-  const source = `
+const testA = () => {
+    const source = `
 #include <stdio.h>
 
 int main(int argc, char* argv[]) {
@@ -103,9 +105,10 @@ int main(int argc, char* argv[]) {
     }
 }
 `;
-  const ast = parse(Lang.C, source);
-  const root = ast.root();
-  const modified = apply(root);
-  console.log(modified);
+    const ast = parse(Lang.C, source);
+    const root = ast.root();
+    const modified = applyForFunctionInit(root);
+    console.log("#include <pthread.h>\n" + modified);
 };
-main();
+
+testA();
