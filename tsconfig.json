@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
-    "target": "ESNEXT",
-    "module": "nodenext",
-    "lib": ["ES2023", "dom"],
+    "target": "ESNext",
+    "module": "Node16",
+    "lib": ["ESNext"],
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "moduleResolution": "NodeNext",
     "forceConsistentCasingInFileNames": true
   }
 }

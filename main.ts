@@ -1,4 +1,5 @@
-import { Edit, Lang, parse, SgNode } from "@ast-grep/napi";
+import { Edit, Lang, parse, parseFiles, SgNode } from "@ast-grep/napi";
+import {writeFile} from 'node:fs/promises'
 
 const applyForFunctionInit = (root: SgNode): string => {
     // const firstFunction = findFirstFunction(root);
@@ -87,6 +88,15 @@ pthread_join(SPECIFIC_THREAD, NULL);`);
     throw new Error("can not find one pattern for insert");
 };
 
+const main = async (paths: string[]) => {
+  await parseFiles(paths, async (err, res) => {
+    const modified = applyForFunctionInit(res.root());
+    await writeFile(res.filename(), "#include <pthread.h>\n" + modified)
+  })
+}
+
+main(process.argv.slice(2))
+
 const testA = () => {
     const source = `
 #include <stdio.h>
@@ -110,5 +120,3 @@ int main(int argc, char* argv[]) {
     const modified = applyForFunctionInit(root);
     console.log("#include <pthread.h>\n" + modified);
 };
-
-testA();
