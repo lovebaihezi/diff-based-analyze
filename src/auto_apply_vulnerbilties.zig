@@ -66,6 +66,8 @@ pub fn applyVulnerbilties(input_allocator: Allocator, ir_module: llvm.NonNullMod
                                 info.add_write_operand(op);
                                 if (info.read_count() == 0) {
                                     // TODO: Add thread here
+                                    // Step 1: Create a new thread
+                                    // Step 2: Move the write to the new thread
                                 }
                                 break;
                             } else if (name.len != 0) {
@@ -165,5 +167,6 @@ test "auto apply vulnerbilties" {
     defer file.close();
     try file.writeAll(llvm.outputIRToStr(ir_module.mod_ref));
     try file.sync();
-    try compile_back.decompile(allocator, "test.ll");
+    try compile_back.decompile(allocator, .{ .file = "test.ll", .output = "test.generated.c" });
+    try cwd.deleteFile("test.generated.c");
 }

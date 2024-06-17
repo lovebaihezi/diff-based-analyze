@@ -18,3 +18,4 @@ pvs-*
 /zlib*
 /clang+llvm*
 /llvm-*
+/.cache
