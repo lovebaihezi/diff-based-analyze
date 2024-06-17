@@ -179,3 +179,101 @@ const Allocator = std.mem.Allocator;
 //    try compile_back.decompile(allocator, .{ .file = "test.ll", .output = "test.generated.c" });
 //    try cwd.deleteFile("test.generated.c");
 //}
+
+pub const SGOption = struct {
+    pattern: []const u8 = "for ($A; $B; $C) { $D }",
+    rewrite: []const u8 = "while ($B) { $A; $D $C }",
+    file_path: []const u8,
+};
+
+pub fn applyVulnerbilties(allocator: Allocator, option: SGOption) !void {
+    std.debug.print("run sg on: {s}\n", .{option.file_path});
+    // sg run --pattern 'foo' --rewrite 'bar' --lang python
+    var process = std.process.Child.init(&.{
+        // Use Ast Grep to rewrite all == to pthread one
+        "sg",
+        // auto update
+        "-U",
+        // pattern
+        "-p",
+        option.pattern,
+        // rewrite to
+        "-r",
+        option.rewrite,
+        // Path
+        option.file_path,
+    }, allocator);
+    process.stderr_behavior = .Inherit;
+    try process.spawn();
+    _ = try process.wait();
+}
+
+const tree_source =
+    \\#include "dirent.h"
+    \\
+    \\#include <stddef.h>
+    \\#include <stdio.h>
+    \\#include <stdlib.h>
+    \\
+    \\int root_fn(DIR *dir, size_t level) {
+    \\  struct dirent *dirent = NULL;
+    \\  while ((dirent = readdir(dir))) {
+    \\    switch (dirent->d_type) {
+    \\    case DT_DIR:
+    \\      if (dirent->d_name[0] == '.') {
+    \\        continue;
+    \\      }
+    \\      for (size_t i = 0; i < level; i++) {
+    \\        printf("\t");
+    \\      }
+    \\      printf("%s\n", dirent->d_name);
+    \\      DIR *subdir = opendir(dirent->d_name);
+    \\      root_fn(subdir, level + 1);
+    \\      break;
+    \\    default:
+    \\      for (size_t i = 0; i < level + 1; i++) {
+    \\        printf("\t");
+    \\      }
+    \\      printf("%s\n", dirent->d_name);
+    \\      break;
+    \\    }
+    \\  }
+    \\  if (dir != NULL) {
+    \\    closedir(dir);
+    \\  }
+    \\  return 0;
+    \\}
+    \\
+    \\int main(int argc, char *argv[]) {
+    \\  DIR *dir = opendir(argv[1]);
+    \\  root_fn(dir, 0);
+    \\  return 0;
+    \\}
+;
+const expected_output =
+    \\
+;
+
+test "apply vulnerbilities" {
+    const allocator = std.testing.allocator;
+
+    var tmpDir = std.testing.tmpDir(.{});
+    defer tmpDir.cleanup();
+
+    const file = try tmpDir.dir.createFile("test.c", .{
+        .read = true,
+    });
+
+    const path = try tmpDir.dir.realpathAlloc(allocator, "test.c");
+
+    defer allocator.free(path);
+    defer file.close();
+    try file.writeAll(tree_source);
+    try file.seekTo(0);
+    try file.sync();
+    try applyVulnerbilties(allocator, .{ .file_path = path });
+    try file.sync();
+    const content = try file.readToEndAlloc(allocator, 4096 * 4096);
+    defer allocator.free(content);
+    try std.testing.expectEqualStrings(expected_output, content);
+}
