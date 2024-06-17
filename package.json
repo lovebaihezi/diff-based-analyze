@@ -4,12 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-      "main": "tsc main.ts; node main.js"
+    "main": "tsc main.ts; node main.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@ast-grep/napi": "^0.23.0"
+    "@ast-grep/napi": "^0.23.0",
+    "@types/node": "^20.14.2"
   }
 }

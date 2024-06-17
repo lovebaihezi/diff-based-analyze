@@ -11,6 +11,9 @@ importers:
       '@ast-grep/napi':
         specifier: ^0.23.0
         version: 0.23.0
+      '@types/node':
+        specifier: ^20.14.2
+        version: 20.14.2
 
 packages:
 
@@ -66,6 +69,12 @@ packages:
     resolution: {integrity: sha512-xdm6TGbDt3xXEsQdWpaVTIJcxqBOAXZ5lfE0j+fnw33z2gHqL+0Mo3GdVPREiOFAb63ohNURn4j51L0uc+2j2g==}
     engines: {node: '>= 10'}
 
+  '@types/node@20.14.2':
+    resolution: {integrity: sha512-xyu6WAMVwv6AKFLB+e/7ySZVr/0zLCzOa7rSpq6jNwpqOrUbcACDWC+53d4n2QHOnDou0fbIsg8wZu/sxrnI4Q==}
+
+  undici-types@5.26.5:
+    resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
+
 snapshots:
 
   '@ast-grep/napi-darwin-arm64@0.23.0':
@@ -102,3 +111,9 @@ snapshots:
       '@ast-grep/napi-win32-arm64-msvc': 0.23.0
       '@ast-grep/napi-win32-ia32-msvc': 0.23.0
       '@ast-grep/napi-win32-x64-msvc': 0.23.0
+
+  '@types/node@20.14.2':
+    dependencies:
+      undici-types: 5.26.5
+
+  undici-types@5.26.5: {}
