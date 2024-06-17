@@ -19,3 +19,5 @@ pvs-*
 /clang+llvm*
 /llvm-*
 /.cache
+/node_modules
+main.js
