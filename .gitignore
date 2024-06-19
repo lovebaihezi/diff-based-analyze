@@ -20,4 +20,4 @@ pvs-*
 /llvm-*
 /.cache
 /node_modules
-main.js
+*.js

@@ -823,10 +823,10 @@ as the thread pool.
     contents: [{ role: "User", parts: [{ text: code }] }],
   };
   const res = await model.generateContent(req);
-  const {candidates} = res.response
+  const { candidates } = res.response;
   if (candidates) {
     for (const candidate of candidates) {
-      console.log(candidate.content)
+      console.log(candidate.content);
     }
   }
 }
