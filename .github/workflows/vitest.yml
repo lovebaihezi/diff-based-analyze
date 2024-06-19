@@ -1,0 +1,15 @@
+name: Parasoft Test
+on:
+  workflow_call:
+jobs:
+  parasoft-baseline:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: extractions/setup-just@v2
+      - uses: ./.github/actions/setup
+

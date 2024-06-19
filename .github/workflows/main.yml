@@ -5,6 +5,9 @@ jobs:
     uses: ./.github/workflows/build.yml
   clang-static-analyzer:
     uses: ./.github/workflows/clang-static-analyzer.yml
+  vitest:
+    uses: ./.github/workflows/vitest.yml
+
   # infer:
   #   uses: ./.github/workflows/infer-racerd.yml
   # ikos:
