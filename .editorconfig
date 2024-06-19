@@ -1,0 +1,11 @@
+# .editorconfig for zig, C, C++, Typescript
+# Zig, C, C++ 4 indent spaces
+# Typescript 2 indent spaces
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+
+[*.ts]
+indent_size = 2
