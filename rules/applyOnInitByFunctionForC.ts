@@ -1,6 +1,6 @@
-import { Edit, Lang, parse, parseFiles, SgNode } from "@ast-grep/napi";
+import { SgNode } from "@ast-grep/napi";
 
-export const applyForFunctionInit = (root: SgNode): string => {
+export const applyForC = (root: SgNode): string => {
   const nodes = root.findAll("$TYPE $ID = $FUNC($$$ARGS);");
   for (const node of nodes) {
     const nextNode = node.next();
