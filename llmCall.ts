@@ -22,7 +22,7 @@ const model = genAI.getGenerativeModel({
     "type": "array",
     "value": [
       {
-        "code": {
+        "codeWithIssue": {
           "value": "...",
           "type": "string",
         },
@@ -68,7 +68,7 @@ export async function checkContent(code: string, options?: Options): Promise<Enh
     ...options
   });
 
-  const result = await Promise.race([chatSession.sendMessage(code), sleep(options?.timeout ?? 10)]);
+  const result = await Promise.race([chatSession.sendMessage(code), sleep(options?.timeout ?? 300)]);
   if (result) {
     return result.response
   }

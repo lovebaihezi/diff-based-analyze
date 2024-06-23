@@ -60,9 +60,7 @@ class Diagnose {
     private llmRes: Result,
     private codeContainsIssue: string[]
   ) {}
-  static collect(diagnoses: Diagnose[]) {
-
-  }
+  static collect(diagnoses: Diagnose[]) {}
 }
 
 const report = async (
@@ -110,12 +108,17 @@ const cmd = async (paths: string[]) => {
 const reportDir = async (path = ".") => {
   const cwd = await opendir(path);
   let file: Dirent | null = null;
-  const diagnoses: Diagnose[] = []
+  const diagnoses: Diagnose[] = [];
   while ((file = await cwd.read())) {
-    if (file.isFile()) {
+    if (
+      file.isFile() &&
+      [".cc", ".C", ".c++", ".cpp", ".cu", ".c"].some(
+        (ext) => file && file.name.endsWith(ext)
+      )
+    ) {
       const diagnose = await getFileReport(join(file.parentPath, file.name));
       if (diagnose) {
-        diagnoses.push(diagnose)
+        diagnoses.push(diagnose);
       }
     } else if (file.isDirectory()) {
       await reportDir(join(file.parentPath, file.name));
@@ -124,7 +127,7 @@ const reportDir = async (path = ".") => {
 };
 
 const main = async () => {
-  await reportDir()
+  await reportDir();
 };
 
 main();
