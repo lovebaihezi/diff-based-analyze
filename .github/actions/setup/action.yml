@@ -34,8 +34,15 @@ runs:
       shell: bash
       run: |
         git clone https://github.com/LLNL/dataracebench.git
-    - name: Setup Node and pnpm
-      shell: bash
+    - uses: cachix/install-nix-action@v27
+      with:
+        github_access_token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/setup-node@v4
+      with:
+        corepack-enable: true
+        node-version: 20
+    - name: Corepack check
       run: |
-        nix profile install nixpkgs#nodejs
-        npm i -g pnpm
+        corepack enable
+        cd ${{ github.workspace }}
+        corepack prepare
