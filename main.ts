@@ -1,32 +1,34 @@
 import { parseFiles, SgRoot } from "@ast-grep/napi";
-import { writeFile } from "node:fs/promises";
 import { applyForC } from "./rules/applyOnInitByFunctionForC";
 import { applyForCpp } from "./rules/applyOnInitByFunctionForC++";
-import { GeminiFlash, checkVulnerabilities } from "./llmCall";
+import { checkContent } from "./llmCall";
+import logger from "./logger";
 
 const main = async (paths: string[]) => {
-  await parseFiles(paths, async (err, res: SgRoot) => {
+  await parseFiles(paths, async (err, root: SgRoot) => {
     if (err) {
-      console.error(err);
+      logger.error(err);
       return;
     }
     try {
       if (
-        res.filename().endsWith(".cc") || res.filename().endsWith(".cpp") || res.filename().endsWith(".cu") ||
-        res.filename().endsWith(".hpp")
+        root.filename().endsWith(".cc") ||
+        root.filename().endsWith(".cpp") ||
+        root.filename().endsWith(".cu") ||
+        root.filename().endsWith(".hpp")
       ) {
-        const modified = applyForCpp(res.root());
-        await checkVulnerabilities(GeminiFlash, modified)
-        await writeFile(res.filename(), "#include <thread>\n" + modified);
-      } else if (res.filename().endsWith(".c")) {
-        const modified = applyForC(res.root());
-        await checkVulnerabilities(GeminiFlash, modified)
-        await writeFile(res.filename(), "#include <pthread.h>\n" + modified);
+        const modified = applyForCpp(root.root());
+        const res = await checkContent( modified);
+        console.log(res.text())
+      } else if (root.filename().endsWith(".c")) {
+        const modified = applyForC(root.root());
+        const res = await checkContent(modified);
+        console.log(res.text())
       } else {
-        console.warn("current not support for this file type", res.filename())
+        logger.warn("current not support for this file type", root.filename());
       }
     } catch (e) {
-      console.error(`failed to apply vulnerabilities for ${res.filename()}`);
+      logger.info(e, "failed to apply vulnerabilities");
     }
   });
 };
