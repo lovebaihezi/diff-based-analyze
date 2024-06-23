@@ -65,7 +65,25 @@ interface Options extends GenerationConfig{
 export async function checkContent(code: string, options?: Options): Promise<EnhancedGenerateContentResponse | null> {
   const chatSession = model.startChat({
     generationConfig,
-    ...options
+    safetySettings: [
+      {
+        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      },
+    ],
+    ...options,
   });
 
   const result = await Promise.race([chatSession.sendMessage(code), sleep(options?.timeout ?? 300)]);

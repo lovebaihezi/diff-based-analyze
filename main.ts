@@ -56,15 +56,21 @@ async function getStrReport(
 
 class Diagnose {
   constructor(
+    private file: string,
     private duration: number,
     private llmRes: Result,
-    private codeContainsIssue: string[]
+    private codeContainsIssue: any[],
   ) {}
-  static collect(diagnoses: Diagnose[]) {}
+  public output() {
+    logger.info(
+      this.codeContainsIssue,
+      `scan ${this.file}, cost ${this.duration}`,
+    );
+  }
 }
 
 const report = async (
-  result: [string, string | null]
+  result: [string, string | null],
 ): Promise<Diagnose | null> => {
   const beginTime = new Date();
   const [filename, jsonStr] = result;
@@ -74,11 +80,12 @@ const report = async (
   }
   const json = JSON.parse(jsonStr);
   const endTime = new Date();
-  return {
-    duration: endTime.getTime() - beginTime.getTime(),
-    llmRes: json,
-    ...json,
-  };
+  return new Diagnose(
+    filename,
+    endTime.getTime() - beginTime.getTime(),
+    json,
+    json.codeContainsIssue,
+  );
 };
 
 const baseline = async (paths: string[]) => {
@@ -108,7 +115,6 @@ const cmd = async (paths: string[]) => {
 const reportDir = async (path = ".") => {
   const cwd = await opendir(path);
   let file: Dirent | null = null;
-  const diagnoses: Diagnose[] = [];
   while ((file = await cwd.read())) {
     if (
       file.isFile() &&
@@ -117,17 +123,16 @@ const reportDir = async (path = ".") => {
       )
     ) {
       const diagnose = await getFileReport(join(file.parentPath, file.name));
-      if (diagnose) {
-        diagnoses.push(diagnose);
-      }
-    } else if (file.isDirectory()) {
+      diagnose?.output();
+    } else if (file.isDirectory() && !file.name.startsWith(".")) {
       await reportDir(join(file.parentPath, file.name));
     }
   }
+  cwd.close()
 };
 
-const main = async () => {
+const main = async (path: string) => {
   await reportDir();
 };
 
-main();
+main(process.argv[2]);
