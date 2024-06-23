@@ -1,0 +1,75 @@
+[submodule "micros/fio"]
+	path = micros/fio
+	url = https://github.com/axboe/fio
+[submodule "micros/Detours"]
+	path = micros/Detours
+	url = https://github.com/microsoft/Detours
+[submodule "micros/passenger"]
+	path = micros/passenger
+	url = https://github.com/phusion/passenger
+[submodule "micros/DALI"]
+	path = micros/DALI
+	url = https://github.com/NVIDIA/DALI
+[submodule "micros/QuantLib"]
+	path = micros/QuantLib
+	url = https://github.com/lballabio/QuantLib
+[submodule "micros/aircrack-ng"]
+	path = micros/aircrack-ng
+	url = https://github.com/aircrack-ng/aircrack-ng
+[submodule "micros/redcarpet"]
+	path = micros/redcarpet
+	url = https://github.com/vmg/redcarpet
+[submodule "micros/fswatch"]
+	path = micros/fswatch
+	url = https://github.com/emcrisostomo/fswatch
+[submodule "micros/instant-meshes"]
+	path = micros/instant-meshes
+	url = https://github.com/wjakob/instant-meshes
+[submodule "micros/clumsy"]
+	path = micros/clumsy
+	url = https://github.com/jagt/clumsy
+[submodule "micros/tinyxml2"]
+	path = micros/tinyxml2
+	url = https://github.com/leethomason/tinyxml2
+[submodule "micros/zcash"]
+	path = micros/zcash
+	url = https://github.com/zcash/zcash
+[submodule "micros/cuberite"]
+	path = micros/cuberite
+	url = https://github.com/cuberite/cuberite
+[submodule "micros/react-native-fs"]
+	path = micros/react-native-fs
+	url = https://github.com/itinance/react-native-fs
+[submodule "micros/Zelda64Recomp"]
+	path = micros/Zelda64Recomp
+	url = https://github.com/Zelda64Recomp/Zelda64Recomp
+[submodule "micros/immortalwrt"]
+	path = micros/immortalwrt
+	url = https://github.com/immortalwrt/immortalwrt
+[submodule "micros/mdp"]
+	path = micros/mdp
+	url = https://github.com/visit1985/mdp
+[submodule "micros/yaml-cpp"]
+	path = micros/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp
+[submodule "micros/gnuradio"]
+	path = micros/gnuradio
+	url = https://github.com/gnuradio/gnuradio
+[submodule "micros/mlpack"]
+	path = micros/mlpack
+	url = https://github.com/mlpack/mlpack
+[submodule "micros/GmSSL"]
+	path = micros/GmSSL
+	url = https://github.com/guanzhi/GmSSL
+[submodule "micros/cccl"]
+	path = micros/cccl
+	url = https://github.com/NVIDIA/cccl
+[submodule "micros/littlefs"]
+	path = micros/littlefs
+	url = https://github.com/littlefs-project/littlefs
+[submodule "micros/sds"]
+	path = micros/sds
+	url = https://github.com/antirez/sds
+[submodule "micros/piper"]
+	path = micros/piper
+	url = https://github.com/rhasspy/piper
