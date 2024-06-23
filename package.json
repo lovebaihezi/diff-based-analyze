@@ -1,20 +1,20 @@
 {
-  "name": "diff-based-analyze",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "main": "tsc main.ts; node main.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@ast-grep/napi": "^0.23.0",
-    "@google-cloud/vertexai": "^1.2.0",
-    "@types/node": "^20.14.2"
-  },
-  "devDependencies": {
-    "vitest": "^1.6.0"
-  }
+    "name": "diff-based-analyze",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "main": "tsc main.ts; node main.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@ast-grep/napi": "^0.23.0",
+        "@google-cloud/vertexai": "^1.2.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.14.8",
+        "vitest": "^1.6.0"
+    }
 }

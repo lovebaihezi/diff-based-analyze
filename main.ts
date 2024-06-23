@@ -2,6 +2,7 @@ import { parseFiles, SgRoot } from "@ast-grep/napi";
 import { writeFile } from "node:fs/promises";
 import { applyForC } from "./rules/applyOnInitByFunctionForC";
 import { applyForCpp } from "./rules/applyOnInitByFunctionForC++";
+import { GeminiFlash, checkVulnerabilities } from "./llmCall";
 
 const main = async (paths: string[]) => {
   await parseFiles(paths, async (err, res: SgRoot) => {
@@ -15,15 +16,17 @@ const main = async (paths: string[]) => {
         res.filename().endsWith(".hpp")
       ) {
         const modified = applyForCpp(res.root());
+        await checkVulnerabilities(GeminiFlash, modified)
         await writeFile(res.filename(), "#include <thread>\n" + modified);
       } else if (res.filename().endsWith(".c")) {
         const modified = applyForC(res.root());
+        await checkVulnerabilities(GeminiFlash, modified)
         await writeFile(res.filename(), "#include <pthread.h>\n" + modified);
       } else {
         console.warn("current not support for this file type", res.filename())
       }
     } catch (e) {
-      console.error(`failed to apply vulnerbilities for ${res.filename()}`);
+      console.error(`failed to apply vulnerabilities for ${res.filename()}`);
     }
   });
 };
