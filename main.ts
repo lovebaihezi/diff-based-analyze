@@ -3,8 +3,9 @@ import { applyForC } from "./rules/applyOnInitByFunctionForC";
 import { applyForCpp } from "./rules/applyOnInitByFunctionForC++";
 import { checkContent } from "./llmCall";
 import logger from "./logger";
-import { readFile } from "node:fs/promises";
-import { log } from "node:console";
+import { readFile, opendir } from "node:fs/promises";
+import { Dir, Dirent } from "node:fs";
+import { join } from "node:path";
 
 type Result = Record<"code" | "cwe_name" | "sync_issue", string | undefined>;
 
@@ -53,10 +54,15 @@ async function getStrReport(
   return jsonStrArr;
 }
 
-interface Diagnose {
-  duration: number;
-  llmRes: Result;
-  codeContainsIssue: string[]
+class Diagnose {
+  constructor(
+    private duration: number,
+    private llmRes: Result,
+    private codeContainsIssue: string[]
+  ) {}
+  static collect(diagnoses: Diagnose[]) {
+
+  }
 }
 
 const report = async (
@@ -73,7 +79,7 @@ const report = async (
   return {
     duration: endTime.getTime() - beginTime.getTime(),
     llmRes: json,
-    ...json
+    ...json,
   };
 };
 
@@ -94,11 +100,31 @@ const getFileReport = async (path: string) => {
   return await report([path, jsonStr]);
 };
 
-const main = async (paths: string[]) => {
+const cmd = async (paths: string[]) => {
   for (const file of paths) {
     const report = await getFileReport(file);
-    logger.info(report)
+    logger.info(report);
   }
 };
 
-main(process.argv.slice(2));
+const reportDir = async (path = ".") => {
+  const cwd = await opendir(path);
+  let file: Dirent | null = null;
+  const diagnoses: Diagnose[] = []
+  while ((file = await cwd.read())) {
+    if (file.isFile()) {
+      const diagnose = await getFileReport(join(file.parentPath, file.name));
+      if (diagnose) {
+        diagnoses.push(diagnose)
+      }
+    } else if (file.isDirectory()) {
+      await reportDir(join(file.parentPath, file.name));
+    }
+  }
+};
+
+const main = async () => {
+  await reportDir()
+};
+
+main();
