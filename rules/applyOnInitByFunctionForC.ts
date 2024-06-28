@@ -25,11 +25,7 @@ export const applyForC = (root: SgNode): string => {
       .map((arg, i) => {
         // NOTE: dont need to handle constant string or number
         if (arg.text().startsWith(`"`) || /\d/.test(arg.text()[0])) {
-          return [
-            `/* skip ${i}th ${arg.text()} */`,
-            "",
-            arg.text(),
-          ] as const;
+          return [`/* skip ${i}th ${arg.text()} */`, "", arg.text()] as const;
         }
         return [
           `typeof(${arg.text()}) var_${i};`,
@@ -45,11 +41,9 @@ struct _ONLY_FORVUL_ARG {
   ${type.text()}${assignID.text()};
   };
   void* ONLY_FOR_VUL(struct _ONLY_FORVUL_ARG* args) {
-    args->${assignID.text().slice(2)} = ${func.text()}(${
-      fields
-        .map(([_, __, field]) => field)
-        .join(", ")
-    });
+    args->${assignID.text().slice(2)} = ${func.text()}(${fields
+      .map(([_, __, field]) => field)
+      .join(", ")});
       return NULL;
       }
       pthread_t SPECIFIC_THREAD;
