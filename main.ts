@@ -32,7 +32,7 @@ async function modified(root: SgRoot): Promise<string | null> {
 }
 
 async function getStrReport(
-  paths: string[]
+  paths: string[],
 ): Promise<[string, string | null][]> {
   const jsonStrArr: [string, string | null][] = [];
   await parseFiles(paths, async (err, root: SgRoot) => {
@@ -58,13 +58,13 @@ class Diagnose {
   constructor(
     private duration: number,
     private llmRes: Result,
-    private codeContainsIssue: string[]
+    private codeContainsIssue: string[],
   ) {}
   static collect(diagnoses: Diagnose[]) {}
 }
 
 const report = async (
-  result: [string, string | null]
+  result: [string, string | null],
 ): Promise<Diagnose | null> => {
   const beginTime = new Date();
   const [filename, jsonStr] = result;
@@ -113,7 +113,7 @@ const reportDir = async (path = ".") => {
     if (
       file.isFile() &&
       [".cc", ".C", ".c++", ".cpp", ".cu", ".c"].some(
-        (ext) => file && file.name.endsWith(ext)
+        (ext) => file && file.name.endsWith(ext),
       )
     ) {
       const diagnose = await getFileReport(join(file.parentPath, file.name));
