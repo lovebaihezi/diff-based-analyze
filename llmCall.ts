@@ -7,6 +7,7 @@ import {
   StartChatParams,
 } from "@google/generative-ai";
 import logger from "./logger";
+import { prototype } from "node:events";
 
 const apiKey = process.env.GEMINI_API_KEY;
 if (!apiKey) {
@@ -16,35 +17,27 @@ const genAI = new GoogleGenerativeAI(apiKey);
 
 const model = genAI.getGenerativeModel({
   model: "gemini-1.5-flash",
-  systemInstruction: `You are an Expert in POSIX Thread Model and Linux API, including sync prototype, atomic, CPU cache and memory corruption. You will check the input source code, point the issues including: wrong memory order of atomic variables read and write; dead lock; non-thread safe API uses in thread scope. Response in this JSON schema
-{
-  "type": "object",
-  "properties": {
-    "codesContainsIssue": {
-      "description": "",
-      "type": "array",
-      "item": {
-        "type": "object",
-        "properties": {
-          "codeWithIssue": {
-            "type": "string",
-            "description": "part of the code with issues"
-          },
-          "CWE": {
-            "type": "string",
-            "description": "the id which will be used to search in CWE database"
-          },
-          "threadSyncIssue": {
-            "type": "string",
-            "description": "the detailed explain of the thread sync"
-          }
-        }
-      },
-      "minItems": 0,
-      "uniqueItems": true
-    }
-  }
-}
+  safetySettings: [
+    {
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+      category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+    },
+    {
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+      category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+    },
+    {
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+      category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+    },
+    {
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+      category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+    },
+  ],
+  systemInstruction: `You are an Expert in POSIX Thread Model and Linux API, including sync prototype, atomic, CPU cache and memory corruption. You will check the input source code, point the issues including: wrong memory order of atomic variables read and write; dead lock; non-thread safe API uses in thread scope. Response in this format
+<codesContainsIssue>$CODE</codesContainsIssue>
+<CWE-ID>$CWE-ID</CWE-ID>
 `,
 });
 
@@ -53,8 +46,6 @@ const generationConfig: GenerationConfig = {
   topP: 0.95,
   topK: 64,
   maxOutputTokens: 8192,
-  // Gemini output is not that good for parsing,
-  responseMimeType: "application/json",
 };
 
 export function sleep(s: number): Promise<null> {
@@ -80,7 +71,7 @@ export async function checkContent(
   });
 
   const result = await Promise.race([
-    chatSession.sendMessage(code),
+    chatSession.sendMessageStream(code),
     sleep(options?.timeout ?? 300),
   ]);
   if (result) {
