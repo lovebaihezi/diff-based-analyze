@@ -4,8 +4,15 @@ import { applyForCpp } from "./rules/applyOnInitByFunctionForC++";
 import { checkContent } from "./llmCall";
 import logger from "./logger";
 import { readFile, opendir } from "node:fs/promises";
-import { Dir, Dirent } from "node:fs";
+import { Dirent } from "node:fs";
 import { join } from "node:path";
+import { TaskPool } from "./tasksPool";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+import { analyze } from "./analyze";
+
+// Gemini flash 1.5 support 1000 RPM
+const pool = new TaskPool(1000);
 
 type Result = Record<"code" | "cwe_name" | "sync_issue", string | undefined>;
 
@@ -34,7 +41,7 @@ async function modified(root: SgRoot): Promise<string | null> {
 async function getStrReport(
   paths: string[],
 ): Promise<[string, string | null][]> {
-  const jsonStrArr: [string, string | null][] = [];
+  const xmlStrs: [string, string | null][] = [];
   await parseFiles(paths, async (err, root: SgRoot) => {
     if (err) {
       logger.error(err);
@@ -48,37 +55,56 @@ async function getStrReport(
     if (!res) {
       return;
     }
-    const jsonStr = res.text();
-    jsonStrArr.push([root.filename(), jsonStr]);
+    const xmlStr = res.text();
+    xmlStrs.push([root.filename(), xmlStr]);
   });
-  return jsonStrArr;
+  return xmlStrs;
 }
 
 class Diagnose {
+  public codeWithIssue: string = "";
+  public cweID: string = "";
   constructor(
+    private fileName: string,
     private duration: number,
-    private llmRes: Result,
-    private codeContainsIssue: string[],
-  ) {}
-  static collect(diagnoses: Diagnose[]) {}
+    private llmRes: string,
+  ) {
+    logger.debug({ llmRes }, "raw llm res");
+    const start = llmRes.indexOf("<codesContainsIssue>");
+    const codeWithIssue = llmRes.slice(
+      start,
+      llmRes.indexOf("</codesContainsIssue>", start + 1),
+    );
+    const cweID = llmRes.slice(
+      llmRes.indexOf("<CWE-ID>"),
+      llmRes.indexOf("</CWE-ID>"),
+    );
+    if (codeWithIssue && cweID) {
+      this.codeWithIssue = codeWithIssue;
+      this.cweID = cweID;
+      logger.debug(
+        { issuesCode: this.codeWithIssue, fileName, duration, cweID },
+        `LLM find the code with issue`,
+      );
+    }
+  }
 }
 
 const report = async (
   result: [string, string | null],
 ): Promise<Diagnose | null> => {
   const beginTime = new Date();
-  const [filename, jsonStr] = result;
-  if (!jsonStr) {
+  const [filename, xmlStr] = result;
+  if (!xmlStr) {
     logger.error("failed to get result from" + filename);
     return null;
   }
-  const json = JSON.parse(jsonStr);
   const endTime = new Date();
-  return {
-    duration: endTime.getTime() - beginTime.getTime(),
-    llmRes: json,
-    ...json,
-  };
+  return new Diagnose(
+    filename,
+    endTime.getTime() - beginTime.getTime(),
+    xmlStr,
+  );
 };
 
 const baseline = async (paths: string[]) => {
@@ -95,7 +121,7 @@ const getFileReport = async (path: string) => {
     return null;
   }
   const jsonStr = res.text();
-  return await report([path, jsonStr]);
+  return await pool.wrap(() => report([path, jsonStr]));
 };
 
 const cmd = async (paths: string[]) => {
@@ -105,29 +131,71 @@ const cmd = async (paths: string[]) => {
   }
 };
 
-const reportDir = async (path = ".") => {
+const reportDir = async ({ path = ".", skiped = [] as string[] }) => {
+  if (skiped.includes(path)) {
+    return;
+  }
   const cwd = await opendir(path);
   let file: Dirent | null = null;
-  const diagnoses: Diagnose[] = [];
+  const checks: Promise<Diagnose | null>[] = [];
   while ((file = await cwd.read())) {
     if (
       file.isFile() &&
       [".cc", ".C", ".c++", ".cpp", ".cu", ".c"].some(
         (ext) => file && file.name.endsWith(ext),
-      )
+      ) &&
+      !/[tT]est/.test(file.name)
     ) {
-      const diagnose = await getFileReport(join(file.parentPath, file.name));
-      if (diagnose) {
-        diagnoses.push(diagnose);
-      }
+      const path = join(file.parentPath, file.name);
+      const check = getFileReport(path).catch((e) => {
+        logger.error(e, `failed to get report of ${path}`);
+        return null;
+      });
+      checks.push(check);
     } else if (file.isDirectory()) {
-      await reportDir(join(file.parentPath, file.name));
+      await reportDir({ path: join(file.parentPath, file.name), skiped });
     }
   }
+  const diagnoses = await Promise.all(checks);
+  for (const diagnose of diagnoses) {
+    logger.info(diagnose);
+  }
+  cwd.close();
 };
 
 const main = async () => {
-  await reportDir();
+  const argv = await yargs(hideBin(process.argv))
+    .command(
+      "analyze <file>",
+      "the path to run check on",
+      (yargs) => {
+        return yargs.positional("file", {
+          describe: "The file to analyze",
+          type: "string",
+        });
+      },
+      async ({ file }) => {
+        if (file) {
+          logger.info({ file }, "run analyze");
+          await analyze(file);
+        }
+      },
+    )
+    .command(
+      "micro <path>",
+      "run on micro",
+      (yargs) => {
+        return yargs.positional("micro", {
+          describe: "The file to analyze",
+          type: "string",
+        });
+      },
+      async ({ micro }) => {
+        await reportDir({ skiped: [], path: micro });
+      },
+    )
+    .help()
+    .parse();
 };
 
 main();

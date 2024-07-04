@@ -4,7 +4,7 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "main": "tsc main.ts; node main.js"
+        "main": "tsc --build tsconfig.json; node dist/main.js"
     },
     "keywords": [],
     "author": "",
@@ -12,10 +12,12 @@
     "dependencies": {
         "@ast-grep/napi": "^0.23.0",
         "@google/generative-ai": "^0.13.0",
-        "pino": "^9.2.0"
+        "pino": "^9.2.0",
+        "yargs": "^17.7.2"
     },
     "devDependencies": {
         "@types/node": "^20.14.8",
+        "@types/yargs": "^17.0.32",
         "vitest": "^1.6.0"
     }
 }
