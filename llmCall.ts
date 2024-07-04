@@ -7,7 +7,6 @@ import {
   StartChatParams,
 } from "@google/generative-ai";
 import logger from "./logger";
-import { prototype } from "node:events";
 
 const apiKey = process.env.GEMINI_API_KEY;
 if (!apiKey) {
@@ -15,7 +14,31 @@ if (!apiKey) {
 }
 const genAI = new GoogleGenerativeAI(apiKey);
 
-const model = genAI.getGenerativeModel({
+export const expertCWE = genAI.getGenerativeModel({
+  model: "gemini-1.5-flash",
+  safetySettings: [
+    {
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+      category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+    },
+    {
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+      category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+    },
+    {
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+      category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+    },
+    {
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+      category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+    },
+  ],
+  systemInstruction: `You are an Expert in POSIX Thread Model and Linux API, including sync prototype, atomic, CPU cache and memory corruption. You will check the input source code, point the issues including: wrong memory order of atomic variables read and write; dead lock; non-thread safe API uses in thread scope. Your will check the Input CWE-ID and examine it actually means a thread issue, ONLY responsed in YES or NO.
+`,
+});
+
+export const expertThreadSyncReviewer = genAI.getGenerativeModel({
   model: "gemini-1.5-flash",
   safetySettings: [
     {
@@ -41,7 +64,7 @@ const model = genAI.getGenerativeModel({
 `,
 });
 
-const generationConfig: GenerationConfig = {
+export const generationConfig: GenerationConfig = {
   temperature: 0,
   topP: 0.95,
   topK: 64,
@@ -65,7 +88,7 @@ export async function checkContent(
   code: string,
   options?: Options,
 ): Promise<EnhancedGenerateContentResponse | null> {
-  const chatSession = model.startChat({
+  const chatSession = expertThreadSyncReviewer.startChat({
     generationConfig,
     ...options,
   });
