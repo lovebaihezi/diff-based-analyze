@@ -109,6 +109,33 @@ update-stringzilla:
 fetch-cocci:
   git clone https://github.com/coccinelle/coccinellery
 
+fetch-micros:
+  git clone https://github.com/axboe/fio --depth=1
+  git clone https://github.com/microsoft/Detours --depth=1
+  git clone https://github.com/phusion/passenger --depth=1
+  git clone https://github.com/NVIDIA/DALI --depth=1
+  git clone https://github.com/lballabio/QuantLib --depth=1
+  git clone https://github.com/aircrack-ng/aircrack-ng --depth=1
+  git clone https://github.com/vmg/redcarpet --depth=1
+  git clone https://github.com/emcrisostomo/fswatch --depth=1
+  git clone https://github.com/wjakob/instant-meshes --depth=1
+  git clone https://github.com/jagt/clumsy --depth=1
+  git clone https://github.com/leethomason/tinyxml2 --depth=1
+  git clone https://github.com/zcash/zcash --depth=1
+  git clone https://github.com/cuberite/cuberite --depth=1
+  git clone https://github.com/itinance/react-native-fs --depth=1
+  git clone https://github.com/Zelda64Recomp/Zelda64Recomp --depth=1
+  git clone https://github.com/immortalwrt/immortalwrt --depth=1
+  git clone https://github.com/visit1985/mdp --depth=1
+  git clone https://github.com/jbeder/yaml-cpp --depth=1
+  git clone https://github.com/gnuradio/gnuradio --depth=1
+  git clone https://github.com/mlpack/mlpack --depth=1
+  git clone https://github.com/guanzhi/GmSSL --depth=1
+  git clone https://github.com/NVIDIA/cccl --depth=1
+  git clone https://github.com/littlefs-project/littlefs --depth=1
+  git clone https://github.com/antirez/sds --depth=1
+  git clone https://github.com/rhasspy/piper --depth=1
+
 build-script:
   clang++ src/AutoApplyVulnerbilities.cpp -Illvm/include -Lllvm/lib $(./llvm/bin/llvm-config --cxxflags) -lc++ --std=c++2a \
     -lclangTooling \
