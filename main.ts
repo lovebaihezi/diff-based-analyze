@@ -11,9 +11,6 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { analyze } from "./analyze";
 
-// Gemini flash 1.5 support 1000 RPM
-const pool = new TaskPool(1000);
-
 type Result = Record<"code" | "cwe_name" | "sync_issue", string | undefined>;
 
 async function modified(root: SgRoot): Promise<string | null> {
@@ -116,12 +113,13 @@ const baseline = async (paths: string[]) => {
 
 const getFileReport = async (path: string) => {
   const content = await readFile(path, { encoding: "utf-8" });
+  logger.info({ path, content }, "runing check on file");
   const res = await checkContent(content);
   if (!res) {
     return null;
   }
   const jsonStr = res.text();
-  return await pool.wrap(() => report([path, jsonStr]));
+  return report([path, jsonStr]);
 };
 
 const cmd = async (paths: string[]) => {
@@ -131,36 +129,53 @@ const cmd = async (paths: string[]) => {
   }
 };
 
-const reportDir = async ({ path = ".", skipped = [] as string[] }) => {
-  if (skipped.includes(path)) {
-    return;
-  }
+const gatherFiles = async (path: string): Promise<string[]> => {
   const cwd = await opendir(path);
-  let file: Dirent | null = null;
-  const checks: Promise<Diagnose | null>[] = [];
-  while ((file = await cwd.read())) {
-    if (
-      file.isFile() &&
+  const files: string[] = [];
+  for await (const dirent of cwd) {
+    if (dirent.isDirectory()) {
+      const subFiles = await gatherFiles(join(path, dirent.name));
+      files.push(...subFiles);
+    } else if (
+      dirent.isFile() &&
       [".cc", ".C", ".c++", ".cpp", ".cu", ".c"].some(
-        (ext) => file && file.name.endsWith(ext),
+        (ext) => dirent && dirent.name.endsWith(ext),
       ) &&
-      !/[tT]est/.test(file.name)
+      !/[tT]est/.test(dirent.name)
     ) {
-      const path = join(file.parentPath, file.name);
-      const check = getFileReport(path).catch((e) => {
-        logger.error(e, `failed to get report of ${path}`);
-        return null;
-      });
-      checks.push(check);
-    } else if (file.isDirectory()) {
-      await reportDir({ path: join(file.parentPath, file.name), skipped });
+      const path = join(dirent.parentPath, dirent.name);
+      files.push(path);
     }
   }
-  const diagnoses = await Promise.all(checks);
-  for (const diagnose of diagnoses) {
-    logger.info(diagnose);
+  return files;
+};
+
+const reportDir = async ({ path = ".", skiped = [] as string[] }) => {
+  if (skiped.includes(path)) {
+    return;
   }
-  cwd.close();
+  const files = await gatherFiles(path);
+  const diagnoses: (Diagnose | null)[] = [];
+  logger.debug(files.length, "files to check");
+  // Run checks 1000 at a time
+  for (let i = 0; i < files.length; i += 30) {
+    const subChecks = files.slice(i, i + 30);
+    diagnoses.push(
+      ...(await Promise.all(
+        subChecks.map(async (path) =>
+          getFileReport(path).catch((e) => {
+            logger.error(e, `failed to get report of ${path}`);
+            return null;
+          }),
+        ),
+      )),
+    );
+  }
+  for (const diagnose of diagnoses) {
+    if (diagnose) {
+      logger.info(diagnose);
+    }
+  }
 };
 
 const main = async () => {
@@ -185,13 +200,13 @@ const main = async () => {
       "micro <path>",
       "run on micro",
       (yargs) => {
-        return yargs.positional("micro", {
+        return yargs.positional("path", {
           describe: "The file to analyze",
           type: "string",
         });
       },
-      async ({ micro }) => {
-        await reportDir({ skipped: [], path: micro });
+      async ({ path }) => {
+        await reportDir({ skiped: [], path });
       },
     )
     .help()

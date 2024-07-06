@@ -4,21 +4,24 @@
 // When compiling natively:
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result {
-    env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
+    tracing_subscriber::fmt()
+        .pretty()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
 
     let native_options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default()
-            .with_icon(
-                // NOTE: Adding an icon is optional
-                eframe::icon_data::from_png_bytes(&include_bytes!("../assets/icon-256.png")[..])
-                    .expect("Failed to load icon"),
-            ),
+        viewport: egui::ViewportBuilder::default().with_icon(
+            // NOTE: Adding an icon is optional
+            eframe::icon_data::from_png_bytes(&include_bytes!("../assets/icon-256.png")[..])
+                .expect("Failed to load icon"),
+        ),
+        follow_system_theme: true,
         ..Default::default()
     };
     eframe::run_native(
-        "Visualize the Micros",
+        "Analyze",
         native_options,
-        Box::new(|cc| Ok(Box::new(visualize_log::TemplateApp::new(cc)))),
+        Box::new(|cc| Ok(Box::new(visualize_log::AnalyzeApp::new(cc)))),
     )
 }
 
@@ -35,7 +38,7 @@ fn main() {
             .start(
                 "the_canvas_id",
                 web_options,
-                Box::new(|cc| Ok(Box::new(visualize_log::TemplateApp::new(cc)))),
+                Box::new(|cc| Ok(Box::new(visualize_log::AnalyzeApp::new(cc)))),
             )
             .await;
 
