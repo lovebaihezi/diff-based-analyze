@@ -39,7 +39,6 @@ runs:
         nix_path: nixpkgs=channel:nixos-unstable
     - uses: actions/setup-node@v4
       with:
-        corepack-enable: true
         node-version: 22
     - name: Corepack check
       shell: bash
