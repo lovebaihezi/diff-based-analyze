@@ -4,7 +4,7 @@ runs:
   using: composite
   steps:
     - name: Setup Base ENV
-      shell: sh
+      shell: bash
       run: |
         sudo apt-get update
         sudo apt-get install wget tar gzip bash git curl file autoconf automake cmake ninja-build libzstd-dev build-essential libc++-dev libstdc++-11-dev llvm-dev libclang-dev clang-tools
@@ -31,15 +31,12 @@ runs:
       shell: bash
       run: zig fmt --check .
     - name: Pull DataRace Bench
-      shell: bash
       run: |
         git clone https://github.com/LLNL/dataracebench.git
     - uses: cachix/install-nix-action@v27
-      shell: bash
       with:
         nix_path: nixpkgs=channel:nixos-unstable
     - uses: actions/setup-node@v4
-      shell: bash
       with:
         corepack-enable: true
         node-version: 22
