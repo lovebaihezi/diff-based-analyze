@@ -31,6 +31,7 @@ runs:
       shell: bash
       run: zig fmt --check .
     - name: Pull DataRace Bench
+      shell: bash
       run: |
         git clone https://github.com/LLNL/dataracebench.git
     - uses: cachix/install-nix-action@v27
