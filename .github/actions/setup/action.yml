@@ -35,8 +35,6 @@ runs:
       run: |
         git clone https://github.com/LLNL/dataracebench.git
     - uses: cachix/install-nix-action@v27
-      with:
-        github_access_token: ${{ secrets.GITHUB_TOKEN }}
     - uses: actions/setup-node@v4
       with:
         corepack-enable: true
