@@ -84,7 +84,7 @@ pub fn createContext() Context {
     return c.LLVMContextCreate();
 }
 
-pub fn functionParamterCount(func: Function) usize {
+pub fn functionParameterCount(func: Function) usize {
     return @intCast(c.LLVMCountParams(func));
 }
 

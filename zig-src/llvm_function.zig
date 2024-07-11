@@ -22,12 +22,12 @@ pub fn next(self: *@This()) llvm.Function {
 
 pub fn currentParameters(self: *@This()) []llvm.Param {
     const f = self.current.?;
-    const function_parameter_count = llvm.functionParamterCount(f);
+    const function_parameter_count = llvm.functionParameterCount(f);
     self.parameter_count = function_parameter_count;
     llvm.functionParameters(self.current.?, &self.parameters);
     if (function_parameter_count > llvm.MaxParam) {
-        std.log.err("function {s} paramater way too large:{d} then {d}", .{ llvm.llvmValueName(f), function_parameter_count, llvm.MaxParam });
-        @panic("function paramater way too large");
+        std.log.err("function {s} parameter way too large:{d} then {d}", .{ llvm.llvmValueName(f), function_parameter_count, llvm.MaxParam });
+        @panic("function parameter way too large");
     }
     return self.parameters[0..self.parameter_count];
 }
