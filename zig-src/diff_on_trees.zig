@@ -73,7 +73,7 @@ pub fn app(self: @This(), allocator: Allocator, path: []const u8) !void {
 
     const res = try SkipCommits.untilCommitContainsGenerator(repo, revwalk);
 
-    std.log.info("skiped {} commits to find which commit contains cmake", .{res.skiped_commits});
+    std.log.info("skipped {} commits to find which commit contains cmake", .{res.skipped_commits});
 
     var oid = res.oid;
 

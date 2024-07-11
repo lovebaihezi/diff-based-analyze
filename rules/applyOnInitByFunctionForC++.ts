@@ -27,8 +27,8 @@ export const applyForCpp = (root: SgNode): string => {
       })
       _DETACH_THREAD.detach();
       `);
-    const rootCommited = root.commitEdits([edited]);
-    return rootCommited;
+    const rootCommitted = root.commitEdits([edited]);
+    return rootCommitted;
   }
   throw new Error("can not apply");
 };

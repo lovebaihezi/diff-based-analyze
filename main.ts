@@ -131,8 +131,8 @@ const cmd = async (paths: string[]) => {
   }
 };
 
-const reportDir = async ({ path = ".", skiped = [] as string[] }) => {
-  if (skiped.includes(path)) {
+const reportDir = async ({ path = ".", skipped = [] as string[] }) => {
+  if (skipped.includes(path)) {
     return;
   }
   const cwd = await opendir(path);
@@ -153,7 +153,7 @@ const reportDir = async ({ path = ".", skiped = [] as string[] }) => {
       });
       checks.push(check);
     } else if (file.isDirectory()) {
-      await reportDir({ path: join(file.parentPath, file.name), skiped });
+      await reportDir({ path: join(file.parentPath, file.name), skipped });
     }
   }
   const diagnoses = await Promise.all(checks);
@@ -191,7 +191,7 @@ const main = async () => {
         });
       },
       async ({ micro }) => {
-        await reportDir({ skiped: [], path: micro });
+        await reportDir({ skipped: [], path: micro });
       },
     )
     .help()

@@ -1,4 +1,4 @@
-1. Performance evaulation
+1. Performance evaluation
 
 2. The result of Experiment, how many CWE -> understand the eco
 
