@@ -20,5 +20,5 @@
         "@types/yargs": "^17.0.32",
         "vitest": "^1.6.0"
     },
-    "packageManager": "pnpm"
+    "packageManager": "pnpm@9.4.0"
 }
