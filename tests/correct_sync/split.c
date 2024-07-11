@@ -3,13 +3,13 @@
 
 // Split stdin to stdout, output each seq in a new line.
 // Use improved KMP
-// Stdin will be seen as a string, and the spliter will be seen as a pattern.
+// Stdin will be seen as a string, and the splitter will be seen as a pattern.
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         return 1;
     }
-    char* spliter = argv[1];
-    size_t spliter_len = strlen(spliter);
+    char* splitter = argv[1];
+    size_t splitter_len = strlen(splitter);
     size_t index = 0;
     // KMP
     while (1) {
@@ -17,16 +17,16 @@ int main(int argc, char *argv[]) {
         if (c == EOF) {
             break;
         }
-        if (c == spliter[index]) {
+        if (c == splitter[index]) {
             index += 1;
-            if (index == spliter_len) {
+            if (index == splitter_len) {
                 printf("\n");
                 index = 0;
             }
         } else {
-            // output spliter content and current char
+            // output splitter content and current char
             for (size_t i = 0;i < index;i += 1) {
-                printf("%c", spliter[i]);
+                printf("%c", splitter[i]);
             }
             printf("%c", c);
             // Reset index

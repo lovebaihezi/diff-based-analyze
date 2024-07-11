@@ -53,8 +53,8 @@ struct _ONLY_FORVUL_ARG {
       pthread_create(&SPECIFIC_THREAD, NULL, (void*)ONLY_FOR_VUL, (void*) &(arg));
 pthread_detach(SPECIFIC_THREAD);
       `);
-    const rootCommited = root.commitEdits([edited]);
-    return rootCommited;
+    const rootCommitted = root.commitEdits([edited]);
+    return rootCommitted;
   }
   throw new Error("can not apply");
 };

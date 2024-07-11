@@ -36,21 +36,21 @@ char *parse(PointToAnother *input, size_t *output_len) {
   if (buf == NULL) {
     return NULL;
   }
-  size_t writed = write_to(input, buf);
+  size_t wrote = write_to(input, buf);
   for (size_t i = 0; i < input->len; i += 1) {
     size_t other_output_len = 0;
     char *parsed_others = parse(input->others + i, &other_output_len);
     if (parsed_others != NULL) {
-      writed += other_output_len;
-      char *new_buf = malloc(writed + other_output_len + 1);
-      memcpy(new_buf, buf, writed);
-      memcpy(new_buf + writed, parsed_others, other_output_len);
+      wrote += other_output_len;
+      char *new_buf = malloc(wrote + other_output_len + 1);
+      memcpy(new_buf, buf, wrote);
+      memcpy(new_buf + wrote, parsed_others, other_output_len);
       free(parsed_others);
       free(buf);
       buf = new_buf;
     }
   }
-  *output_len = writed;
+  *output_len = wrote;
   return NULL;
 }
 

@@ -132,7 +132,7 @@ test "compile simple function to IR str" {
 
 test "compile simple function IR Module" {
     const ctx = llvm.createContext();
-    defer llvm.destoryContext(ctx);
+    defer llvm.destroyContext(ctx);
     const allocator = std.testing.allocator;
     const mem_buf = try createCompiledMemBuf(allocator, "static int x;", .{ .compiler = Compiler.Clang });
     // defer mem_buf.deinit();

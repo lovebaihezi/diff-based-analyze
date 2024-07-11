@@ -84,7 +84,7 @@ pub fn createContext() Context {
     return c.LLVMContextCreate();
 }
 
-pub fn functionParamterCount(func: Function) usize {
+pub fn functionParameterCount(func: Function) usize {
     return @intCast(c.LLVMCountParams(func));
 }
 
@@ -96,7 +96,7 @@ pub fn functionNthParameter(func: Function, index: usize) Value {
     return c.LLVMGetParam(func, @intCast(index));
 }
 
-pub fn destoryContext(ctx: Context) void {
+pub fn destroyContext(ctx: Context) void {
     return c.LLVMContextDispose(ctx);
 }
 

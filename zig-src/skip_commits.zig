@@ -25,18 +25,18 @@ fn containsGenerator(delta_ptr: Git.DeltaPtr, progress: f32, payload: ?*anyopaqu
     return 0; // Return 0 to continue iterating
 }
 
-skiped_commits: usize = 0,
+skipped_commits: usize = 0,
 oid: ?Git.OID = null,
 
 pub fn untilCommitContainsGenerator(repo: Git.Repo, revwalk: Git.Revwalk) Git.Error!@This() {
-    var skiped: usize = 0;
+    var skipped: usize = 0;
     var oid: Git.OID = undefined;
     _ = Git.revwalkNext(revwalk, &oid) catch @panic("failed to get fist commit");
     var previous_commit: Git.Commit = try Git.commitLookup(repo, &oid);
     var previous_tree: Git.Tree = try Git.commitTree(previous_commit);
 
     while (try Git.revwalkNext(revwalk, &oid)) |_| {
-        skiped += 1;
+        skipped += 1;
         std.log.debug("not find first commit contains changes of meson or cmake\n", .{});
         const commit = try Git.commitLookup(repo, &oid);
         const tree = try Git.commitTree(commit);
@@ -48,7 +48,7 @@ pub fn untilCommitContainsGenerator(repo: Git.Repo, revwalk: Git.Revwalk) Git.Er
         Git.freeCommit(previous_commit);
         if (founded) {
             Git.freeCommit(commit);
-            return .{ .skiped_commits = skiped, .oid = oid };
+            return .{ .skipped_commits = skipped, .oid = oid };
         }
         previous_tree = tree;
         previous_commit = commit;

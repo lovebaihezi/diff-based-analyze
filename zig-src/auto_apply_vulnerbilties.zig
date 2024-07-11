@@ -168,7 +168,7 @@ const Allocator = std.mem.Allocator;
 //    defer allocator.free(compiled);
 //    const buf = try mem_buf.initWithContent(tree_path, compiled);
 //    const ctx = llvm.createContext();
-//    defer llvm.destoryContext(ctx);
+//    defer llvm.destroyContext(ctx);
 //    var ir_module = try IR.parseIR(ctx, buf.mem_buf);
 //    defer ir_module.deinit();
 //    try applyVulnerbilties(allocator, ir_module.mod_ref);
@@ -254,7 +254,7 @@ const expected_output =
     \\
 ;
 
-test "apply vulnerbilities" {
+test "apply vulnerabilities" {
     const allocator = std.testing.allocator;
 
     var tmpDir = std.testing.tmpDir(.{});

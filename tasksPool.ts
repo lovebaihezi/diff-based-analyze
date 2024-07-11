@@ -2,9 +2,9 @@ import { sleep } from "./llmCall";
 
 export class TaskPool {
   private currentJobs = 0;
-  constructor(private maxiumTask: number) {}
+  constructor(private maximumTask: number) {}
   public async wrap<T>(job: () => Promise<T>): Promise<T> {
-    while (this.currentJobs >= this.maxiumTask) {
+    while (this.currentJobs >= this.maximumTask) {
       await sleep(10);
     }
     this.currentJobs += 1;

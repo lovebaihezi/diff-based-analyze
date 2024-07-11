@@ -21,7 +21,7 @@ pub fn app(allocator: std.mem.Allocator) !void {
     };
     defer mem_buf.deinit();
     const ctx = llvm.createContext();
-    defer llvm.destoryContext(ctx);
+    defer llvm.destroyContext(ctx);
     var ir_module: IR = IR.parseIR(ctx, mem_buf.mem_buf) catch {
         std.os.exit(255);
     };

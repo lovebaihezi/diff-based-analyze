@@ -14,7 +14,7 @@ zig build -Doptimize=ReleaseSafe
 
 ## Usage
 
-Currently not avaliable
+Currently not available
 
 ## Todo
 

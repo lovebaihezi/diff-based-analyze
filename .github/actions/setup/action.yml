@@ -4,7 +4,7 @@ runs:
   using: composite
   steps:
     - name: Setup Base ENV
-      shell: sh
+      shell: bash
       run: |
         sudo apt-get update
         sudo apt-get install wget tar gzip bash git curl file autoconf automake cmake ninja-build libzstd-dev build-essential libc++-dev libstdc++-11-dev llvm-dev libclang-dev clang-tools
@@ -36,12 +36,12 @@ runs:
         git clone https://github.com/LLNL/dataracebench.git
     - uses: cachix/install-nix-action@v27
       with:
-        github_access_token: ${{ secrets.GITHUB_TOKEN }}
+        nix_path: nixpkgs=channel:nixos-unstable
     - uses: actions/setup-node@v4
       with:
-        corepack-enable: true
-        node-version: 20
+        node-version: 22
     - name: Corepack check
+      shell: bash
       run: |
         corepack enable
         cd ${{ github.workspace }}
