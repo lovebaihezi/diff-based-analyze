@@ -11,12 +11,12 @@ pub fn init(allocator: Allocator, cmd: Command) Allocator.Error!@This() {
     var arena = std.heap.ArenaAllocator.init(allocator);
     const arena_allocator = arena.allocator();
     const len = std.mem.count(u8, cmd.command, " ");
-    const spliter = std.mem.split(u8, cmd.command, " ");
+    const splitter = std.mem.split(u8, cmd.command, " ");
     var name_with_zero = try arena_allocator.alloc(u8, cmd.file.len + 1);
     @memcpy(name_with_zero[0..cmd.file.len], cmd.file);
     name_with_zero[cmd.file.len] = 0;
     std.debug.print("compile unit: {s}\n", .{name_with_zero});
-    return .{ .file_name = name_with_zero, .command_lines = spliter, .len = len, .arena = arena };
+    return .{ .file_name = name_with_zero, .command_lines = splitter, .len = len, .arena = arena };
 }
 
 pub fn next(self: *@This()) ?[]const u8 {

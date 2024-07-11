@@ -121,7 +121,7 @@ pub fn deinit(ir: *IR) void {
 //     ;
 
 //     const ctx = llvm.createContext();
-//     defer llvm.destoryContext(ctx);
+//     defer llvm.destroyContext(ctx);
 //     const mem = try llvm_mem_buf.initWithContent("test.ll", content);
 //     var module = try IR.parseIR(ctx, mem.mem_buf);
 //     defer module.deinit();

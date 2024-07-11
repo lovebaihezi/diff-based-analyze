@@ -34,7 +34,7 @@ export const expertCWE = genAI.getGenerativeModel({
       category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
     },
   ],
-  systemInstruction: `You are an Expert in POSIX Thread Model and Linux API, including sync prototype, atomic, CPU cache and memory corruption. You will check the input source code, point the issues including: wrong memory order of atomic variables read and write; dead lock; non-thread safe API uses in thread scope. Your will check the Input CWE-ID and examine it actually means a thread issue, ONLY responsed in YES or NO.
+  systemInstruction: `You are an Expert in POSIX Thread Model and Linux API, including sync prototype, atomic, CPU cache and memory corruption. You will check the input source code, point the issues including: wrong memory order of atomic variables read and write; dead lock; non-thread safe API uses in thread scope. Your will check the Input CWE-ID and examine it actually means a thread issue, ONLY responded in YES or NO.
 `,
 });
 
