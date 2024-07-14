@@ -5,7 +5,7 @@ export class TaskPool {
   constructor(private maximumTask: number) {}
   public async wrap<T>(job: () => Promise<T>): Promise<T> {
     while (this.currentJobs >= this.maximumTask) {
-      await sleep(10);
+      await sleep(0);
     }
     this.currentJobs += 1;
     try {
