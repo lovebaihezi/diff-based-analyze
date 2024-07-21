@@ -1,4 +1,4 @@
-const llvm = @import("llvm.zig");
+const llvm = @import("llvm_wrap.zig");
 const CallPath = @import("call_path.zig");
 const Path = CallPath.Path;
 

@@ -156,4 +156,21 @@ pub fn lastError() ?[]const u8 {
     }
 }
 
+pub fn forceCheckout(repo: @This().Repo, id: *@This().OID) !void {
+    var options: @This().CheckoutOptions = undefined;
+    try @This().checkoutOptionsInit(&options, @This().c.GIT_CHECKOUT_OPTIONS_VERSION);
+    options.checkout_strategy = @This().c.GIT_CHECKOUT_FORCE;
+    @This().checkout(repo, id, &options) catch |err| {
+        if (err == @This().Error.CheckoutFailed) {
+            const err_msg = @This().lastError();
+            if (err_msg) |msg| {
+                std.log.err("{s}", .{msg});
+            } else {
+                std.log.warn("can not get last error of git", .{});
+            }
+        }
+        return err;
+    };
+}
+
 test "open repo" {}
