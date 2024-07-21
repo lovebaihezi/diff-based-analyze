@@ -11,10 +11,17 @@ const Operands = @import("llvm_operands.zig");
 const VariableInfo = @import("variable_info.zig");
 const GlobalVar = @import("llvm_global_var.zig");
 
-pub fn app(allocator: std.mem.Allocator) !void {
-    const stdout = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout);
-    const out = bw.writer();
+global_vars: GlobalVar,
+
+pub fn deinit(self: @This()) void {
+    for (self.global_map.keys()) |key| {
+        var info = self.global_map.get(key) orelse continue;
+        info.deinit();
+    }
+}
+
+pub fn analyze(self: *@This(), json_path: []const u8, allocator: std.mem.Allocator) !void {
+    _ = json_path;
     const mem_buf = MemoryBuffer.initWithStdin() catch {
         std.log.err("failed create memory buffer from stdin", .{});
         std.os.exit(255);
@@ -26,40 +33,33 @@ pub fn app(allocator: std.mem.Allocator) !void {
         std.os.exit(255);
     };
     defer ir_module.deinit();
-    var global_vars = GlobalVar.init(ir_module.mod_ref);
+    self.global_vars = GlobalVar.init(ir_module.mod_ref);
     var function = Function.init(ir_module.mod_ref);
     var global_map = std.StringArrayHashMap(VariableInfo).init(allocator);
     defer global_map.deinit();
-    while (global_vars.next()) |g| {
+    while (self.global_vars.next()) |g| {
         const name = llvm.valueName(g);
         const info = VariableInfo.init(allocator);
-        out.print("global var: {s}\n", .{name}) catch unreachable;
         global_map.put(name, info) catch unreachable;
-        bw.flush() catch unreachable;
     }
     while (function.next()) |f| {
+        // TODO: Store the relation between variable_info and function
         var map = std.StringArrayHashMap(VariableInfo).init(allocator);
         defer map.deinit();
-        out.print("func {s}(", .{llvm.valueName(f)}) catch unreachable;
         const parameters = function.currentParameters();
         const len = parameters.len;
         if (len > 0) {
             for (parameters[0 .. len - 1]) |param| {
                 const name = llvm.valueName(param);
-                out.print("{s}, ", .{name}) catch unreachable;
                 const info = VariableInfo.init(allocator);
                 map.put(name, info) catch unreachable;
             }
             const name = llvm.valueName(parameters[len - 1]);
             const info = VariableInfo.init(allocator);
             map.put(name, info) catch unreachable;
-            out.print("{s})\n", .{name}) catch unreachable;
-        } else {
-            out.print(")\n", .{}) catch unreachable;
-        }
+        } else {}
         var block = BasicBlock.init(f);
         while (block.next()) |b| {
-            out.print("  block: {s}\n", .{llvm.basicBlockName(b)}) catch unreachable;
             var instruction = Instruction.init(b);
             while (instruction.next()) |i| {
                 const opcode = llvm.instructionCode(i);
@@ -105,25 +105,7 @@ pub fn app(allocator: std.mem.Allocator) !void {
                 }
             }
         }
-        bw.flush() catch unreachable;
-        for (map.keys()) |key| {
-            var info = map.get(key) orelse continue;
-            defer info.deinit();
-            const read_count = VariableInfo.read_count(info);
-            const write_count = VariableInfo.write_count(info);
-            out.print("{s}: read count: {d}, write count: {d}\n", .{ key, read_count, write_count }) catch unreachable;
-        }
-        bw.flush() catch unreachable;
     }
-    for (global_map.keys()) |key| {
-        var info = global_map.get(key) orelse continue;
-        defer info.deinit();
-        const read_count = info.read_count();
-        const write_count = info.write_count();
-        out.print("global: {s}: read count: {d}, write count: {d}\n", .{ key, read_count, write_count }) catch unreachable;
-    }
-    out.print("\n", .{}) catch unreachable;
-    bw.flush() catch unreachable;
 }
 
 test "import other tests" {

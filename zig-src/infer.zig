@@ -2,6 +2,7 @@ const std = @import("std");
 const CompileCommands = @import("compile_commands.zig");
 const Allocator = std.mem.Allocator;
 const buildin = @import("builtin");
+const PThreadLinked = @import("pthread_linked.zig");
 
 const build_mode = buildin.mode;
 
@@ -15,6 +16,36 @@ pub const Strategy = enum {
 pub const Infer = union(Strategy) {
     Baseline: []const u8, // compilation_database
     Optimized: []*const CompileCommands.Command,
+
+    pub fn analyze(self: @This(), allocator: Allocator, json_path: []const u8) !void {
+        switch (self.strategy) {
+            .Baseline => {
+                const infer = Infer.Infer.baseline(json_path);
+                try infer.run(allocator);
+            },
+            .Optimized => {
+                const cwd = std.fs.cwd();
+                const file = try cwd.openFile(json_path, .{});
+                defer file.close();
+                const file_reader = std.io.bufferedReader(file.reader());
+                var puller = CompileCommands.commandReader(allocator, file_reader);
+                defer puller.deinit();
+                var pthread_linked = PThreadLinked.init();
+                defer pthread_linked.deinit(allocator);
+                while (try puller.next()) |cmd| {
+                    try pthread_linked.addBuildCommand(allocator, cmd);
+                }
+                var iter = pthread_linked.iter();
+                var array = std.ArrayList(*const CompileCommands.Command).init(allocator);
+                defer array.deinit();
+                while (iter.next()) |path| {
+                    try array.append(path);
+                }
+                const infer = Infer.Infer.optimized(array.items);
+                try infer.run(allocator);
+            },
+        }
+    }
 
     pub fn baseline(compilation_database: []const u8) @This() {
         return .{ .Baseline = compilation_database };
