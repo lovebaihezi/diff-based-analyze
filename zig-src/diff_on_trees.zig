@@ -79,6 +79,7 @@ pub fn app(self: @This(), allocator: Allocator, path: []const u8) !void {
 
     if (oid) |*id| {
         const generator = try CompileCommands.Generator.inferFromProject(path);
+        try generator.patch(allocator);
         if (self.limit) |limit| {
             var i: usize = 0;
             while (try Git.revwalkNext(revwalk, id)) |_| {

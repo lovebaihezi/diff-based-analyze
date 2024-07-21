@@ -5,6 +5,12 @@ const buildin = @import("builtin");
 
 const OUTPUT_FILE = "build";
 const build_mode = buildin.mode;
+const CMAKE_BUILD_OPTIONS =
+    \\set(CMAKE_C_COMPILER "clang")
+    \\set(CMAKE_CXX_COMPILER "clang++")
+    \\set(CMAKE_C_FLAGS "-emit-llvm")
+    \\set(CMAKE_CXX_FLAGS "-emit-llvm")
+;
 
 const Token = std.json.Token;
 
@@ -129,21 +135,23 @@ fn mv(allocator: Allocator, oid: *Git.OID) ![2][]u8 {
     return files;
 }
 
-pub const Generator = enum {
-    Meson,
-    CMake,
+pub const Generator = union(enum) {
+    Meson: []const u8,
+    CMake: []const u8,
     // TODO
     Bear,
+
+    pub const PatchError = error{};
 
     pub fn inferFromProject(path: []const u8) std.fs.File.OpenError!@This() {
         var dir = try std.fs.cwd().openDir(path, .{});
         defer dir.close();
         if (dir.access("meson.build", .{})) |_| {
-            return .Meson;
+            return .{ .Meson = "./meson.build" };
         } else |meson_err| {
             std.log.debug("not use meson cause {s}", .{@errorName(meson_err)});
             if (dir.access("CMakeLists.txt", .{})) |_| {
-                return .CMake;
+                return .{ .CMake = "./CMakeLists.txt" };
             } else |cmake_err| {
                 std.log.debug("not use CMakeLists cause {s}", .{@errorName(cmake_err)});
             }
@@ -154,6 +162,24 @@ pub const Generator = enum {
     fn clean(allocator: Allocator) !void {
         var rm = std.process.Child.init(&[3][]const u8{ "rm", "-rf", OUTPUT_FILE }, allocator);
         _ = try rm.spawnAndWait();
+    }
+
+    pub fn patch(self: @This(), allocator: Allocator) !void {
+        // Add CMAKE_CXX_FLAGS TO BUILD IR Result
+        switch (self) {
+            .CMake => |cmake_file_path| {
+                var file = try std.fs.cwd().openFile(cmake_file_path, .{ .mode = .read_write });
+                defer file.close();
+                const buf = try file.readToEndAlloc(allocator, 4096 * 4096 * 12);
+                try file.seekTo(0);
+                defer allocator.free(buf);
+                try file.writeAll(CMAKE_BUILD_OPTIONS);
+                try file.writeAll(buf);
+                try file.sync();
+            },
+            .Meson => {},
+            else => @panic("not support generator other then cmake or meson"),
+        }
     }
 
     pub fn generate(self: @This(), allocator: Allocator, oid: *Git.OID) ![]const u8 {
@@ -275,8 +301,6 @@ pub fn CommandReader(comptime reader_type: type) type {
             }
             return cmd;
         }
-
-        // pub fn fetchAll(self: *@This()) CommandSeq {}
     };
 }
 

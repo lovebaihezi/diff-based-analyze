@@ -12,8 +12,5 @@ pub fn main() !void {
 }
 
 test {
-    _ = @import("compile2ir.zig");
-    _ = @import("compile_ir_back.zig");
-    _ = @import("auto_apply_vulnerbilties.zig");
     std.testing.refAllDecls(@This());
 }
