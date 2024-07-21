@@ -1,4 +1,4 @@
-const llvm = @import("llvm.zig");
+const llvm = @import("llvm_wrap.zig");
 const std = @import("std");
 const Function = @import("llvm_function.zig");
 const BasicBlock = @import("llvm_basic_block.zig");
@@ -11,7 +11,11 @@ const Operands = @import("llvm_operands.zig");
 const VariableInfo = @import("variable_info.zig");
 const GlobalVar = @import("llvm_global_var.zig");
 
-global_vars: GlobalVar,
+pub const AnalysisErr = error{
+    FailedToInitMemFromBuf,
+};
+const GlobalVarInfos = std.StringArrayHashMap(VariableInfo);
+global_map: GlobalVarInfos,
 
 pub fn deinit(self: @This()) void {
     for (self.global_map.keys()) |key| {
@@ -20,11 +24,11 @@ pub fn deinit(self: @This()) void {
     }
 }
 
-pub fn analyze(self: *@This(), json_path: []const u8, allocator: std.mem.Allocator) !void {
+pub fn analyze(self: *@This(), allocator: std.mem.Allocator, json_path: []const u8) !void {
     _ = json_path;
     const mem_buf = MemoryBuffer.initWithStdin() catch {
         std.log.err("failed create memory buffer from stdin", .{});
-        std.os.exit(255);
+        return AnalysisErr.FailedToInitMemFromBuf;
     };
     defer mem_buf.deinit();
     const ctx = llvm.createContext();
@@ -33,14 +37,13 @@ pub fn analyze(self: *@This(), json_path: []const u8, allocator: std.mem.Allocat
         std.os.exit(255);
     };
     defer ir_module.deinit();
-    self.global_vars = GlobalVar.init(ir_module.mod_ref);
+    var global_vars = GlobalVar.init(ir_module.mod_ref);
     var function = Function.init(ir_module.mod_ref);
-    var global_map = std.StringArrayHashMap(VariableInfo).init(allocator);
-    defer global_map.deinit();
-    while (self.global_vars.next()) |g| {
-        const name = llvm.valueName(g);
+    self.global_map = GlobalVarInfos.init(allocator);
+    while (global_vars.next()) |g| {
+        const name = llvm.llvmValueName(g);
         const info = VariableInfo.init(allocator);
-        global_map.put(name, info) catch unreachable;
+        self.global_map.put(name, info) catch unreachable;
     }
     while (function.next()) |f| {
         // TODO: Store the relation between variable_info and function
@@ -50,11 +53,11 @@ pub fn analyze(self: *@This(), json_path: []const u8, allocator: std.mem.Allocat
         const len = parameters.len;
         if (len > 0) {
             for (parameters[0 .. len - 1]) |param| {
-                const name = llvm.valueName(param);
+                const name = llvm.llvmValueName(param);
                 const info = VariableInfo.init(allocator);
                 map.put(name, info) catch unreachable;
             }
-            const name = llvm.valueName(parameters[len - 1]);
+            const name = llvm.llvmValueName(parameters[len - 1]);
             const info = VariableInfo.init(allocator);
             map.put(name, info) catch unreachable;
         } else {}
@@ -68,15 +71,15 @@ pub fn analyze(self: *@This(), json_path: []const u8, allocator: std.mem.Allocat
                         const function_name = llvm.functionName(i);
                         var operands = Operands.init(i);
                         while (operands.next()) |op| {
-                            const name = llvm.valueName(op);
+                            const name = llvm.llvmValueName(op);
                             std.log.info("function {s} called with {s}", .{ function_name, name });
                         }
                     },
                     llvm.Load => {
                         var operands = Operands.init(i);
                         while (operands.next()) |op| {
-                            const name = llvm.valueName(op);
-                            if (map.getPtr(name) orelse global_map.getPtr(name)) |info| {
+                            const name = llvm.llvmValueName(op);
+                            if (map.getPtr(name) orelse self.global_map.getPtr(name)) |info| {
                                 VariableInfo.add_write_operand(info, op);
                                 break;
                             } else if (name.len != 0) {
@@ -87,8 +90,8 @@ pub fn analyze(self: *@This(), json_path: []const u8, allocator: std.mem.Allocat
                     llvm.Store => {
                         var operands = Operands.init(i);
                         while (operands.next()) |op| {
-                            const name = llvm.valueName(op);
-                            if (map.getPtr(name) orelse global_map.getPtr(name)) |info| {
+                            const name = llvm.llvmValueName(op);
+                            if (map.getPtr(name) orelse self.global_map.getPtr(name)) |info| {
                                 VariableInfo.add_read_operand(info, op);
                                 break;
                             } else if (name.len != 0) {
@@ -97,7 +100,7 @@ pub fn analyze(self: *@This(), json_path: []const u8, allocator: std.mem.Allocat
                         }
                     },
                     llvm.Alloca => {
-                        const name = llvm.valueName(i);
+                        const name = llvm.llvmValueName(i);
                         const info = VariableInfo.init(allocator);
                         map.put(name, info) catch unreachable;
                     },
@@ -110,6 +113,6 @@ pub fn analyze(self: *@This(), json_path: []const u8, allocator: std.mem.Allocat
 
 test "import other tests" {
     std.testing.refAllDecls(@This());
-    _ = @import("llvm.zig");
+    _ = @import("llvm_wrap.zig");
     _ = @import("call_tree.zig");
 }

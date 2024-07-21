@@ -156,7 +156,7 @@ pub fn lastError() ?[]const u8 {
     }
 }
 
-pub fn forceCheckout(repo: @This().repo, id: *@This().OID) !void {
+pub fn forceCheckout(repo: @This().Repo, id: *@This().OID) !void {
     var options: @This().CheckoutOptions = undefined;
     try @This().checkoutOptionsInit(&options, @This().c.GIT_CHECKOUT_OPTIONS_VERSION);
     options.checkout_strategy = @This().c.GIT_CHECKOUT_FORCE;

@@ -18,9 +18,9 @@ pub const Infer = union(Strategy) {
     Optimized: []*const CompileCommands.Command,
 
     pub fn analyze(self: @This(), allocator: Allocator, json_path: []const u8) !void {
-        switch (self.strategy) {
+        switch (self) {
             .Baseline => {
-                const infer = Infer.Infer.baseline(json_path);
+                const infer = @This().baseline(json_path);
                 try infer.run(allocator);
             },
             .Optimized => {
@@ -41,7 +41,7 @@ pub const Infer = union(Strategy) {
                 while (iter.next()) |path| {
                     try array.append(path);
                 }
-                const infer = Infer.Infer.optimized(array.items);
+                const infer = @This().optimized(array.items);
                 try infer.run(allocator);
             },
         }

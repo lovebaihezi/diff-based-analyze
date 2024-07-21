@@ -1,10 +1,12 @@
 const std = @import("std");
 const Strategy = @import("infer.zig").Strategy;
+const AnalyzerType = @import("analyzer.zig").AnalyzerType;
 
 const Allocator = std.mem.Allocator;
 
 limit: ?usize = null,
 path: []const u8 = ".",
+analyzer: AnalyzerType = AnalyzerType.RWOp,
 strategy: Strategy = Strategy.Baseline,
 
 pub fn parse() !@This() {
@@ -12,6 +14,7 @@ pub fn parse() !@This() {
     defer args.deinit();
     _ = args.next();
     var self = @This(){};
+    var i: usize = 0;
     while (args.next()) |arg| {
         if (std.mem.startsWith(u8, arg, "-s=")) {
             const slice = arg[3..];
@@ -31,9 +34,14 @@ pub fn parse() !@This() {
             self.limit = num;
         } else if (std.mem.startsWith(u8, arg, "-")) {
             return error.UnknowOption;
+        } else if (std.mem.eql(u8, arg, "rwop") and i == 0) {
+            self.analyzer = AnalyzerType.RWOp;
+        } else if (std.mem.eql(u8, arg, "infer") and i == 0) {
+            self.analyzer = AnalyzerType.Infer;
         } else {
             self.path = arg;
         }
+        i += 1;
     }
     return self;
 }

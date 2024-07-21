@@ -2,36 +2,37 @@ const Git = @import("git2.zig");
 const std = @import("std");
 const CompileCommands = @import("compile_commands.zig");
 const SkipCommits = @import("skip_commits.zig");
-const Infer = @import("infer.zig");
-const AnalysisIR = @import("analysis-ir.zig");
+const Analyzer = @import("analyzer.zig").Analyzer;
 
 const Allocator = std.mem.Allocator;
 
-pub const Analyzer = union(enum) {
-    Infer: Infer,
-    RWOp: AnalysisIR,
-};
-
 limit: ?usize = null,
-analyzer: Analyzer = Analyzer,
+analyzer: Analyzer,
 
-fn actions(self: @This(), allocator: Allocator, repo: Git.Repo, id: *Git.OID, generator: CompileCommands.Generator) !void {
+pub fn init() @This() {
+    return .{
+        .limit = null,
+        .analyzer = undefined,
+    };
+}
+
+fn actions(self: *@This(), allocator: Allocator, repo: Git.Repo, id: *Git.OID, generator: CompileCommands.Generator) !void {
     // We don't need reset now cause use checkout force fit the need
     // try resetAllFiles(repo);
-    Git.forceCheckout(repo, id);
+    try Git.forceCheckout(repo, id);
     const final_json_path = try generator.generate(allocator, id);
     defer allocator.free(final_json_path);
     switch (self.analyzer) {
-        .Infer => |infer| {
-            try infer.analyze();
+        .Infer => |*infer| {
+            try infer.analyze(allocator, final_json_path);
         },
-        .RWOp => |rwop| {
-            try rwop.analyze();
+        .RWOp => |*rwop| {
+            try rwop.analyze(allocator, final_json_path);
         },
     }
 }
 
-pub fn app(self: @This(), allocator: Allocator, path: []const u8) !void {
+pub fn app(self: *@This(), allocator: Allocator, path: []const u8) !void {
     try Git.init();
     defer _ = Git.depose();
 
