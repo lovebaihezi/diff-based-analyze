@@ -12,5 +12,9 @@ pub fn main() !void {
 }
 
 test {
+    _ = @import("diff_on_trees.zig");
+    _ = @import("llvm_wrap.zig");
+    _ = @import("ir-analyzer.zig");
+    _ = @import("analysis-ir.zig");
     std.testing.refAllDecls(@This());
 }

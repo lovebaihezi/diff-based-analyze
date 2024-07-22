@@ -1,5 +1,5 @@
 const Infer = @import("infer.zig");
-const AnalysisIR = @import("analysis-ir.zig");
+const AnalysisIR = @import("ir-analyzer.zig");
 
 pub const AnalyzerType = enum {
     Infer,

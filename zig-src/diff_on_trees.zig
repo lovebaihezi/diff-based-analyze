@@ -24,10 +24,10 @@ fn actions(self: *@This(), allocator: Allocator, repo: Git.Repo, id: *Git.OID, g
     defer allocator.free(final_json_path);
     switch (self.analyzer) {
         .Infer => |*infer| {
-            try infer.analyze(allocator, final_json_path);
+            try infer.analyze_compile_commands(allocator, final_json_path);
         },
         .RWOp => |*rwop| {
-            try rwop.analyze(allocator, final_json_path);
+            try rwop.analyze_compile_commands(allocator, final_json_path);
         },
     }
 }

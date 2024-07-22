@@ -17,7 +17,7 @@ pub const Infer = union(Strategy) {
     Baseline: []const u8, // compilation_database
     Optimized: []*const CompileCommands.Command,
 
-    pub fn analyze(self: @This(), allocator: Allocator, json_path: []const u8) !void {
+    pub fn analyze_compile_commands(self: @This(), allocator: Allocator, json_path: []const u8) !void {
         switch (self) {
             .Baseline => {
                 const infer = @This().baseline(json_path);
