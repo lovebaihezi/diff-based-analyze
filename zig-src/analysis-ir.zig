@@ -14,7 +14,9 @@ const GlobalVar = @import("llvm_global_var.zig");
 pub const AnalysisErr = error{
     FailedToInitMemFromBuf,
 };
+
 const GlobalVarInfos = std.StringArrayHashMap(VariableInfo);
+const FunctionLocalVarInfos = std.AutoHashMap(llvm.Function, std.StringArrayHashMap(VariableInfo));
 global_map: GlobalVarInfos,
 
 pub fn deinit(self: @This()) void {
@@ -22,6 +24,7 @@ pub fn deinit(self: @This()) void {
         var info = self.global_map.get(key) orelse continue;
         info.deinit();
     }
+    self.global_map.deinit();
 }
 
 pub fn analyze(self: *@This(), allocator: std.mem.Allocator, json_path: []const u8) !void {
