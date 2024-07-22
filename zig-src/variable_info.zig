@@ -11,13 +11,9 @@ const ValueSeq = struct {
     }
     pub fn jsonStringify(self: @This(), out_stream: anytype) !void {
         try out_stream.beginArray();
-        for (self.inner.items, 0..) |item, i| {
+        for (self.inner.items) |item| {
             const valueName = llvm.llvmValueName(item);
-            if (i == 0 or i == self.inner.items.len - 1) {
-                try out_stream.print("{s}", .{valueName});
-            } else {
-                try out_stream.print(",{s}", .{valueName});
-            }
+            try out_stream.write(valueName);
         }
         try out_stream.endArray();
     }
