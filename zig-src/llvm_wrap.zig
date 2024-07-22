@@ -111,6 +111,7 @@ pub fn instNthOperand(value: Value, index: usize) Value {
     return operand;
 }
 
+// Return Memory managed by LLVM
 pub fn llvmValueName(value: Value) []const u8 {
     std.debug.assert(value != null);
     var len: usize = 0;
