@@ -55,6 +55,7 @@ pub const TokenStr = union(enum) {
         return self.str().len;
     }
 };
+
 pub const Command = struct {
     file: []u8 = undefined,
     command: []u8 = undefined,
@@ -78,8 +79,7 @@ const Scanner = std.json.Scanner;
 const ParseError = std.json.ParseError(Scanner);
 pub const ParsedCommands = std.json.Parsed(CommandSeq);
 
-pub fn fromLocalFile(allocator: Allocator, path: []const u8) !ParsedCommands {
-    const cwd = std.fs.cwd();
+pub fn fromLocalFile(cwd: std.fs.Dir, allocator: Allocator, path: []const u8) !ParsedCommands {
     const file = try cwd.openFile(path, .{});
     const metadata = try file.metadata();
     const buf = try file.readToEndAlloc(allocator, metadata.size());

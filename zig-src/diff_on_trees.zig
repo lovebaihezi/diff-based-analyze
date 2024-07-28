@@ -16,7 +16,7 @@ pub fn init() @This() {
     };
 }
 
-fn actions(self: *@This(), allocator: Allocator, repo: Git.Repo, id: *Git.OID, generator: CompileCommands.Generator) !void {
+fn actions(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, repo: Git.Repo, id: *Git.OID, generator: CompileCommands.Generator) !void {
     // We don't need reset now cause use checkout force fit the need
     // try resetAllFiles(repo);
     try Git.forceCheckout(repo, id);
@@ -24,15 +24,15 @@ fn actions(self: *@This(), allocator: Allocator, repo: Git.Repo, id: *Git.OID, g
     defer allocator.free(final_json_path);
     switch (self.analyzer) {
         .Infer => |*infer| {
-            try infer.analyze_compile_commands(allocator, final_json_path);
+            try infer.analyze_compile_commands(cwd, allocator, final_json_path);
         },
         .RWOp => |*rwop| {
-            try rwop.analyze_compile_commands(allocator, final_json_path);
+            try rwop.analyze_compile_commands(cwd, allocator, final_json_path);
         },
     }
 }
 
-pub fn app(self: *@This(), allocator: Allocator, path: []const u8) !void {
+pub fn app(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, path: []const u8) !void {
     try Git.init();
     defer _ = Git.depose();
 
@@ -59,11 +59,11 @@ pub fn app(self: *@This(), allocator: Allocator, path: []const u8) !void {
                     break;
                 }
                 i += 1;
-                try self.actions(allocator, repo, id, generator);
+                try self.actions(cwd, allocator, repo, id, generator);
             }
         } else {
             while (try Git.revwalkNext(revwalk, id)) |_| {
-                try self.actions(allocator, repo, id, generator);
+                try self.actions(cwd, allocator, repo, id, generator);
             }
         }
     } else {

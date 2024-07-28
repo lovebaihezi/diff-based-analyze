@@ -7,8 +7,9 @@ pub fn main() !void {
     defer arena.deinit();
     const allocator = arena.allocator();
     const args = try exe_args.parse();
+    const cwd = std.fs.cwd();
     var diff_on_trees = DiffOnTrees.init();
-    try diff_on_trees.app(allocator, args.path);
+    try diff_on_trees.app(cwd, allocator, args.path);
 }
 
 test {

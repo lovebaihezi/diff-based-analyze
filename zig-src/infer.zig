@@ -17,14 +17,13 @@ pub const Infer = union(Strategy) {
     Baseline: []const u8, // compilation_database
     Optimized: []*const CompileCommands.Command,
 
-    pub fn analyze_compile_commands(self: @This(), allocator: Allocator, json_path: []const u8) !void {
+    pub fn analyze_compile_commands(self: @This(), cwd: std.fs.Dir, allocator: Allocator, json_path: []const u8) !void {
         switch (self) {
             .Baseline => {
                 const infer = @This().baseline(json_path);
-                try infer.run(allocator);
+                try infer.run(cwd, allocator);
             },
             .Optimized => {
-                const cwd = std.fs.cwd();
                 const file = try cwd.openFile(json_path, .{});
                 defer file.close();
                 const file_reader = std.io.bufferedReader(file.reader());
@@ -42,7 +41,7 @@ pub const Infer = union(Strategy) {
                     try array.append(path);
                 }
                 const infer = @This().optimized(array.items);
-                try infer.run(allocator);
+                try infer.run(cwd, allocator);
             },
         }
     }
@@ -55,10 +54,10 @@ pub const Infer = union(Strategy) {
         return .{ .Optimized = cmd_seq };
     }
 
-    pub fn run(self: @This(), allocator: Allocator) !void {
+    pub fn run(self: @This(), cwd: std.fs.Dir, allocator: Allocator) !void {
         switch (self) {
             .Baseline => |compilation_database| {
-                const cmds = try CompileCommands.fromLocalFile(allocator, compilation_database);
+                const cmds = try CompileCommands.fromLocalFile(cwd, allocator, compilation_database);
                 defer cmds.deinit();
                 for (cmds.value) |cmd| {
                     const args: [5][]const u8 = .{ "infer", "run", "--", cmd.command, Concurrency };

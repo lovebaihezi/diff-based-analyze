@@ -96,6 +96,13 @@ pub fn initWithMem(allocator: Allocator, name: [:0]const u8, input: []const u8) 
     };
 }
 
+pub fn initWithFile(allocator: Allocator, file_path: [:0]const u8) !@This() {
+    return .{
+        .mem_buf = try MemoryBuffer.initWithFile(file_path.ptr),
+        .res = AnalysisIRRes.init(allocator),
+    };
+}
+
 pub fn deinit(self: @This()) void {
     defer self.mem_buf.deinit();
 }
