@@ -80,14 +80,7 @@ const ParseError = std.json.ParseError(Scanner);
 pub const ParsedCommands = std.json.Parsed(CommandSeq);
 
 pub fn fromLocalFile(cwd: std.fs.Dir, allocator: Allocator, path: []const u8) !ParsedCommands {
-    const file = cwd.openFile(path, .{}) catch |e| {
-        if (e == std.fs.File.OpenError.FileNotFound) {
-            const realpath = try cwd.realpathAlloc(allocator, ".");
-            defer allocator.free(realpath);
-            std.debug.print("\nfile not found: {s} under {s}\n", .{ path, realpath });
-        }
-        return e;
-    };
+    const file = try cwd.openFile(path, .{});
     const metadata = try file.metadata();
     const buf = try file.readToEndAlloc(allocator, metadata.size());
     return fromCompleteInput(allocator, buf);
@@ -148,16 +141,16 @@ pub const Generator = union(enum) {
     // TODO
     Bear,
 
-    pub const PatchError = error{};
+    pub const GeneratorError = error{
+        BearNotSupport,
+    };
 
-    pub fn inferFromProject(cwd: std.fs.Dir, path: []const u8) std.fs.File.OpenError!@This() {
-        var dir = try cwd.openDir(path, .{});
-        defer dir.close();
-        if (dir.access("meson.build", .{})) |_| {
+    pub fn inferFromProject(cwd: std.fs.Dir) std.fs.File.OpenError!@This() {
+        if (cwd.access("meson.build", .{})) |_| {
             return .{ .Meson = "./meson.build" };
         } else |meson_err| {
             std.log.debug("not use meson cause {s}", .{@errorName(meson_err)});
-            if (dir.access("CMakeLists.txt", .{})) |_| {
+            if (cwd.access("CMakeLists.txt", .{})) |_| {
                 return .{ .CMake = "./CMakeLists.txt" };
             } else |cmake_err| {
                 std.log.debug("not use CMakeLists cause {s}", .{@errorName(cmake_err)});
@@ -199,6 +192,32 @@ pub const Generator = union(enum) {
         return mem;
     }
 
+    fn cmakeSetup(cwd: std.fs.Dir, allocator: Allocator) !std.process.Child.Term {
+        var setup = std.process.Child.init(&.{ "cmake", "-GNinja", "-B" ++ OUTPUT_FILE, "-DCMAKE_EXPORT_COMPILE_COMMANDS=Yes", "-DCMAKE_BUILD_TYPE=Debug" }, allocator);
+        setup.cwd_dir = cwd;
+        const argv = setup.argv;
+        std.log.debug("run cmd: {s} {s} {s} {s} {s}", .{ argv[0], argv[1], argv[2], argv[3], argv[4] });
+        if (build_mode != std.builtin.OptimizeMode.Debug) {
+            setup.stdout_behavior = std.process.Child.StdIo.Close;
+            setup.stderr_behavior = std.process.Child.StdIo.Close;
+        }
+        const term = try setup.spawnAndWait();
+        return term;
+    }
+
+    fn mesonSetup(cwd: std.fs.Dir, allocator: Allocator) !std.process.Child.Term {
+        var setup = std.process.Child.init(&[3][]const u8{ "meson", "setup", OUTPUT_FILE }, allocator);
+        setup.cwd_dir = cwd;
+        const argv = setup.argv;
+        std.log.debug("run cmd: {s} {s} {s}", .{ argv[0], argv[1], argv[2] });
+        if (build_mode != std.builtin.OptimizeMode.Debug) {
+            setup.stdout_behavior = std.process.Child.StdIo.Close;
+            setup.stderr_behavior = std.process.Child.StdIo.Close;
+        }
+        const term = try setup.spawnAndWait();
+        return term;
+    }
+
     // NOTE: Zig 0.13.0 currently not suppport specific cwd_dir on ChildProcess
     pub fn generate(self: @This(), cwd: std.fs.Dir, allocator: Allocator) ![]u8 {
         var timer = try std.time.Timer.start();
@@ -209,33 +228,12 @@ pub const Generator = union(enum) {
             timer.reset();
         }
         try cleanGenerateDir(cwd);
-        switch (self) {
-            .Meson => {
-                var setup = std.process.Child.init(&[3][]const u8{ "meson", "setup", OUTPUT_FILE }, allocator);
-                setup.cwd_dir = cwd;
-                const argv = setup.argv;
-                std.log.debug("run cmd: {s} {s} {s}", .{ argv[0], argv[1], argv[2] });
-                if (build_mode != std.builtin.OptimizeMode.Debug) {
-                    setup.stdout_behavior = std.process.Child.StdIo.Close;
-                    setup.stderr_behavior = std.process.Child.StdIo.Close;
-                }
-                _ = try setup.spawnAndWait();
-            },
-            .CMake => {
-                var setup = std.process.Child.init(&[5][]const u8{ "cmake", "-GNinja", "-B" ++ OUTPUT_FILE, "-DCMAKE_EXPORT_COMPILE_COMMANDS=Yes", "-DCMAKE_BUILD_TYPE=Debug" }, allocator);
-                setup.cwd_dir = cwd;
-                const argv = setup.argv;
-                std.log.debug("run cmd: {s} {s} {s} {s} {s}", .{ argv[0], argv[1], argv[2], argv[3], argv[4] });
-                if (build_mode != std.builtin.OptimizeMode.Debug) {
-                    setup.stdout_behavior = std.process.Child.StdIo.Close;
-                    setup.stderr_behavior = std.process.Child.StdIo.Close;
-                }
-                _ = try setup.spawnAndWait();
-            },
-            .Bear => {
-                @panic("unimplemented!");
-            },
-        }
+        const term = try switch (self) {
+            .Meson => mesonSetup(cwd, allocator),
+            .CMake => cmakeSetup(cwd, allocator),
+            .Bear => GeneratorError.BearNotSupport,
+        };
+        _ = term;
         const path = try std.fs.path.join(allocator, &.{ OUTPUT_FILE, "compile_commands.json" });
         return path;
     }

@@ -23,8 +23,9 @@ test "analyze_compile_commands" {
     const allocator = std.testing.allocator;
     const cwd = std.fs.cwd();
     var this = @This(){};
-    const tests = try cwd.openDir("tests", .{});
-    var generator = try Generator.inferFromProject(tests, "tests");
+    var tests = try cwd.openDir("tests", .{});
+    defer tests.close();
+    var generator = try Generator.inferFromProject(tests);
     const json_path = try generator.generate(tests, allocator);
     defer allocator.free(json_path);
     try this.analyze_compile_commands(tests, allocator, json_path);

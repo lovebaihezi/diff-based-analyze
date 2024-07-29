@@ -28,6 +28,7 @@ pub const Options = struct {
     }
 };
 
+// TODO: temp file should able to been cleaned up
 pub fn createCompiledMemBuf(allocator: Allocator, code: []const u8, options: ?Options) !llvmMemBuf {
     const nonnull_options = options orelse Options{ .compiler = Compiler.ZigCC };
     const compiler = nonnull_options.getCompiler();

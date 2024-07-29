@@ -51,7 +51,9 @@ pub fn app(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, path: []const 
     var oid = res.oid;
 
     if (oid) |*id| {
-        const generator = try CompileCommands.Generator.inferFromProject(cwd, path);
+        var dir = try cwd.openDir(path, .{});
+        defer dir.close();
+        const generator = try CompileCommands.Generator.inferFromProject(dir);
         if (self.limit) |limit| {
             var i: usize = 0;
             while (try Git.revwalkNext(revwalk, id)) |_| {
