@@ -26,7 +26,7 @@ test "analyze_compile_commands" {
     var tests = try cwd.openDir("tests", .{});
     defer tests.close();
     var generator = try Generator.inferFromProject(tests);
-    const json_path = try generator.generate(tests, allocator);
+    const json_path = try generator.generate(cwd, "tests", allocator);
     defer allocator.free(json_path);
-    try this.analyze_compile_commands(tests, allocator, json_path);
+    try this.analyze_compile_commands(cwd, allocator, json_path);
 }
