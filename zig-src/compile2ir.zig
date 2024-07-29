@@ -116,21 +116,35 @@ pub fn compileByCMD(allocator: Allocator, code: []const u8, options: ?Options) !
 
     // read output file
     const output = try output_file.readToEndAlloc(allocator, 4096 * 4096);
-    std.debug.print("{s}\n", .{output});
     output_file.close();
     try cwd.deleteFile(output_str_buf.items);
 
     return output;
 }
 
-pub fn fromCompileCommands(cwd: std.fs.Dir, allocator: Allocator, file_path: []const u8) ![][]u8 {
+pub const CompiledFiles = struct {
+    value: std.ArrayList([]u8),
+
+    pub fn init(allocator: Allocator) @This() {
+        return .{ .value = std.ArrayList([]u8).init(allocator) };
+    }
+
+    pub fn files(self: @This()) []const []const u8 {
+        return self.value.items;
+    }
+
+    pub fn deinit(self: @This()) void {
+        self.value.deinit();
+    }
+};
+
+pub fn fromCompileCommands(cwd: std.fs.Dir, allocator: Allocator, file_path: []const u8) !CompiledFiles {
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
     const arena_allocator = arena.allocator();
     const commands = try commandsFromFile(cwd, arena_allocator, file_path);
     defer commands.deinit();
-    var ll_files = std.ArrayList([]u8).init(arena_allocator);
-    defer ll_files.deinit();
+    var ll_files = CompiledFiles.init(arena_allocator);
     var processes = std.ArrayList(std.process.Child).init(arena_allocator);
     defer processes.deinit();
     try processes.ensureTotalCapacity(commands.value.len);
@@ -160,7 +174,7 @@ pub fn fromCompileCommands(cwd: std.fs.Dir, allocator: Allocator, file_path: []c
                         try new_path.append('_');
                         try new_path.appendSlice(splited_by_path);
                     }
-                    try ll_files.append(try allocator.dupe(u8, new_path.items));
+                    try ll_files.value.append(try allocator.dupe(u8, new_path.items));
                     try new_cmd.append(new_path.items);
                     // Add -emit-llvm and -S
                     try new_cmd.append(try arena_allocator.dupe(u8, "-emit-llvm"));
@@ -183,8 +197,7 @@ pub fn fromCompileCommands(cwd: std.fs.Dir, allocator: Allocator, file_path: []c
     for (processes.items) |*process| {
         _ = try process.wait();
     }
-    const slice = try ll_files.toOwnedSlice();
-    return slice;
+    return ll_files;
 }
 
 test "compile whole project based on compile_commands" {
@@ -192,12 +205,9 @@ test "compile whole project based on compile_commands" {
     const cwd = std.fs.cwd();
     var tests = try cwd.openDir("tests", .{ .iterate = true });
     defer tests.close();
-    // var walker = try tests.walk(std.testing.allocator);
-    // defer walker.deinit();
-    // while (try walker.next()) |file| {
-    //     std.debug.print("{s}\n", .{file.path});
-    // }
-    try tests.setAsCwd();
+    const file = "compile_commands.json";
+    const ll_files = try fromCompileCommands(tests, std.testing.allocator, file);
+    defer ll_files.deinit();
 }
 
 test "compile simple function to IR str" {

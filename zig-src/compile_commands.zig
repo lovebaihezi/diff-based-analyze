@@ -80,7 +80,14 @@ const ParseError = std.json.ParseError(Scanner);
 pub const ParsedCommands = std.json.Parsed(CommandSeq);
 
 pub fn fromLocalFile(cwd: std.fs.Dir, allocator: Allocator, path: []const u8) !ParsedCommands {
-    const file = try cwd.openFile(path, .{});
+    const file = cwd.openFile(path, .{}) catch |e| {
+        if (e == std.fs.File.OpenError.FileNotFound) {
+            const realpath = try cwd.realpathAlloc(allocator, ".");
+            defer allocator.free(realpath);
+            std.debug.print("\nfile not found: {s} under {s}\n", .{ path, realpath });
+        }
+        return e;
+    };
     const metadata = try file.metadata();
     const buf = try file.readToEndAlloc(allocator, metadata.size());
     return fromCompleteInput(allocator, buf);
@@ -127,7 +134,7 @@ test "compile commands mv files name" {
     try std.testing.expectEqual(std.mem.indexOf(u8, names[1], &.{0x0}), null);
 }
 
-fn mv(allocator: Allocator, oid: *Git.OID) ![2][]u8 {
+fn mv2Cache(allocator: Allocator, oid: *Git.OID) ![2][]u8 {
     const dir = std.fs.cwd();
     const files = try compile_mv_files_name(allocator, oid);
     std.log.debug("will rename {s} to {s}", .{ files[0], files[1] });
@@ -159,9 +166,8 @@ pub const Generator = union(enum) {
         return .Bear;
     }
 
-    fn clean(allocator: Allocator) !void {
-        var rm = std.process.Child.init(&[3][]const u8{ "rm", "-rf", OUTPUT_FILE }, allocator);
-        _ = try rm.spawnAndWait();
+    fn cleanGenerateDir(cwd: std.fs.Dir) !void {
+        try cwd.deleteTree(OUTPUT_FILE);
     }
 
     pub fn patch(self: @This(), allocator: Allocator) !void {
@@ -181,7 +187,19 @@ pub const Generator = union(enum) {
         }
     }
 
-    pub fn generate(self: @This(), allocator: Allocator, oid: *Git.OID) ![]const u8 {
+    pub fn makeCompileCommandsUnique(allocator: Allocator, oid: *Git.OID) !void {
+        try mkdir(".cache");
+        var buf: [4096]u8 = undefined;
+        var fixed_allocator = std.heap.FixedBufferAllocator.init(&buf);
+        const local_allocator = fixed_allocator.allocator();
+        const files = try mv2Cache(local_allocator, oid);
+        // the files is alloc by local_allocator, so we don't need to free it
+        const mem = try allocator.alloc(u8, files[1].len);
+        @memcpy(mem, files[1]);
+        return mem;
+    }
+
+    pub fn generate(self: @This(), cwd: std.fs.Dir, allocator: Allocator) ![]const u8 {
         var timer = try std.time.Timer.start();
         defer {
             const end = timer.read();
@@ -189,11 +207,7 @@ pub const Generator = union(enum) {
             std.log.info("running {s} cost {}", .{ @tagName(self), fmt });
             timer.reset();
         }
-        try clean(allocator);
-        try mkdir(".cache");
-        var buf: [4096]u8 = undefined;
-        var fixed_allocator = std.heap.FixedBufferAllocator.init(&buf);
-        const local_allocator = fixed_allocator.allocator();
+        try cleanGenerateDir(cwd);
         switch (self) {
             .Meson => {
                 var setup = std.process.Child.init(&[3][]const u8{ "meson", "setup", OUTPUT_FILE }, allocator);
@@ -206,7 +220,7 @@ pub const Generator = union(enum) {
                 _ = try setup.spawnAndWait();
             },
             .CMake => {
-                var setup = std.process.Child.init(&[5][]const u8{ "cmake", "-GNinja", "-B" ++ OUTPUT_FILE, "-DCMAKE_EXPORT_COMPILE_COMMANDS=Yes", "-DCMAKE_BUILD_TYPE=Release" }, allocator);
+                var setup = std.process.Child.init(&[5][]const u8{ "cmake", "-GNinja", "-B" ++ OUTPUT_FILE, "-DCMAKE_EXPORT_COMPILE_COMMANDS=Yes", "-DCMAKE_BUILD_TYPE=Debug" }, allocator);
                 const argv = setup.argv;
                 std.log.debug("run cmd: {s} {s} {s} {s} {s}", .{ argv[0], argv[1], argv[2], argv[3], argv[4] });
                 if (build_mode != std.builtin.OptimizeMode.Debug) {
@@ -219,11 +233,7 @@ pub const Generator = union(enum) {
                 @panic("unimplemented!");
             },
         }
-        const files = try mv(local_allocator, oid);
-        // the files is alloc by local_allocator, so we don't need to free it
-        const mem = try allocator.alloc(u8, files[1].len);
-        @memcpy(mem, files[1]);
-        return mem;
+        return try std.fs.path.join(allocator, &.{ OUTPUT_FILE, "compile_commands.json" });
     }
 };
 
