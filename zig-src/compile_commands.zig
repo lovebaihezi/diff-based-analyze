@@ -150,8 +150,8 @@ pub const Generator = union(enum) {
 
     pub const PatchError = error{};
 
-    pub fn inferFromProject(path: []const u8) std.fs.File.OpenError!@This() {
-        var dir = try std.fs.cwd().openDir(path, .{});
+    pub fn inferFromProject(cwd: std.fs.Dir, path: []const u8) std.fs.File.OpenError!@This() {
+        var dir = try cwd.openDir(path, .{});
         defer dir.close();
         if (dir.access("meson.build", .{})) |_| {
             return .{ .Meson = "./meson.build" };
@@ -199,7 +199,8 @@ pub const Generator = union(enum) {
         return mem;
     }
 
-    pub fn generate(self: @This(), cwd: std.fs.Dir, allocator: Allocator) ![]const u8 {
+    // NOTE: Zig 0.13.0 currently not suppport specific cwd_dir on ChildProcess
+    pub fn generate(self: @This(), cwd: std.fs.Dir, allocator: Allocator) ![]u8 {
         var timer = try std.time.Timer.start();
         defer {
             const end = timer.read();
@@ -211,6 +212,7 @@ pub const Generator = union(enum) {
         switch (self) {
             .Meson => {
                 var setup = std.process.Child.init(&[3][]const u8{ "meson", "setup", OUTPUT_FILE }, allocator);
+                setup.cwd_dir = cwd;
                 const argv = setup.argv;
                 std.log.debug("run cmd: {s} {s} {s}", .{ argv[0], argv[1], argv[2] });
                 if (build_mode != std.builtin.OptimizeMode.Debug) {
@@ -221,6 +223,7 @@ pub const Generator = union(enum) {
             },
             .CMake => {
                 var setup = std.process.Child.init(&[5][]const u8{ "cmake", "-GNinja", "-B" ++ OUTPUT_FILE, "-DCMAKE_EXPORT_COMPILE_COMMANDS=Yes", "-DCMAKE_BUILD_TYPE=Debug" }, allocator);
+                setup.cwd_dir = cwd;
                 const argv = setup.argv;
                 std.log.debug("run cmd: {s} {s} {s} {s} {s}", .{ argv[0], argv[1], argv[2], argv[3], argv[4] });
                 if (build_mode != std.builtin.OptimizeMode.Debug) {
@@ -233,7 +236,8 @@ pub const Generator = union(enum) {
                 @panic("unimplemented!");
             },
         }
-        return try std.fs.path.join(allocator, &.{ OUTPUT_FILE, "compile_commands.json" });
+        const path = try std.fs.path.join(allocator, &.{ OUTPUT_FILE, "compile_commands.json" });
+        return path;
     }
 };
 

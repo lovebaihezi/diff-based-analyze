@@ -22,12 +22,10 @@ pub fn analyze_compile_commands(self: *@This(), cwd: std.fs.Dir, allocator: Allo
 test "analyze_compile_commands" {
     const allocator = std.testing.allocator;
     const cwd = std.fs.cwd();
-    const json_path = "compile_commands.json";
     var this = @This(){};
     const tests = try cwd.openDir("tests", .{});
-    var process = std.process.Child.init(&.{ "cmake", "-GNinja", "-BBuild" }, allocator);
-    process.cwd = "tests";
-    const term = try process.spawnAndWait();
-    try std.testing.expectEqual(term.Exited, 0);
+    var generator = try Generator.inferFromProject(tests, "tests");
+    const json_path = try generator.generate(tests, allocator);
+    defer allocator.free(json_path);
     try this.analyze_compile_commands(tests, allocator, json_path);
 }
