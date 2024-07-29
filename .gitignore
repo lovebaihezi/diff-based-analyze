@@ -36,3 +36,4 @@ target_wasm
 .lycheecache
 *.log
 /.cache
+tests/temp-*.c

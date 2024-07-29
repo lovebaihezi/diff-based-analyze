@@ -165,7 +165,6 @@ pub const Generator = union(enum) {
     }
 
     pub fn patch(self: @This(), allocator: Allocator) !void {
-        // Add CMAKE_CXX_FLAGS TO BUILD IR Result
         switch (self) {
             .CMake => |cmake_file_path| {
                 var file = try std.fs.cwd().openFile(cmake_file_path, .{ .mode = .read_write });
