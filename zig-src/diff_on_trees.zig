@@ -20,7 +20,7 @@ fn actions(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, repo: Git.Repo
     // We don't need reset now cause use checkout force fit the need
     // try resetAllFiles(repo);
     try Git.forceCheckout(repo, id);
-    const final_json_path = try generator.generate(cwd, ".", allocator);
+    const final_json_path = try generator.generate(cwd, allocator);
     defer allocator.free(final_json_path);
     switch (self.analyzer) {
         .Infer => |*infer| {

@@ -135,7 +135,13 @@ fn mv2Cache(allocator: Allocator, oid: *Git.OID) ![2][]u8 {
     return files;
 }
 
-pub const Generator = union(enum) {
+pub const GeneratorType = enum {
+    Meson,
+    CMake,
+    Bear,
+};
+
+pub const Generator = union(GeneratorType) {
     Meson: []const u8,
     CMake: []const u8,
     // TODO
@@ -193,40 +199,18 @@ pub const Generator = union(enum) {
         return mem;
     }
 
-    fn cmakeSetup(wd: std.fs.Dir, path: []const u8, allocator: Allocator) !std.process.Child.Term {
-        _ = wd;
-        var setup = std.process.Child.init(&.{ "cmake", "-GNinja", "-B" ++ OUTPUT_FILE, "-DCMAKE_EXPORT_COMPILE_COMMANDS=Yes", "-DCMAKE_BUILD_TYPE=Debug", "-S", path }, allocator);
-        const argv = setup.argv;
-        std.log.debug("run cmd: {s} {s} {s} {s} {s}", .{ argv[0], argv[1], argv[2], argv[3], argv[4] });
-        if (build_mode != std.builtin.OptimizeMode.Debug) {
-            setup.stdout_behavior = std.process.Child.StdIo.Close;
-            setup.stderr_behavior = std.process.Child.StdIo.Close;
-        }
-        setup.spawn() catch |e| {
-            _ = try setup.kill();
-            return e;
-        };
-        const term = try setup.wait();
-        std.debug.assert(term.Exited == 0);
-        return term;
+    fn cmakeSetup(wd: std.fs.Dir, allocator: Allocator) std.process.Child.RunError!std.process.Child.RunResult {
+        const res = try std.process.Child.run(.{ .argv = &.{ "env", "CC=clang", "CXX=clang++", "cmake", "-GNinja", "-B" ++ OUTPUT_FILE, "-DCMAKE_EXPORT_COMPILE_COMMANDS=Yes", "-DCMAKE_BUILD_TYPE=Debug" }, .allocator = allocator, .cwd_dir = wd });
+        return res;
     }
 
-    fn mesonSetup(wd: std.fs.Dir, path: []const u8, allocator: Allocator) !std.process.Child.Term {
-        _ = path;
-        var setup = std.process.Child.init(&[3][]const u8{ "meson", "setup", OUTPUT_FILE }, allocator);
-        setup.cwd_dir = wd;
-        const argv = setup.argv;
-        std.log.debug("run cmd: {s} {s} {s}", .{ argv[0], argv[1], argv[2] });
-        if (build_mode != std.builtin.OptimizeMode.Debug) {
-            setup.stdout_behavior = std.process.Child.StdIo.Close;
-            setup.stderr_behavior = std.process.Child.StdIo.Close;
-        }
-        const term = try setup.spawnAndWait();
-        return term;
+    fn mesonSetup(wd: std.fs.Dir, allocator: Allocator) std.process.Child.RunError!std.process.Child.RunResult {
+        const res = try std.process.Child.run(.{ .argv = &.{ "meson", "setup", OUTPUT_FILE }, .allocator = allocator, .cwd_dir = wd });
+        return res;
     }
 
     // NOTE: Zig 0.13.0 currently not suppport specific cwd_dir on ChildProcess on Windows
-    pub fn generate(self: @This(), cwd: std.fs.Dir, path: []const u8, allocator: Allocator) ![]u8 {
+    pub fn generate(self: @This(), cwd: std.fs.Dir, allocator: Allocator) ![]u8 {
         var timer = try std.time.Timer.start();
         defer {
             const end = timer.read();
@@ -236,13 +220,14 @@ pub const Generator = union(enum) {
         }
         try cleanGenerateDir(cwd);
         // TODO: support bear
-        // TODO: CMake run into defunct
-        const term = try switch (self) {
-            .Meson => mesonSetup(cwd, path, allocator),
-            .CMake => cmakeSetup(cwd, path, allocator),
+        const res = try switch (self) {
+            .Meson => mesonSetup(cwd, allocator),
+            .CMake => cmakeSetup(cwd, allocator),
             .Bear => GeneratorError.BearNotSupport,
         };
-        if (term.Exited != 0) {
+        defer allocator.free(res.stdout);
+        defer allocator.free(res.stderr);
+        if (res.term.Exited != 0) {
             return GeneratorError.GenerateFailed;
         }
         const commands_path = try std.fs.path.join(allocator, &.{ OUTPUT_FILE, "compile_commands.json" });
