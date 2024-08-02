@@ -210,8 +210,17 @@ pub fn fromCompileCommands(cwd: std.fs.Dir, allocator: Allocator, file_path: []c
         try process.spawn();
         try processes.append(process);
     }
-    for (processes.items) |*process| {
-        _ = try process.wait();
+    for (processes.items, 0..) |*process, i| {
+        _ = process.wait() catch |e| {
+            std.log.err("process {d} failed, error name would be: {s}", .{ i, @errorName(e) });
+            if (process.stderr) |*process_stderr_file| {
+                defer process_stderr_file.close();
+                var stderr = std.io.getStdErr();
+                defer stderr.close();
+                var fifo = std.fifo.LinearFifo(u8, .{ .Static = 4096 }).init();
+                try fifo.pump(process_stderr_file.reader(), stderr.writer());
+            }
+        };
     }
     return ll_files;
 }
