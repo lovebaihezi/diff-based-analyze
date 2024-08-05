@@ -142,6 +142,16 @@ pub const CompiledFiles = struct {
     }
 };
 
+//fn print_stderr(process: *std.process.Child, i: usize, allocator: std.mem.Allocator) !void {
+//    if (process.stderr) |*process_stderr_file| {
+//        defer process_stderr_file.close();
+//        var stderr = std.io.getStdErr();
+//        defer stderr.close();
+//        var fifo = std.fifo.LinearFifo(u8, .{ .Static = 4096 }).init();
+//        try fifo.pump(process_stderr_file.reader(), stderr.writer());
+//    }
+//}
+
 pub fn fromCompileCommands(cwd: std.fs.Dir, allocator: Allocator, file_path: []const u8) !CompiledFiles {
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
@@ -172,14 +182,13 @@ pub fn fromCompileCommands(cwd: std.fs.Dir, allocator: Allocator, file_path: []c
             if (buf.len == 0) {
                 continue;
             }
-            // remove -O3, -O2, -O2, -Og
+            // remove -O3, -O2, -O2, -Og, -g
             if (std.mem.eql(u8, buf, "-O3") or std.mem.eql(u8, buf, "-o3") or std.mem.eql(u8, buf, "-O2") or std.mem.eql(u8, buf, "-o2") or std.mem.eql(u8, buf, "-O1") or std.mem.eql(u8, buf, "-o1") or std.mem.eql(u8, buf, "-Og") or std.mem.eql(u8, buf, "-og")) {
                 // add -g
                 try new_cmd.append(try arena_allocator.dupe(u8, "-g"));
                 set_debug = true;
                 continue;
             }
-            // remove -o and the file
             if (std.mem.eql(u8, buf, "-o")) {
                 const or_out_file = splited.next();
                 // change to a specifc name, and record it
@@ -197,10 +206,12 @@ pub fn fromCompileCommands(cwd: std.fs.Dir, allocator: Allocator, file_path: []c
 
                     try ll_files.value.append(try allocator.dupe(u8, new_path.items));
 
+                    try new_cmd.append(try arena_allocator.dupe(u8, "-o"));
                     try new_cmd.append(new_path.items);
                     // Add -emit-llvm and -S
                     try new_cmd.append(try arena_allocator.dupe(u8, "-emit-llvm"));
                     try new_cmd.append(try arena_allocator.dupe(u8, "-g"));
+                    continue;
                 } else {
                     std.log.warn("specific -o but not specific file", .{});
                     break;
@@ -220,19 +231,13 @@ pub fn fromCompileCommands(cwd: std.fs.Dir, allocator: Allocator, file_path: []c
         try processes.append(process);
     }
     for (processes.items, 0..) |*process, i| {
-        _ = process.wait() catch |e| {
+        const term = try process.wait();
+        if (term.Exited != 0) {
             const json_argv = try std.json.stringifyAlloc(allocator, process.argv, .{});
             defer allocator.free(json_argv);
-            std.debug.print("\nprocess {d} failed, error name: {s}, argv: {s}\n", .{ i, @errorName(e), json_argv });
-            // if (process.stderr) |*process_stderr_file| {
-            //     defer process_stderr_file.close();
-            //     var stderr = std.io.getStdErr();
-            //     defer stderr.close();
-            //     var fifo = std.fifo.LinearFifo(u8, .{ .Static = 4096 }).init();
-            //     try fifo.pump(process_stderr_file.reader(), stderr.writer());
-            // }
-            return e;
-        };
+            std.debug.print("\nprocess {d} failed, argv: {s}\n", .{ i, json_argv });
+            @panic("failed to run clang");
+        }
     }
     return ll_files;
 }
