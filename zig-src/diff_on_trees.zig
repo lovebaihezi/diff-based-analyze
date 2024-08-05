@@ -20,7 +20,7 @@ fn actions(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, repo: Git.Repo
     // We don't need reset now cause use checkout force fit the need
     // try resetAllFiles(repo);
     try Git.forceCheckout(repo, id);
-    const final_json_path = try generator.generate(allocator, id);
+    const final_json_path = try generator.generate(cwd, allocator);
     defer allocator.free(final_json_path);
     switch (self.analyzer) {
         .Infer => |*infer| {
@@ -51,7 +51,9 @@ pub fn app(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, path: []const 
     var oid = res.oid;
 
     if (oid) |*id| {
-        const generator = try CompileCommands.Generator.inferFromProject(path);
+        var dir = try cwd.openDir(path, .{});
+        defer dir.close();
+        const generator = try CompileCommands.Generator.inferFromProject(dir);
         if (self.limit) |limit| {
             var i: usize = 0;
             while (try Git.revwalkNext(revwalk, id)) |_| {
