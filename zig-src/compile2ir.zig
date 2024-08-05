@@ -5,6 +5,7 @@ const llvmMemBuf = @import("llvm_memory_buffer.zig");
 const Allocator = std.mem.Allocator;
 const IR = @import("llvm_parse_ir.zig");
 const commandsFromFile = @import("compile_commands.zig").fromLocalFile;
+const output_dir = @import("compile_commands.zig").OUTPUT_DIR;
 
 pub const Compiler = enum {
     Clang,
@@ -142,22 +143,14 @@ pub const CompiledFiles = struct {
     }
 };
 
-//fn print_stderr(process: *std.process.Child, i: usize, allocator: std.mem.Allocator) !void {
-//    if (process.stderr) |*process_stderr_file| {
-//        defer process_stderr_file.close();
-//        var stderr = std.io.getStdErr();
-//        defer stderr.close();
-//        var fifo = std.fifo.LinearFifo(u8, .{ .Static = 4096 }).init();
-//        try fifo.pump(process_stderr_file.reader(), stderr.writer());
-//    }
-//}
+pub const Compile2IRError = error{CompileCommandFailed};
 
 pub fn fromCompileCommands(cwd: std.fs.Dir, allocator: Allocator, file_path: []const u8) !CompiledFiles {
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
     const arena_allocator = arena.allocator();
 
-    var build_dir = try cwd.openDir(@import("compile_commands.zig").OUTPUT_FILE, .{});
+    var build_dir = try cwd.openDir(output_dir, .{});
     defer build_dir.close();
 
     const commands = try commandsFromFile(cwd, arena_allocator, file_path);
@@ -204,7 +197,9 @@ pub fn fromCompileCommands(cwd: std.fs.Dir, allocator: Allocator, file_path: []c
                         try new_path.appendSlice(splited_by_path);
                     }
 
-                    try ll_files.value.append(try allocator.dupe(u8, new_path.items));
+                    // new path will created under OUTPUT_FILE
+                    const relative_file_path = try std.fs.path.join(allocator, &.{ output_dir, new_path.items });
+                    try ll_files.value.append(relative_file_path);
 
                     try new_cmd.append(try arena_allocator.dupe(u8, "-o"));
                     try new_cmd.append(new_path.items);
@@ -235,8 +230,8 @@ pub fn fromCompileCommands(cwd: std.fs.Dir, allocator: Allocator, file_path: []c
         if (term.Exited != 0) {
             const json_argv = try std.json.stringifyAlloc(allocator, process.argv, .{});
             defer allocator.free(json_argv);
-            std.debug.print("\nprocess {d} failed, argv: {s}\n", .{ i, json_argv });
-            @panic("failed to run clang");
+            std.log.err("\nprocess {d} failed, argv: {s}\n", .{ i, json_argv });
+            return error.CompileCommandFailed;
         }
     }
     return ll_files;

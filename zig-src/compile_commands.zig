@@ -3,7 +3,7 @@ const mkdir = @import("mkdir_no_exist.zig").mkdirIfNExist;
 const Git = @import("git2.zig");
 const buildin = @import("builtin");
 
-pub const OUTPUT_FILE = "build";
+pub const OUTPUT_DIR = "build";
 const build_mode = buildin.mode;
 const CMAKE_BUILD_OPTIONS =
     \\set(CMAKE_C_COMPILER "clang")
@@ -104,7 +104,7 @@ pub fn compile_mv_files_name(allocator: Allocator, oid: *Git.OID) Allocator.Erro
     @memcpy(buf[len .. len + 5], ".json");
     const file = buf[0 .. len + 5];
     std.debug.assert(std.mem.endsWith(u8, file, ".json"));
-    const old_file = try std.fs.path.join(allocator, &[2][]const u8{ OUTPUT_FILE, "compile_commands.json" });
+    const old_file = try std.fs.path.join(allocator, &[2][]const u8{ OUTPUT_DIR, "compile_commands.json" });
     const new_file_name = try std.fs.path.join(allocator, &[2][]const u8{ ".cache", file });
     return .{ old_file, new_file_name };
 }
@@ -167,7 +167,7 @@ pub const Generator = union(GeneratorType) {
     }
 
     fn cleanGenerateDir(cwd: std.fs.Dir) !void {
-        try cwd.deleteTree(OUTPUT_FILE);
+        try cwd.deleteTree(OUTPUT_DIR);
     }
 
     pub fn patch(self: @This(), allocator: Allocator) !void {
@@ -200,12 +200,12 @@ pub const Generator = union(GeneratorType) {
     }
 
     fn cmakeSetup(wd: std.fs.Dir, allocator: Allocator) std.process.Child.RunError!std.process.Child.RunResult {
-        const res = try std.process.Child.run(.{ .argv = &.{ "env", "CC=clang", "CXX=clang++", "cmake", "-GNinja", "-B" ++ OUTPUT_FILE, "-DCMAKE_EXPORT_COMPILE_COMMANDS=Yes", "-DCMAKE_BUILD_TYPE=Debug" }, .allocator = allocator, .cwd_dir = wd });
+        const res = try std.process.Child.run(.{ .argv = &.{ "env", "CC=clang", "CXX=clang++", "cmake", "-GNinja", "-B" ++ OUTPUT_DIR, "-DCMAKE_EXPORT_COMPILE_COMMANDS=Yes", "-DCMAKE_BUILD_TYPE=Debug" }, .allocator = allocator, .cwd_dir = wd });
         return res;
     }
 
     fn mesonSetup(wd: std.fs.Dir, allocator: Allocator) std.process.Child.RunError!std.process.Child.RunResult {
-        const res = try std.process.Child.run(.{ .argv = &.{ "meson", "setup", OUTPUT_FILE }, .allocator = allocator, .cwd_dir = wd });
+        const res = try std.process.Child.run(.{ .argv = &.{ "meson", "setup", OUTPUT_DIR }, .allocator = allocator, .cwd_dir = wd });
         return res;
     }
 
@@ -230,7 +230,7 @@ pub const Generator = union(GeneratorType) {
         if (res.term.Exited != 0) {
             return GeneratorError.GenerateFailed;
         }
-        const commands_path = try std.fs.path.join(allocator, &.{ OUTPUT_FILE, "compile_commands.json" });
+        const commands_path = try std.fs.path.join(allocator, &.{ OUTPUT_DIR, "compile_commands.json" });
         return commands_path;
     }
 };

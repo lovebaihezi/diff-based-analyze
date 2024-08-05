@@ -12,10 +12,14 @@ pub fn analyze_compile_commands(self: *@This(), cwd: std.fs.Dir, allocator: Allo
     defer paths.deinit(allocator);
     for (paths.files()) |path| {
         // Create Membuf for analyzing
+        // the path we got here will be the relative path to the cwd
         const buf = try allocator.dupeZ(u8, path);
+        std.log.debug("analysis file: {s}", .{buf});
         defer allocator.free(buf);
         var analysis = try AnalysisIR.initWithFile(allocator, buf);
         try analysis.run(allocator);
+        const json = try std.json.stringifyAlloc(allocator, analysis.res, .{});
+        defer allocator.free(json);
         analysis.deinit();
     }
     // TODO: collect the res
