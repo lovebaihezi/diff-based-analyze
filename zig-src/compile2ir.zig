@@ -147,6 +147,9 @@ pub fn fromCompileCommands(cwd: std.fs.Dir, allocator: Allocator, file_path: []c
     defer arena.deinit();
     const arena_allocator = arena.allocator();
 
+    var build_dir = try cwd.openDir(@import("compile_commands.zig").OUTPUT_FILE, .{});
+    defer build_dir.close();
+
     const commands = try commandsFromFile(cwd, arena_allocator, file_path);
     defer commands.deinit();
 
@@ -159,12 +162,16 @@ pub fn fromCompileCommands(cwd: std.fs.Dir, allocator: Allocator, file_path: []c
     for (commands.value) |command| {
         const clang_command = command.command;
         var splited = std.mem.split(u8, clang_command, " ");
+        std.log.debug("modify {s}", .{clang_command});
 
         var new_cmd = std.ArrayList([]u8).init(arena_allocator);
 
         var set_debug = false;
 
         while (splited.next()) |buf| {
+            if (buf.len == 0) {
+                continue;
+            }
             // remove -O3, -O2, -O2, -Og
             if (std.mem.eql(u8, buf, "-O3") or std.mem.eql(u8, buf, "-o3") or std.mem.eql(u8, buf, "-O2") or std.mem.eql(u8, buf, "-o2") or std.mem.eql(u8, buf, "-O1") or std.mem.eql(u8, buf, "-o1") or std.mem.eql(u8, buf, "-Og") or std.mem.eql(u8, buf, "-og")) {
                 // add -g
@@ -199,6 +206,7 @@ pub fn fromCompileCommands(cwd: std.fs.Dir, allocator: Allocator, file_path: []c
                     break;
                 }
             }
+            try new_cmd.append(try arena_allocator.dupe(u8, buf));
         }
         if (!set_debug) {
             try new_cmd.append(try arena_allocator.dupe(u8, "-g"));
@@ -207,19 +215,23 @@ pub fn fromCompileCommands(cwd: std.fs.Dir, allocator: Allocator, file_path: []c
         // add process
         var process = std.process.Child.init(new_cmd.items, arena_allocator);
         process.stdout_behavior = .Close;
+        process.cwd_dir = build_dir;
         try process.spawn();
         try processes.append(process);
     }
     for (processes.items, 0..) |*process, i| {
         _ = process.wait() catch |e| {
-            std.log.err("process {d} failed, error name would be: {s}", .{ i, @errorName(e) });
-            if (process.stderr) |*process_stderr_file| {
-                defer process_stderr_file.close();
-                var stderr = std.io.getStdErr();
-                defer stderr.close();
-                var fifo = std.fifo.LinearFifo(u8, .{ .Static = 4096 }).init();
-                try fifo.pump(process_stderr_file.reader(), stderr.writer());
-            }
+            const json_argv = try std.json.stringifyAlloc(allocator, process.argv, .{});
+            defer allocator.free(json_argv);
+            std.debug.print("\nprocess {d} failed, error name: {s}, argv: {s}\n", .{ i, @errorName(e), json_argv });
+            // if (process.stderr) |*process_stderr_file| {
+            //     defer process_stderr_file.close();
+            //     var stderr = std.io.getStdErr();
+            //     defer stderr.close();
+            //     var fifo = std.fifo.LinearFifo(u8, .{ .Static = 4096 }).init();
+            //     try fifo.pump(process_stderr_file.reader(), stderr.writer());
+            // }
+            return e;
         };
     }
     return ll_files;

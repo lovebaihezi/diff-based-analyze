@@ -3,7 +3,7 @@ const mkdir = @import("mkdir_no_exist.zig").mkdirIfNExist;
 const Git = @import("git2.zig");
 const buildin = @import("builtin");
 
-const OUTPUT_FILE = "build";
+pub const OUTPUT_FILE = "build";
 const build_mode = buildin.mode;
 const CMAKE_BUILD_OPTIONS =
     \\set(CMAKE_C_COMPILER "clang")
