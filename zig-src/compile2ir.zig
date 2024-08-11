@@ -8,6 +8,8 @@ const commandsFromFile = @import("compile_commands.zig").fromLocalFile;
 const output_dir = @import("compile_commands.zig").OUTPUT_DIR;
 
 pub const Compiler = enum {
+    CC,
+    CXX,
     Clang,
     ClangCpp,
     ZigCC,
@@ -20,6 +22,8 @@ pub const Options = struct {
     output_file_name: ?[]const u8 = null,
     pub fn getCompiler(self: @This()) []const u8 {
         const compiler = switch (self.compiler) {
+            Compiler.CC => "cc",
+            Compiler.CXX => "c++",
             Compiler.Clang => "clang",
             Compiler.ClangCpp => "clang++",
             Compiler.ZigCC => "zig cc",
@@ -37,7 +41,7 @@ pub const CompiledResult = struct {
 
 // TODO: temp file should able to been cleaned up
 pub fn createCompiledMemBuf(allocator: Allocator, code: []const u8, options: ?Options) !llvmMemBuf {
-    const nonnull_options = options orelse Options{ .compiler = Compiler.ZigCC };
+    const nonnull_options = options orelse Options{ .compiler = Compiler.CC };
     const compiler = nonnull_options.getCompiler();
     var cwd = std.fs.cwd();
 
@@ -83,7 +87,7 @@ pub fn createCompiledMemBuf(allocator: Allocator, code: []const u8, options: ?Op
 }
 
 pub fn compileByCMD(allocator: Allocator, code: []const u8, options: ?Options) ![]u8 {
-    const nonnull_options = options orelse Options{ .compiler = Compiler.ZigCC };
+    const nonnull_options = options orelse Options{ .compiler = Compiler.CC };
     const compiler = nonnull_options.getCompiler();
     var cwd = std.fs.cwd();
 

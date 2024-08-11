@@ -12,10 +12,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Build Binary
-        run: zig build -Doptimize=ReleaseSafe --verbose-link --search-prefix ${{ github.workspace }}/llvm/lib
+        # run: zig build -Doptimize=ReleaseSafe --verbose-link --search-prefix ${{ github.workspace }}/llvm/lib
+        run: zig build -Doptimize=ReleaseSafe --verbose-link --search-prefix /usr/lib/llvm-14
       - name: Build tests
         run: |
           just config-examples
           just build-examples
       - name: Run Test
-        run: zig build test --search-prefix ${{ github.workspace }}/llvm/lib
+        # run: zig build test --search-prefix ${{ github.workspace }}/llvm/lib
+        run: zig build test --search-prefix /usr/lib/llvm-14

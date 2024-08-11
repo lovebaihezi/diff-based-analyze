@@ -24,6 +24,10 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    var env = try std.process.getEnvMap(b.allocator);
+    defer env.deinit();
+    const libLLVM = env.get("DIFF_LLVM_SHARED_LIB") orelse "LLVM";
+
     exe.linkLibC();
     exe.linkLibCpp();
 
@@ -60,7 +64,7 @@ pub fn build(b: *std.Build) void {
     //exe.linkSystemLibrary2("clangAST", .{ .preferred_link_mode = .static, .needed = true });
     //exe.linkSystemLibrary2("clangLex", .{ .preferred_link_mode = .static, .needed = true });
     //exe.linkSystemLibrary2("clangBasic", .{ .preferred_link_mode = .static, .needed = true });
-    exe.linkSystemLibrary2("LLVM", .{ .preferred_link_mode = .dynamic, .needed = true });
+    exe.linkSystemLibrary2(libLLVM, .{ .preferred_link_mode = .dynamic, .needed = true });
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
@@ -135,7 +139,7 @@ pub fn build(b: *std.Build) void {
     //unit_tests.linkSystemLibrary2("clangAST", .{ .preferred_link_mode = .static, .needed = true });
     //unit_tests.linkSystemLibrary2("clangLex", .{ .preferred_link_mode = .static, .needed = true });
     //unit_tests.linkSystemLibrary2("clangBasic", .{ .preferred_link_mode = .static, .needed = true });
-    unit_tests.linkSystemLibrary2("LLVM", .{ .preferred_link_mode = .dynamic, .needed = true });
+    unit_tests.linkSystemLibrary2(libLLVM, .{ .preferred_link_mode = .dynamic, .needed = true });
 
     const run_unit_tests = b.addRunArtifact(unit_tests);
 
