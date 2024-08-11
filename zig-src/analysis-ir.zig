@@ -76,7 +76,7 @@ pub fn stringifyVarMapInfo(self: VarMapInfo, out_stream: anytype) !void {
     try out_stream.endObject();
 }
 
-// Funcion Name -> { Var Name -> VariableInfo }
+// Function Name -> { Var Name -> VariableInfo }
 const FunctionLocalVarInfos = std.StringArrayHashMap(VarMapInfo);
 
 ctx: llvm.Context = undefined,
