@@ -78,7 +78,7 @@ install-zlib:
 
 config-examples:
   #!/usr/bin/env bash
-  cmake -GNinja -Bexamples-build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release tests
+  cmake -GNinja -Bexamples-build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug tests
 
 # build example tests under tests folder by using meson
 build-examples: config-examples
@@ -165,4 +165,3 @@ build-script:
     -lLLVMIRPrinter \
     -lLLVMCoverage \
     -lz
-
