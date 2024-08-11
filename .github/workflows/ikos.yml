@@ -14,4 +14,4 @@ jobs:
       - name: run ikos
         run: |
           just config-examples
-          ikos-scan just build-examples
+          ikos-scan -e just build-examples
