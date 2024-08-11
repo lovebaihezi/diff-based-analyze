@@ -35,8 +35,8 @@ pub fn analyze_compile_commands(self: *@This(), cwd: std.fs.Dir, allocator: Allo
 
 pub fn report(self: @This(), allocator: Allocator, stream: anytype) !void {
     _ = allocator;
-    var bufferd_stdout_stream = std.io.bufferedWriter(stream);
-    var out = bufferd_stdout_stream.writer();
+    var buffered_stdout_stream = std.io.bufferedWriter(stream);
+    var out = buffered_stdout_stream.writer();
     var jsons_value_iterator = self.jsons.iterator();
     while (jsons_value_iterator.next()) |entry| {
         try out.print("{{\"{s}\":\"{s}\"}}\n", .{ entry.key_ptr.*, entry.value_ptr.* });

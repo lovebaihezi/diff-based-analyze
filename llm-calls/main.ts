@@ -150,8 +150,8 @@ const gatherFiles = async (path: string): Promise<string[]> => {
   return files;
 };
 
-const reportDir = async ({ path = ".", skiped = [] as string[] }) => {
-  if (skiped.includes(path)) {
+const reportDir = async ({ path = ".", skipped = [] as string[] }) => {
+  if (skipped.includes(path)) {
     return;
   }
   const files = await gatherFiles(path);
@@ -206,7 +206,7 @@ const main = async () => {
         });
       },
       async ({ path }) => {
-        await reportDir({ skiped: [], path });
+        await reportDir({ skipped: [], path });
       },
     )
     .help()
