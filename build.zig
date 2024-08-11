@@ -24,7 +24,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    var env = try std.process.getEnvMap(b.allocator);
+    var env = std.process.getEnvMap(b.allocator) catch @panic("failed to load env map");
     defer env.deinit();
     const libLLVM = env.get("DIFF_LLVM_SHARED_LIB") orelse "LLVM";
 
