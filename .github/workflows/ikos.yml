@@ -10,6 +10,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
       - name: run ikos
         run: |
           just config-examples
