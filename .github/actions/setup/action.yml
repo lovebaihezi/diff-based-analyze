@@ -40,9 +40,9 @@ runs:
     - uses: actions/setup-node@v4
       with:
         node-version: 22
-    - name: Corepack check
-      shell: bash
-      run: |
-        corepack enable
-        cd ${{ github.workspace }}
-        corepack prepare
+    # - name: Corepack check
+    #   shell: bash
+    #   run: |
+    #     corepack enable
+    #     cd ${{ github.workspace }}
+    #     corepack prepare
