@@ -113,7 +113,7 @@ const baseline = async (paths: string[]) => {
 
 const getFileReport = async (path: string) => {
   const content = await readFile(path, { encoding: "utf-8" });
-  logger.info({ path, content }, "runing check on file");
+  logger.info({ path, content }, "running check on file");
   const res = await checkContent(content);
   if (!res) {
     return null;

@@ -209,7 +209,7 @@ pub const Generator = union(GeneratorType) {
         return res;
     }
 
-    // NOTE: Zig 0.13.0 currently not suppport specific cwd_dir on ChildProcess on Windows
+    // NOTE: Zig 0.13.0 currently not support specific cwd_dir on ChildProcess on Windows
     pub fn generate(self: @This(), cwd: std.fs.Dir, allocator: Allocator) ![]u8 {
         var timer = try std.time.Timer.start();
         defer {

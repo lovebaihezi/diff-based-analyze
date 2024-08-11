@@ -170,14 +170,14 @@ pub fn fromCompileCommands(cwd: std.fs.Dir, allocator: Allocator, file_path: []c
 
     for (commands.value) |command| {
         const clang_command = command.command;
-        var splited = std.mem.split(u8, clang_command, " ");
+        var split = std.mem.split(u8, clang_command, " ");
         std.log.debug("modify {s}", .{clang_command});
 
         var new_cmd = std.ArrayList([]u8).init(arena_allocator);
 
         var set_debug = false;
 
-        while (splited.next()) |buf| {
+        while (split.next()) |buf| {
             if (buf.len == 0) {
                 continue;
             }
@@ -189,18 +189,18 @@ pub fn fromCompileCommands(cwd: std.fs.Dir, allocator: Allocator, file_path: []c
                 continue;
             }
             if (std.mem.eql(u8, buf, "-o")) {
-                const or_out_file = splited.next();
-                // change to a specifc name, and record it
+                const or_out_file = split.next();
+                // change to a specific name, and record it
                 // replace sep to empty
                 if (or_out_file) |out_file| {
                     const sep_str = std.fs.path.sep_str;
 
-                    var path_splited = std.mem.split(u8, out_file, sep_str);
+                    var path_split = std.mem.split(u8, out_file, sep_str);
                     var new_path = std.ArrayList(u8).init(arena_allocator);
 
-                    while (path_splited.next()) |splited_by_path| {
+                    while (path_split.next()) |split_by_path| {
                         try new_path.append('_');
-                        try new_path.appendSlice(splited_by_path);
+                        try new_path.appendSlice(split_by_path);
                     }
 
                     // new path will created under OUTPUT_FILE
