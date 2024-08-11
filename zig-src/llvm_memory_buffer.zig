@@ -9,7 +9,7 @@ pub const LLVMError = error{
 };
 
 pub const LLVMStdinError = error{
-    CeateMemBufFromStdinFailed,
+    CreateMemBufFromStdinFailed,
 } || LLVMError;
 
 pub const LLVMFileError = error{
@@ -29,7 +29,7 @@ pub fn initWithStdin() LLVMStdinError!MemoryBuf {
         if (out_msg != 0x0) {
             std.log.err("failed to read bitcode from stdin, output message: {s}", .{out_msg});
         }
-        return error.CeateMemBufFromStdinFailed;
+        return error.CreateMemBufFromStdinFailed;
     }
     return self;
 }
