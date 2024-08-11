@@ -79,6 +79,8 @@ pub fn stringifyVarMapInfo(self: VarMapInfo, out_stream: anytype) !void {
 // Funcion Name -> { Var Name -> VariableInfo }
 const FunctionLocalVarInfos = std.StringArrayHashMap(VarMapInfo);
 
+ctx: llvm.Context = undefined,
+ir: IR = undefined,
 mem_buf: MemoryBuffer = undefined,
 res: AnalysisIRRes = undefined,
 
@@ -103,17 +105,17 @@ pub fn initWithFile(allocator: Allocator, file_path: [:0]const u8) !@This() {
     };
 }
 
-pub fn deinit(self: @This()) void {
+pub fn deinit(self: *@This()) void {
+    defer llvm.destroyContext(self.ctx);
     defer self.mem_buf.deinit();
+    self.ir.deinit();
 }
 
 pub fn run(self: *@This(), allocator: std.mem.Allocator) !void {
-    const ctx = llvm.createContext();
-    defer llvm.destroyContext(ctx);
-    var ir_module: IR = try IR.parseIR(ctx, self.mem_buf.mem_buf);
-    defer ir_module.deinit();
-    var global_vars = GlobalVar.init(ir_module.mod_ref);
-    var function = Function.init(ir_module.mod_ref);
+    self.ctx = llvm.createContext();
+    self.ir = try IR.parseIR(self.ctx, self.mem_buf.mem_buf);
+    var global_vars = GlobalVar.init(self.ir.mod_ref);
+    var function = Function.init(self.ir.mod_ref);
     while (global_vars.next()) |g| {
         const name = llvm.llvmValueName(g);
         const info = VariableInfo.init(allocator);

@@ -6,12 +6,12 @@ const path = std.fs.path;
 
 const eql = std.mem.eql;
 
-pub fn find(allocator: Allocator, dir: Dir, name: []const u8) !?[]u8 {
+pub fn find(allocator: Allocator, dir: Dir, name: []const u8) !?[]const u8 {
     var walker = try dir.walk(allocator);
     defer walker.deinit();
     while (try walker.next()) |entry| {
         if (eql(u8, entry.basename, name)) {
-            return try entry.dir.realpathAlloc(allocator, entry.basename);
+            return entry.path;
         }
     }
     return null;
