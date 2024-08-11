@@ -17,9 +17,11 @@ runs:
         version: "17.0.6"
         env: true
         directory: ${{ github.workspace }}/llvm
-    - name: Check Zig ENV
+    - name: Check Zig ENV, LLVM Env
       shell: bash
-      run: zig env
+      run: |
+        zig env
+        ls -l ${{ github.workspace }}/llvm
     - name: Build libgit2, zlib
       shell: bash
       run: |
