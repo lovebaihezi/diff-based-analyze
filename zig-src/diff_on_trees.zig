@@ -29,6 +29,9 @@ fn actions(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, repo: Git.Repo
         .RWOp => |*rwop| {
             defer rwop.deinit(allocator);
             try rwop.analyze_compile_commands(cwd, allocator, final_json_path);
+            var stdout_file = std.io.getStdOut();
+            const stdout_writer = stdout_file.writer();
+            try rwop.report(allocator, stdout_writer);
         },
     }
 }
