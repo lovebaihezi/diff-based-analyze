@@ -37,9 +37,14 @@ runs:
     - uses: cachix/install-nix-action@v27
       with:
         nix_path: nixpkgs=channel:nixos-unstable
+    - uses: Homebrew/actions/setup-homebrew@master
     - uses: actions/setup-node@v4
       with:
         node-version: 22
+    - name: Install Ikos
+      shell: bash
+      run: |
+        brew install nasa-sw-vnv/core/ikos
     # - name: Corepack check
     #   shell: bash
     #   run: |
