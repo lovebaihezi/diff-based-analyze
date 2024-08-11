@@ -27,6 +27,7 @@ pub fn build(b: *std.Build) void {
     var env = std.process.getEnvMap(b.allocator) catch @panic("failed to load env map");
     defer env.deinit();
     const libLLVM = env.get("DIFF_LLVM_SHARED_LIB") orelse "LLVM";
+    const libclang = env.get("DIFF_clang_SHARED_LIB") orelse "clang";
 
     exe.linkLibC();
     exe.linkLibCpp();
@@ -43,7 +44,7 @@ pub fn build(b: *std.Build) void {
 
     exe.linkSystemLibrary2("git2", .{ .preferred_link_mode = .static, .needed = true });
     exe.linkSystemLibrary2("z", .{ .preferred_link_mode = .dynamic, .needed = true });
-    exe.linkSystemLibrary2("clang", .{ .preferred_link_mode = .dynamic, .needed = true });
+    exe.linkSystemLibrary2(libclang, .{ .preferred_link_mode = .dynamic, .needed = true });
     //exe.linkSystemLibrary2("compile2ir", .{ .preferred_link_mode = .static, .needed = true });
     //exe.linkSystemLibrary2("clangTooling", .{ .preferred_link_mode = .static, .needed = true });
     //exe.linkSystemLibrary2("clangFrontend", .{ .preferred_link_mode = .static, .needed = true });
@@ -118,7 +119,7 @@ pub fn build(b: *std.Build) void {
 
     unit_tests.linkSystemLibrary2("git2", .{ .preferred_link_mode = .static, .needed = true });
     unit_tests.linkSystemLibrary2("z", .{ .preferred_link_mode = .dynamic, .needed = true });
-    unit_tests.linkSystemLibrary2("clang", .{ .preferred_link_mode = .dynamic, .needed = true });
+    unit_tests.linkSystemLibrary2(libclang, .{ .preferred_link_mode = .dynamic, .needed = true });
     //unit_tests.linkSystemLibrary2("compile2ir", .{ .preferred_link_mode = .static, .needed = true });
     //unit_tests.linkSystemLibrary2("clangTooling", .{ .preferred_link_mode = .static, .needed = true });
     //unit_tests.linkSystemLibrary2("clangFrontend", .{ .preferred_link_mode = .static, .needed = true });

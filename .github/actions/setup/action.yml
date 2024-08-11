@@ -19,6 +19,7 @@ runs:
         chmod +x llvm.sh
         sudo ./llvm.sh 18
         echo DIFF_LLVM_SHARED_LIB="libLLVM-18" >> $GITHUB_ENV
+        echo DIFF_clang_SHARED_LIB="libclang-18" >> $GITHUB_ENV
     - name: Check Zig ENV
       shell: bash
       run: |
