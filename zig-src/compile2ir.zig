@@ -29,6 +29,12 @@ pub const Options = struct {
     }
 };
 
+pub const CompiledResult = struct {
+    mem_buf: llvmMemBuf,
+    file: std.fs.File,
+    pub fn deinit() void {}
+};
+
 // TODO: temp file should able to been cleaned up
 pub fn createCompiledMemBuf(allocator: Allocator, code: []const u8, options: ?Options) !llvmMemBuf {
     const nonnull_options = options orelse Options{ .compiler = Compiler.ZigCC };
