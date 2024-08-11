@@ -27,6 +27,7 @@ fn actions(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, repo: Git.Repo
             try infer.analyze_compile_commands(cwd, allocator, final_json_path);
         },
         .RWOp => |*rwop| {
+            defer rwop.deinit(allocator);
             try rwop.analyze_compile_commands(cwd, allocator, final_json_path);
         },
     }

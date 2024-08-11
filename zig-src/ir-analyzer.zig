@@ -5,9 +5,18 @@ const Generator = @import("compile_commands.zig").Generator;
 
 const Allocator = std.mem.Allocator;
 
+jsons: std.StringHashMap([]const u8) = undefined,
+
+pub fn init(allocator: Allocator) @This() {
+    return .{
+        .jsons = std.StringHashMap([]const u8).init(allocator),
+    };
+}
+
 pub fn analyze_compile_commands(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, json_path: []const u8) !void {
+    // TODO(chaibowen): call init in analyzer
+    self.jsons = std.StringHashMap([]const u8).init(allocator);
     std.log.debug("run analysis based on compile_commands under cwd: {s}", .{json_path});
-    _ = self;
     const paths = try compile2ir.fromCompileCommands(cwd, allocator, json_path);
     defer paths.deinit(allocator);
     for (paths.files()) |path| {
@@ -19,20 +28,31 @@ pub fn analyze_compile_commands(self: *@This(), cwd: std.fs.Dir, allocator: Allo
         var analysis = try AnalysisIR.initWithFile(allocator, buf);
         try analysis.run(allocator);
         const json = try std.json.stringifyAlloc(allocator, analysis.res, .{});
-        defer allocator.free(json);
+        try self.jsons.put(try allocator.dupe(u8, path), json);
         analysis.deinit();
     }
-    // TODO: collect the res
+}
+
+pub fn deinit(self: *@This(), allocator: Allocator) void {
+    var jsons_value_iterator = self.jsons.iterator();
+    while (jsons_value_iterator.next()) |entry| {
+        allocator.free(entry.key_ptr.*);
+        allocator.free(entry.value_ptr.*);
+    }
 }
 
 test "analyze_compile_commands" {
     const allocator = std.testing.allocator;
     const cwd = std.fs.cwd();
     var this = @This(){};
+    defer this.deinit(allocator);
     var tests = try cwd.openDir("tests", .{});
     defer tests.close();
     var generator = try Generator.inferFromProject(tests);
     const json_path = try generator.generate(tests, allocator);
     defer allocator.free(json_path);
     try this.analyze_compile_commands(cwd, allocator, json_path);
+    const jsons = this.jsons;
+    const json_quanlities = jsons.count();
+    try std.testing.expectEqual(json_quanlities, 30);
 }
