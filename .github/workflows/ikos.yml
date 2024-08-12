@@ -11,6 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
+      - name: Install Ikos
+        run: |
+          brew install nasa-sw-vnv/core/ikos
       - name: run ikos
         run: |
           yes | ikos-scan just config-examples

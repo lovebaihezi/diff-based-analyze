@@ -11,6 +11,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
+      - name: Install Infer
+        run: |
+          VERSION=1.2.0; \
+          curl -sSL "https://github.com/facebook/infer/releases/download/v$VERSION/infer-linux64-v$VERSION.tar.xz" \
+          | sudo tar -C /opt -xJ && \
+          sudo ln -s "/opt/infer-linux64-v$VERSION/bin/infer" /usr/local/bin/infer
       - name: config and run infer with --racerd-only
         run: |
           just config-examples
@@ -23,6 +29,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Install Infer
+        run: |
+          VERSION=1.2.0; \
+          curl -sSL "https://github.com/facebook/infer/releases/download/v$VERSION/infer-linux64-v$VERSION.tar.xz" \
+          | sudo tar -C /opt -xJ && \
+          sudo ln -s "/opt/infer-linux64-v$VERSION/bin/infer" /usr/local/bin/infer
       - name: config and run infer with --racerd-only
         run: |
           echo "Unimplemented"
