@@ -17,7 +17,9 @@ jobs:
       - name: Run Test
         # run: zig build test --search-prefix ${{ github.workspace }}/llvm/lib
         run: zig build test --search-prefix /usr/lib/llvm-18
-  micros:
+      - name: Install Bin
+        run: sudo cp zig-out/bin/analysis /usr/local/bin/analysis
+  micros-fio:
     strategy:
       fail-fast: false
       matrix:
@@ -25,6 +27,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: ./.github/actions/fetch-micro-bench
-      - name: Run Micro Benchmarks
+      - name: Run Micro Benchmarks- fio
         run: |
-          echo "TODO"
+          cd fio
+          analysis rwop
