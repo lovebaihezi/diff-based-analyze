@@ -34,7 +34,23 @@ jobs:
       - name: Install Bin
         run: sudo cp zig-out/bin/analysis /usr/local/bin/analysis
       - uses: ./.github/actions/fetch-micro-bench
-      - name: Run Micro Benchmarks- fio
+      - name: Run Micro Benchmarks on fio
         run: |
           cd fio
+          analysis rwop
+      - name: Run Micro Benchmarks on Detours
+        run: |
+          cd detours
+          analysis rwop
+      - name: Run Micro Benchmarks on passenger
+        run: |
+          cd passenger
+          analysis rwop
+      - name: Run Micro Benchmarks on DALI
+        run: |
+          cd DALI
+          analysis rwop
+      - name: Run Micro Benchmarks on QuantLib
+        run: |
+          cd QuantLib
           analysis rwop
