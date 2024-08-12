@@ -111,7 +111,6 @@ fetch-cocci:
   git clone https://github.com/coccinelle/coccinellery
 
 fetch-micros:
-  git clone https://github.com/axboe/fio
   git clone https://github.com/microsoft/Detours
   git clone https://github.com/phusion/passenger
   git clone https://github.com/NVIDIA/DALI

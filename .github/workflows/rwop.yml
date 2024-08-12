@@ -2,25 +2,6 @@ name: Run RWOP on the Micro Benchmarks
 on:
   workflow_call:
 jobs:
-  fio:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      - name: Build Binary
-        # run: zig build -Doptimize=ReleaseSafe --verbose-link --search-prefix ${{ github.workspace }}/llvm/lib
-        run: zig build -Doptimize=ReleaseSafe --verbose-link --search-prefix /usr/lib/llvm-18
-      - name: Install Bin
-        run: sudo cp zig-out/bin/analysis /usr/local/bin/analysis
-      - uses: ./.github/actions/fetch-micro-bench
-      - name: Run Micro Benchmarks on fio
-        run: |
-          cd fio
-          analysis rwop
   Detours:
     strategy:
       fail-fast: false

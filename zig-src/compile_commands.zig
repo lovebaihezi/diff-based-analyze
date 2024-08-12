@@ -228,6 +228,7 @@ pub const Generator = union(GeneratorType) {
         defer allocator.free(res.stdout);
         defer allocator.free(res.stderr);
         if (res.term.Exited != 0) {
+            std.log.err("failed to run generator: \n{s}", .{res.stderr});
             return GeneratorError.GenerateFailed;
         }
         const commands_path = try std.fs.path.join(allocator, &.{ OUTPUT_DIR, "compile_commands.json" });
