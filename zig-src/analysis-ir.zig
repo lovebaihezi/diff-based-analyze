@@ -109,6 +109,7 @@ pub fn deinit(self: *@This()) void {
     defer llvm.destroyContext(self.ctx);
     defer self.mem_buf.deinit();
     self.ir.deinit();
+    self.res.deinit();
 }
 
 pub fn run(self: *@This(), allocator: std.mem.Allocator) !void {
@@ -407,7 +408,7 @@ test "analysis on Og input content, get json" {
     try std.json.stringify(res, .{}, arr.writer());
     try std.testing.expect(arr.items.len != 0);
     try std.testing.expectEqualStrings(
-        \\{"global_var":{".str.1":{"read":[],"write":[]}},"function_var":{"main":{"":{"read":["","","","","","","",""],"write":["","","","","","","","","","",""]}}}}
+        \\{"global_var":{".str":{"read":[],"write":[]},".str.1":{"read":[],"write":[]}},"function_var":{"main":{"":{"read":["","","","","","","",""],"write":["","","","","","","","","","",""]}},"fopen":{"":{"read":[],"write":[]}},"fgetc":{"":{"read":[],"write":[]}},"printf":{"":{"read":[],"write":[]}},"fclose":{"":{"read":[],"write":[]}}}}
     , arr.items);
 }
 
