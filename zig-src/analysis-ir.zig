@@ -41,10 +41,12 @@ pub const AnalysisIRRes = struct {
         defer self.global_map.deinit();
         defer self.function_var_map.deinit();
         for (self.global_map.keys()) |key| {
+            std.log.debug("deinit global var map: {s}", .{key});
             var info = self.global_map.get(key) orelse continue;
             defer info.deinit();
         }
         for (self.function_var_map.keys()) |key| {
+            std.log.debug("deinit var map under function : {s}", .{key});
             var map = self.function_var_map.get(key) orelse continue;
             defer map.deinit();
             for (map.keys()) |sub_key| {
