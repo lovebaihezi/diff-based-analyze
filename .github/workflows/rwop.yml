@@ -38,7 +38,7 @@ jobs:
       - uses: ./.github/actions/fetch-micro-bench
       - name: Run Micro Benchmarks on Detours
         run: |
-          cd detours
+          cd Detours
           analysis rwop
   passenger:
     strategy:
