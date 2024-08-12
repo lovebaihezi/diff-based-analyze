@@ -1,4 +1,4 @@
-name: build deps and binary
+name: Run RWOP on the Micro Benchmarks
 on:
   workflow_call:
 jobs:
