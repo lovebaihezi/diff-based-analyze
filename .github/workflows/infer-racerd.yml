@@ -11,10 +11,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - name: setup infer
-        run: |
-          just install-infer
       - name: config and run infer with --racerd-only
         run: |
           just config-examples
           time just run-infer examples-build/compile_commands.json
+  infer-micro:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: config and run infer with --racerd-only
+        run: |
+          echo "Unimplemented"

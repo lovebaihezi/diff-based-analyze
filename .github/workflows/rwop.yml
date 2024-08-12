@@ -1,0 +1,30 @@
+name: build deps and binary
+on:
+  workflow_call:
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Build Binary
+        # run: zig build -Doptimize=ReleaseSafe --verbose-link --search-prefix ${{ github.workspace }}/llvm/lib
+        run: zig build -Doptimize=ReleaseSafe --verbose-link --search-prefix /usr/lib/llvm-18
+      - name: Run Test
+        # run: zig build test --search-prefix ${{ github.workspace }}/llvm/lib
+        run: zig build test --search-prefix /usr/lib/llvm-18
+  micros:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: ./.github/actions/fetch-micro-bench
+      - name: Run Micro Benchmarks
+        run: |
+          echo "TODO"

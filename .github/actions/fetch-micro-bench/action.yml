@@ -3,44 +3,9 @@ description: Git clone Micro Benchmarks
 runs:
   using: composite
   steps:
-    - uses: goto-bus-stop/setup-zig@v2.2.0
-      with:
-        version: 0.13.0
     - uses: extractions/setup-just@v2
-    - uses: KyleMayes/install-llvm-action@v2
-      with:
-        version: "17"
-        env: false
-        directory: ${{ github.workspace }}/llvm
-    - name: Check Zig ENV
-      shell: bash
-      run: zig env
     - name: Pull Micro Benchmarks
       shell: bash
       run: |
         # Repo on github which star in 2000..5000
-        git clone https://github.com/axboe/fio --depth=1
-        git clone https://github.com/microsoft/Detours --depth=1
-        git clone https://github.com/phusion/passenger --depth=1
-        git clone https://github.com/NVIDIA/DALI --depth=1
-        git clone https://github.com/lballabio/QuantLib --depth=1
-        git clone https://github.com/aircrack-ng/aircrack-ng --depth=1
-        git clone https://github.com/vmg/redcarpet --depth=1
-        git clone https://github.com/emcrisostomo/fswatch --depth=1
-        git clone https://github.com/wjakob/instant-meshes --depth=1
-        git clone https://github.com/jagt/clumsy --depth=1
-        git clone https://github.com/leethomason/tinyxml2 --depth=1
-        git clone https://github.com/zcash/zcash --depth=1
-        git clone https://github.com/cuberite/cuberite --depth=1
-        git clone https://github.com/itinance/react-native-fs --depth=1
-        git clone https://github.com/Zelda64Recomp/Zelda64Recomp --depth=1
-        git clone https://github.com/immortalwrt/immortalwrt --depth=1
-        git clone https://github.com/visit1985/mdp --depth=1
-        git clone https://github.com/jbeder/yaml-cpp --depth=1
-        git clone https://github.com/gnuradio/gnuradio --depth=1
-        git clone https://github.com/mlpack/mlpack --depth=1
-        git clone https://github.com/guanzhi/GmSSL --depth=1
-        git clone https://github.com/NVIDIA/cccl --depth=1
-        git clone https://github.com/littlefs-project/littlefs --depth=1
-        git clone https://github.com/antirez/sds --depth=1
-        git clone https://github.com/rhasspy/piper --depth=1
+        just fetch-micros
