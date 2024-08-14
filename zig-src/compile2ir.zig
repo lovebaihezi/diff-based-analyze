@@ -8,6 +8,8 @@ const commandsFromFile = @import("compile_commands.zig").fromLocalFile;
 const output_dir = @import("compile_commands.zig").OUTPUT_DIR;
 
 pub const Compiler = enum {
+    CC,
+    CXX,
     Clang,
     ClangCpp,
     ZigCC,
@@ -20,6 +22,8 @@ pub const Options = struct {
     output_file_name: ?[]const u8 = null,
     pub fn getCompiler(self: @This()) []const u8 {
         const compiler = switch (self.compiler) {
+            Compiler.CC => "cc",
+            Compiler.CXX => "c++",
             Compiler.Clang => "clang",
             Compiler.ClangCpp => "clang++",
             Compiler.ZigCC => "zig cc",
@@ -37,7 +41,7 @@ pub const CompiledResult = struct {
 
 // TODO: temp file should able to been cleaned up
 pub fn createCompiledMemBuf(allocator: Allocator, code: []const u8, options: ?Options) !llvmMemBuf {
-    const nonnull_options = options orelse Options{ .compiler = Compiler.ZigCC };
+    const nonnull_options = options orelse Options{ .compiler = Compiler.CC };
     const compiler = nonnull_options.getCompiler();
     var cwd = std.fs.cwd();
 
@@ -83,7 +87,7 @@ pub fn createCompiledMemBuf(allocator: Allocator, code: []const u8, options: ?Op
 }
 
 pub fn compileByCMD(allocator: Allocator, code: []const u8, options: ?Options) ![]u8 {
-    const nonnull_options = options orelse Options{ .compiler = Compiler.ZigCC };
+    const nonnull_options = options orelse Options{ .compiler = Compiler.CC };
     const compiler = nonnull_options.getCompiler();
     var cwd = std.fs.cwd();
 
@@ -170,14 +174,14 @@ pub fn fromCompileCommands(cwd: std.fs.Dir, allocator: Allocator, file_path: []c
 
     for (commands.value) |command| {
         const clang_command = command.command;
-        var splited = std.mem.split(u8, clang_command, " ");
+        var split = std.mem.split(u8, clang_command, " ");
         std.log.debug("modify {s}", .{clang_command});
 
         var new_cmd = std.ArrayList([]u8).init(arena_allocator);
 
         var set_debug = false;
 
-        while (splited.next()) |buf| {
+        while (split.next()) |buf| {
             if (buf.len == 0) {
                 continue;
             }
@@ -189,18 +193,18 @@ pub fn fromCompileCommands(cwd: std.fs.Dir, allocator: Allocator, file_path: []c
                 continue;
             }
             if (std.mem.eql(u8, buf, "-o")) {
-                const or_out_file = splited.next();
-                // change to a specifc name, and record it
+                const or_out_file = split.next();
+                // change to a specific name, and record it
                 // replace sep to empty
                 if (or_out_file) |out_file| {
                     const sep_str = std.fs.path.sep_str;
 
-                    var path_splited = std.mem.split(u8, out_file, sep_str);
+                    var path_split = std.mem.split(u8, out_file, sep_str);
                     var new_path = std.ArrayList(u8).init(arena_allocator);
 
-                    while (path_splited.next()) |splited_by_path| {
+                    while (path_split.next()) |split_by_path| {
                         try new_path.append('_');
-                        try new_path.appendSlice(splited_by_path);
+                        try new_path.appendSlice(split_by_path);
                     }
 
                     // new path will created under OUTPUT_FILE

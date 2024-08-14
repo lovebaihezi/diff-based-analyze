@@ -113,7 +113,7 @@ const baseline = async (paths: string[]) => {
 
 const getFileReport = async (path: string) => {
   const content = await readFile(path, { encoding: "utf-8" });
-  logger.info({ path, content }, "runing check on file");
+  logger.info({ path, content }, "running check on file");
   const res = await checkContent(content);
   if (!res) {
     return null;
@@ -150,8 +150,8 @@ const gatherFiles = async (path: string): Promise<string[]> => {
   return files;
 };
 
-const reportDir = async ({ path = ".", skiped = [] as string[] }) => {
-  if (skiped.includes(path)) {
+const reportDir = async ({ path = ".", skipped = [] as string[] }) => {
+  if (skipped.includes(path)) {
     return;
   }
   const files = await gatherFiles(path);
@@ -206,7 +206,7 @@ const main = async () => {
         });
       },
       async ({ path }) => {
-        await reportDir({ skiped: [], path });
+        await reportDir({ skipped: [], path });
       },
     )
     .help()

@@ -5,13 +5,16 @@ jobs:
     uses: ./.github/workflows/build.yml
   clang-static-analyzer:
     uses: ./.github/workflows/clang-static-analyzer.yml
-  # infer:
-  #   uses: ./.github/workflows/infer-racerd.yml
-  # ikos:
-  #   uses: ./.github/workflows/ikos.yml
+  infer:
+    uses: ./.github/workflows/infer-racerd.yml
+  ikos:
+    uses: ./.github/workflows/ikos.yml
   # frama-c:
   #   uses: ./.github/workflows/frama-c.yml
   # coccinelle:
   #   uses: ./.github/workflows/coccinelle.yml
+  rwop:
+    uses: ./.github/workflows/rwop.yml
+  # coderrect no longer provide binary files
   # coderrect:
   #   uses: ./.github/workflows/coderrect.yml

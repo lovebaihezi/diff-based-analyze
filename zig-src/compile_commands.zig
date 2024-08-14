@@ -153,17 +153,19 @@ pub const Generator = union(GeneratorType) {
     };
 
     pub fn inferFromProject(cwd: std.fs.Dir) std.fs.File.OpenError!@This() {
+        var self: @This() = .Bear;
         if (cwd.access("meson.build", .{})) |_| {
-            return .{ .Meson = "./meson.build" };
+            self = .{ .Meson = "./meson.build" };
         } else |meson_err| {
             std.log.debug("not use meson cause {s}", .{@errorName(meson_err)});
-            if (cwd.access("CMakeLists.txt", .{})) |_| {
-                return .{ .CMake = "./CMakeLists.txt" };
-            } else |cmake_err| {
-                std.log.debug("not use CMakeLists cause {s}", .{@errorName(cmake_err)});
-            }
         }
-        return .Bear;
+        // Prefer CMake over meson
+        if (cwd.access("CMakeLists.txt", .{})) |_| {
+            return .{ .CMake = "./CMakeLists.txt" };
+        } else |cmake_err| {
+            std.log.debug("not use CMakeLists cause {s}", .{@errorName(cmake_err)});
+        }
+        return self;
     }
 
     fn cleanGenerateDir(cwd: std.fs.Dir) !void {
@@ -209,7 +211,7 @@ pub const Generator = union(GeneratorType) {
         return res;
     }
 
-    // NOTE: Zig 0.13.0 currently not suppport specific cwd_dir on ChildProcess on Windows
+    // NOTE: Zig 0.13.0 currently not support specific cwd_dir on ChildProcess on Windows
     pub fn generate(self: @This(), cwd: std.fs.Dir, allocator: Allocator) ![]u8 {
         var timer = try std.time.Timer.start();
         defer {
@@ -228,9 +230,14 @@ pub const Generator = union(GeneratorType) {
         defer allocator.free(res.stdout);
         defer allocator.free(res.stderr);
         if (res.term.Exited != 0) {
+            std.log.err("failed to run generator: \n{s}", .{res.stderr});
             return GeneratorError.GenerateFailed;
         }
-        const commands_path = try std.fs.path.join(allocator, &.{ OUTPUT_DIR, "compile_commands.json" });
+        const commands_path = try switch (self) {
+            .CMake => std.fs.path.join(allocator, &.{ OUTPUT_DIR, "compile_commands.json" }),
+            .Meson => std.fs.path.join(allocator, &.{ ".", "compile_commands.json" }),
+            else => @panic("not support generator other then cmake or meson"),
+        };
         return commands_path;
     }
 };

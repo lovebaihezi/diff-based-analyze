@@ -10,22 +10,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v20
-        with:
-          extra_nix_config: |
-            experimental-features = nix-command flakes
-            allow-unfree = "true"
-      - run: echo "NIXPKGS_ALLOW_UNFREE=1" >> $GITHUB_ENV
-      - run: env
-      - name: install ikos
-        shell: bash
+      - uses: ./.github/actions/setup
+      - name: Install Ikos
         run: |
-          export NIXPKGS_ALLOW_UNFREE="1"
-          echo $NIXPKGS_ALLOW_UNFREE
-          env nix profile install nixpkgs#ikos
-        env:
-          NIXPKGS_ALLOW_UNFREE: "1"
+          brew install nasa-sw-vnv/core/ikos
       - name: run ikos
         run: |
-          just config-examples
-          ikos-scan just build-examples
+          yes | ikos-scan just config-examples
+          yes | ikos-scan just build-examples

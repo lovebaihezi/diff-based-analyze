@@ -35,8 +35,10 @@ pub fn parse() !@This() {
         } else if (std.mem.startsWith(u8, arg, "-")) {
             return error.UnknowOption;
         } else if (std.mem.eql(u8, arg, "rwop") and i == 0) {
+            std.log.debug("set analyzer to {s}", .{arg});
             self.analyzer = AnalyzerType.RWOp;
         } else if (std.mem.eql(u8, arg, "infer") and i == 0) {
+            std.log.debug("set analyzer to {s}", .{arg});
             self.analyzer = AnalyzerType.Infer;
         } else {
             self.path = arg;

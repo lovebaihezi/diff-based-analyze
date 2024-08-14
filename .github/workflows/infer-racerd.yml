@@ -11,10 +11,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - name: setup infer
+      - name: Install Infer
         run: |
-          just install-infer
+          curl -sSL https://github.com/facebook/infer/releases/download/v1.2.0/infer-linux-x86_64-v1.2.0.tar.xz | sudo tar -C /opt -xJ && sudo ln -s "/opt/infer-linux-x86_64-v1.2.0/bin/infer" /usr/local/bin/infer
       - name: config and run infer with --racerd-only
         run: |
           just config-examples
           time just run-infer examples-build/compile_commands.json
+  infer-micro:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Install Infer
+        run: |
+          curl -sSL https://github.com/facebook/infer/releases/download/v1.2.0/infer-linux-x86_64-v1.2.0.tar.xz | sudo tar -C /opt -xJ && sudo ln -s "/opt/infer-linux-x86_64-v1.2.0/bin/infer" /usr/local/bin/infer
+      - name: config and run infer with --racerd-only
+        run: |
+          echo "Unimplemented"

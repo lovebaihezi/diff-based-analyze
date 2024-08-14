@@ -78,7 +78,8 @@ install-zlib:
 
 config-examples:
   #!/usr/bin/env bash
-  cmake -GNinja -Bexamples-build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release tests
+  echo $CC $CXX
+  cmake -GNinja -Bexamples-build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug tests
 
 # build example tests under tests folder by using meson
 build-examples: config-examples
@@ -110,31 +111,30 @@ fetch-cocci:
   git clone https://github.com/coccinelle/coccinellery
 
 fetch-micros:
-  git clone https://github.com/axboe/fio --depth=1
-  git clone https://github.com/microsoft/Detours --depth=1
-  git clone https://github.com/phusion/passenger --depth=1
-  git clone https://github.com/NVIDIA/DALI --depth=1
-  git clone https://github.com/lballabio/QuantLib --depth=1
-  git clone https://github.com/aircrack-ng/aircrack-ng --depth=1
-  git clone https://github.com/vmg/redcarpet --depth=1
-  git clone https://github.com/emcrisostomo/fswatch --depth=1
-  git clone https://github.com/wjakob/instant-meshes --depth=1
-  git clone https://github.com/jagt/clumsy --depth=1
-  git clone https://github.com/leethomason/tinyxml2 --depth=1
-  git clone https://github.com/zcash/zcash --depth=1
-  git clone https://github.com/cuberite/cuberite --depth=1
-  git clone https://github.com/itinance/react-native-fs --depth=1
-  git clone https://github.com/Zelda64Recomp/Zelda64Recomp --depth=1
-  git clone https://github.com/immortalwrt/immortalwrt --depth=1
-  git clone https://github.com/visit1985/mdp --depth=1
-  git clone https://github.com/jbeder/yaml-cpp --depth=1
-  git clone https://github.com/gnuradio/gnuradio --depth=1
-  git clone https://github.com/mlpack/mlpack --depth=1
-  git clone https://github.com/guanzhi/GmSSL --depth=1
-  git clone https://github.com/NVIDIA/cccl --depth=1
-  git clone https://github.com/littlefs-project/littlefs --depth=1
-  git clone https://github.com/antirez/sds --depth=1
-  git clone https://github.com/rhasspy/piper --depth=1
+  git clone https://github.com/microsoft/Detours
+  git clone https://github.com/phusion/passenger
+  git clone https://github.com/NVIDIA/DALI
+  git clone https://github.com/lballabio/QuantLib
+  git clone https://github.com/aircrack-ng/aircrack-ng
+  git clone https://github.com/vmg/redcarpet
+  git clone https://github.com/emcrisostomo/fswatch
+  git clone https://github.com/wjakob/instant-meshes
+  git clone https://github.com/jagt/clumsy
+  git clone https://github.com/leethomason/tinyxml2
+  git clone https://github.com/zcash/zcash
+  git clone https://github.com/cuberite/cuberite
+  git clone https://github.com/itinance/react-native-fs
+  git clone https://github.com/Zelda64Recomp/Zelda64Recomp
+  git clone https://github.com/immortalwrt/immortalwrt
+  git clone https://github.com/visit1985/mdp
+  git clone https://github.com/jbeder/yaml-cpp
+  git clone https://github.com/gnuradio/gnuradio
+  git clone https://github.com/mlpack/mlpack
+  git clone https://github.com/guanzhi/GmSSL
+  git clone https://github.com/NVIDIA/cccl
+  git clone https://github.com/littlefs-project/littlefs
+  git clone https://github.com/antirez/sds
+  git clone https://github.com/rhasspy/piper
 
 build-script:
   clang++ src/AutoApplyVulnerbilities.cpp -Illvm/include -Lllvm/lib $(./llvm/bin/llvm-config --cxxflags) -lc++ --std=c++2a \
@@ -165,4 +165,3 @@ build-script:
     -lLLVMIRPrinter \
     -lLLVMCoverage \
     -lz
-

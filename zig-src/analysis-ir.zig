@@ -41,10 +41,12 @@ pub const AnalysisIRRes = struct {
         defer self.global_map.deinit();
         defer self.function_var_map.deinit();
         for (self.global_map.keys()) |key| {
+            std.log.debug("deinit global var map: {s}", .{key});
             var info = self.global_map.get(key) orelse continue;
             defer info.deinit();
         }
         for (self.function_var_map.keys()) |key| {
+            std.log.debug("deinit var map under function : {s}", .{key});
             var map = self.function_var_map.get(key) orelse continue;
             defer map.deinit();
             for (map.keys()) |sub_key| {
@@ -76,7 +78,7 @@ pub fn stringifyVarMapInfo(self: VarMapInfo, out_stream: anytype) !void {
     try out_stream.endObject();
 }
 
-// Funcion Name -> { Var Name -> VariableInfo }
+// Function Name -> { Var Name -> VariableInfo }
 const FunctionLocalVarInfos = std.StringArrayHashMap(VarMapInfo);
 
 ctx: llvm.Context = undefined,
@@ -109,6 +111,7 @@ pub fn deinit(self: *@This()) void {
     defer llvm.destroyContext(self.ctx);
     defer self.mem_buf.deinit();
     self.ir.deinit();
+    self.res.deinit();
 }
 
 pub fn run(self: *@This(), allocator: std.mem.Allocator) !void {
@@ -407,7 +410,7 @@ test "analysis on Og input content, get json" {
     try std.json.stringify(res, .{}, arr.writer());
     try std.testing.expect(arr.items.len != 0);
     try std.testing.expectEqualStrings(
-        \\{"global_var":{".str.1":{"read":[],"write":[]}},"function_var":{"main":{"":{"read":["","","","","","","",""],"write":["","","","","","","","","","",""]}}}}
+        \\{"global_var":{".str":{"read":[],"write":[]},".str.1":{"read":[],"write":[]}},"function_var":{"main":{"":{"read":["","","","","","","",""],"write":["","","","","","","","","","",""]}},"fopen":{"":{"read":[],"write":[]}},"fgetc":{"":{"read":[],"write":[]}},"printf":{"":{"read":[],"write":[]}},"fclose":{"":{"read":[],"write":[]}}}}
     , arr.items);
 }
 
