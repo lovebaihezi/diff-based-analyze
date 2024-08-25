@@ -276,12 +276,10 @@ const LL_INPUT =
 ;
 
 test "analysis on O3 input content, gen JSON" {
-    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
-    defer arena.deinit();
     const name: [:0]const u8 = "cat.ll";
-    var analysis = try Analysis.initWithMem(arena.allocator(), name, LL_INPUT);
+    var analysis = try Analysis.initWithMem(std.testing.allocator, name, LL_INPUT);
     defer analysis.deinit();
-    try analysis.run(arena.allocator());
+    try analysis.run(std.testing.allocator);
     var res = analysis.res;
     defer res.deinit();
     var arr = std.ArrayList(u8).init(std.testing.allocator);
@@ -396,13 +394,12 @@ const OG_LL_INPUT =
     \\!7 = !{!"llvm.loop.mustprogress"}
     \\!8 = distinct !{!8, !7}
 ;
+
 test "analysis on Og input content, get json" {
-    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
-    defer arena.deinit();
     const name: [:0]const u8 = "cat.ll";
-    var analysis = try Analysis.initWithMem(arena.allocator(), name, OG_LL_INPUT);
+    var analysis = try Analysis.initWithMem(std.testing.allocator, name, OG_LL_INPUT);
     defer analysis.deinit();
-    try analysis.run(arena.allocator());
+    try analysis.run(std.testing.allocator);
     var res = analysis.res;
     defer res.deinit();
     var arr = std.ArrayList(u8).init(std.testing.allocator);

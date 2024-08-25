@@ -21,6 +21,7 @@ fn actions(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, repo: Git.Repo
     // We don't need reset now cause use checkout force fit the need
     // try resetAllFiles(repo);
     try Git.forceCheckout(repo, id);
+    // TODO(BoWen Chai): if exists compile_commands.json, just use it
     const final_json_path = try generator.generate(cwd, allocator);
     defer allocator.free(final_json_path);
     std.log.info("running checker: {s}", .{@tagName(self.analyzer)});

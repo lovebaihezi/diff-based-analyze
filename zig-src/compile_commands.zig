@@ -213,32 +213,38 @@ pub const Generator = union(GeneratorType) {
 
     // NOTE: Zig 0.13.0 currently not support specific cwd_dir on ChildProcess on Windows
     pub fn generate(self: @This(), cwd: std.fs.Dir, allocator: Allocator) ![]u8 {
-        var timer = try std.time.Timer.start();
-        defer {
-            const end = timer.read();
-            const fmt = std.fmt.fmtDuration(end);
-            std.log.info("running {s} cost {}", .{ @tagName(self), fmt });
-            timer.reset();
+        const tryAccess = cwd.access("compile_commands.json", .{});
+        if (tryAccess) |_| {
+            return std.fs.path.join(allocator, &.{ ".", "compile_commands.json" });
+        } else |e| {
+            std.log.warn("failed to access compile_commands.json: {s}", .{@errorName(e)});
+            var timer = try std.time.Timer.start();
+            defer {
+                const end = timer.read();
+                const fmt = std.fmt.fmtDuration(end);
+                std.log.info("running {s} cost {}", .{ @tagName(self), fmt });
+                timer.reset();
+            }
+            try cleanGenerateDir(cwd);
+            // TODO: support bear
+            const res = try switch (self) {
+                .Meson => mesonSetup(cwd, allocator),
+                .CMake => cmakeSetup(cwd, allocator),
+                .Bear => GeneratorError.BearNotSupport,
+            };
+            defer allocator.free(res.stdout);
+            defer allocator.free(res.stderr);
+            if (res.term.Exited != 0) {
+                std.log.err("failed to run generator: \n{s}", .{res.stderr});
+                return GeneratorError.GenerateFailed;
+            }
+            const commands_path = try switch (self) {
+                .CMake => std.fs.path.join(allocator, &.{ OUTPUT_DIR, "compile_commands.json" }),
+                .Meson => std.fs.path.join(allocator, &.{ ".", "compile_commands.json" }),
+                else => @panic("not support generator other then cmake or meson"),
+            };
+            return commands_path;
         }
-        try cleanGenerateDir(cwd);
-        // TODO: support bear
-        const res = try switch (self) {
-            .Meson => mesonSetup(cwd, allocator),
-            .CMake => cmakeSetup(cwd, allocator),
-            .Bear => GeneratorError.BearNotSupport,
-        };
-        defer allocator.free(res.stdout);
-        defer allocator.free(res.stderr);
-        if (res.term.Exited != 0) {
-            std.log.err("failed to run generator: \n{s}", .{res.stderr});
-            return GeneratorError.GenerateFailed;
-        }
-        const commands_path = try switch (self) {
-            .CMake => std.fs.path.join(allocator, &.{ OUTPUT_DIR, "compile_commands.json" }),
-            .Meson => std.fs.path.join(allocator, &.{ ".", "compile_commands.json" }),
-            else => @panic("not support generator other then cmake or meson"),
-        };
-        return commands_path;
     }
 };
 
