@@ -5,7 +5,7 @@ const AnalyzerType = @import("analyzer.zig").AnalyzerType;
 const Allocator = std.mem.Allocator;
 
 limit: ?usize = null,
-path: []const u8 = ".",
+repo_path: []const u8 = ".",
 analyzer: AnalyzerType = AnalyzerType.RWOp,
 strategy: Strategy = Strategy.Baseline,
 
@@ -30,7 +30,7 @@ fn parseFromIterator(iterator: anytype) !@This() {
         } else if (i == 0) {
             self.analyzer = try parseAnalyzer(arg);
         } else {
-            self.path = arg;
+            self.repo_path = arg;
         }
         i += 1;
     }
@@ -85,5 +85,5 @@ test "parseFromIterator" {
     try std.testing.expectEqual(AnalyzerType.RWOp, result.analyzer);
     try std.testing.expectEqual(Strategy.Baseline, result.strategy);
     try std.testing.expectEqual(@as(?usize, 10), result.limit);
-    try std.testing.expectEqualStrings("/path/to/file", result.path);
+    try std.testing.expectEqualStrings("/path/to/file", result.repo_path);
 }
