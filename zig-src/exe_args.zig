@@ -8,6 +8,7 @@ limit: ?usize = null,
 repo_path: []const u8 = ".",
 analyzer: AnalyzerType = AnalyzerType.RWOp,
 strategy: Strategy = Strategy.Baseline,
+database_path: ?[]const u8 = null, // New field for compile_commands.json path
 
 pub fn parse() !@This() {
     var args = std.process.args();
@@ -25,6 +26,8 @@ fn parseFromIterator(iterator: anytype) !@This() {
             self.strategy = try parseStrategy(arg[3..]);
         } else if (std.mem.startsWith(u8, arg, "-l=")) {
             self.limit = try parseLimit(arg[3..]);
+        } else if (std.mem.startsWith(u8, arg, "--database=")) {
+            self.database_path = arg[11..]; // New option for database path
         } else if (std.mem.startsWith(u8, arg, "-")) {
             return error.UnknownOption;
         } else if (i == 0) {
@@ -86,4 +89,54 @@ test "parseFromIterator" {
     try std.testing.expectEqual(Strategy.Baseline, result.strategy);
     try std.testing.expectEqual(@as(?usize, 10), result.limit);
     try std.testing.expectEqualStrings("/path/to/file", result.repo_path);
+}
+
+test "parseFromIterator with database path" {
+    const TestIterator = struct {
+        args: []const []const u8,
+        index: usize = 0,
+
+        fn next(self: *@This()) ?[]const u8 {
+            if (self.index < self.args.len) {
+                const arg = self.args[self.index];
+                self.index += 1;
+                return arg;
+            }
+            return null;
+        }
+    };
+
+    var test_args = TestIterator{ .args = &[_][]const u8{ "rwop", "-s=baseline", "-l=10", "--database=/path/to/compile_commands.json", "/path/to/file" } };
+    const result = try parseFromIterator(&test_args);
+
+    try std.testing.expectEqual(AnalyzerType.RWOp, result.analyzer);
+    try std.testing.expectEqual(Strategy.Baseline, result.strategy);
+    try std.testing.expectEqual(@as(?usize, 10), result.limit);
+    try std.testing.expectEqualStrings("/path/to/file", result.repo_path);
+    try std.testing.expectEqualStrings("/path/to/compile_commands.json", result.database_path.?);
+}
+
+test "parseFromIterator without database path" {
+    const TestIterator = struct {
+        args: []const []const u8,
+        index: usize = 0,
+
+        fn next(self: *@This()) ?[]const u8 {
+            if (self.index < self.args.len) {
+                const arg = self.args[self.index];
+                self.index += 1;
+                return arg;
+            }
+            return null;
+        }
+    };
+
+    var test_args = TestIterator{ .args = &[_][]const u8{ "rwop", "-s=baseline", "-l=10", "/path/to/file" } };
+    const result = try parseFromIterator(&test_args);
+
+    try std.testing.expectEqual(AnalyzerType.RWOp, result.analyzer);
+    try std.testing.expectEqual(Strategy.Baseline, result.strategy);
+    try std.testing.expectEqual(@as(?usize, 10), result.limit);
+    try std.testing.expectEqualStrings("/path/to/file", result.repo_path);
+    try std.testing.expect(result.database_path == null);
 }

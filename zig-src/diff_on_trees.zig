@@ -9,11 +9,13 @@ const Allocator = std.mem.Allocator;
 
 limit: ?usize = null,
 analyzer: Analyzer,
+database_path: ?[]const u8 = null,
 
 pub fn init(allocator: Allocator, arg: Arg) @This() {
     return .{
         .limit = arg.limit,
         .analyzer = Analyzer.init(allocator, arg.analyzer),
+        .database_path = arg.database_path,
     };
 }
 
@@ -24,14 +26,15 @@ fn actions(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, repo: Git.Repo
     // TODO(BoWen Chai): if exists compile_commands.json, just use it
     const final_json_path = try generator.generate(cwd, allocator);
     defer allocator.free(final_json_path);
+    const json_path = self.database_path orelse final_json_path;
     std.log.info("running checker: {s}", .{@tagName(self.analyzer)});
     switch (self.analyzer) {
         .Infer => |*infer| {
-            try infer.analyze_compile_commands(cwd, allocator, final_json_path);
+            try infer.analyze_compile_commands(cwd, allocator, json_path);
         },
         .RWOp => |*rwop| {
             defer rwop.deinit(allocator);
-            try rwop.analyze_compile_commands(cwd, allocator, final_json_path);
+            try rwop.analyze_compile_commands(cwd, allocator, json_path);
             var stdout_file = std.io.getStdOut();
             const stdout_writer = stdout_file.writer();
             try rwop.report(allocator, stdout_writer);
