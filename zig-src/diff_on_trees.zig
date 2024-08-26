@@ -19,14 +19,15 @@ pub fn init(allocator: Allocator, arg: Arg) @This() {
     };
 }
 
-fn actions(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, repo: Git.Repo, id: *Git.OID, generator: CompileCommands.Generator) !void {
-    // We don't need reset now cause use checkout force fit the need
-    // try resetAllFiles(repo);
-    try Git.forceCheckout(repo, id);
-    // TODO(BoWen Chai): if exists compile_commands.json, just use it
-    const final_json_path = try generator.generate(cwd, allocator);
-    defer allocator.free(final_json_path);
-    const json_path = self.database_path orelse final_json_path;
+fn getDatabasePath(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, generator: CompileCommands.Generator) ![]const u8 {
+    if (self.database_path) |path| {
+        return allocator.dupe(u8, path);
+    } else {
+        return generator.generate(cwd, allocator);
+    }
+}
+
+fn analyzeCommit(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, json_path: []const u8) !void {
     std.log.info("running checker: {s}", .{@tagName(self.analyzer)});
     switch (self.analyzer) {
         .Infer => |*infer| {
@@ -40,6 +41,13 @@ fn actions(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, repo: Git.Repo
             try rwop.report(allocator, stdout_writer);
         },
     }
+}
+
+fn processCommit(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, repo: Git.Repo, id: *Git.OID, generator: CompileCommands.Generator) !void {
+    try Git.forceCheckout(repo, id);
+    const json_path = try self.getDatabasePath(cwd, allocator, generator);
+    defer allocator.free(json_path);
+    try self.analyzeCommit(cwd, allocator, json_path);
 }
 
 pub fn app(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, path: []const u8) !void {
@@ -71,11 +79,11 @@ pub fn app(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, path: []const 
                     break;
                 }
                 i += 1;
-                try self.actions(cwd, allocator, repo, id, generator);
+                try self.processCommit(cwd, allocator, repo, id, generator);
             }
         } else {
             while (try Git.revwalkNext(revwalk, id)) |_| {
-                try self.actions(cwd, allocator, repo, id, generator);
+                try self.processCommit(cwd, allocator, repo, id, generator);
             }
         }
     } else {
