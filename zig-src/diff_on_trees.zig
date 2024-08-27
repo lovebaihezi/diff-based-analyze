@@ -28,7 +28,7 @@ fn getDatabasePath(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, genera
 }
 
 fn analyzeCommit(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, json_path: []const u8) !void {
-    std.log.info("running checker: {s}", .{@tagName(self.analyzer)});
+    std.log.info("running checker: {s} with compile bases: {s}", .{ @tagName(self.analyzer), json_path });
     switch (self.analyzer) {
         .Infer => |*infer| {
             try infer.analyze_compile_commands(cwd, allocator, json_path);
@@ -70,7 +70,8 @@ pub fn app(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, path: []const 
         var dir = try cwd.openDir(path, .{});
         defer dir.close();
         const generator = try CompileCommands.Generator.inferFromProject(dir);
-        std.log.info("skipped {} commits to find which commit contains {s}", .{ res.skipped_commits, @tagName(generator) });
+        std.log.debug("skipped {} commits to find which commit contains {s}", .{ res.skipped_commits, @tagName(generator) });
+        std.log.debug("start to analyze commit from {s}", .{id});
 
         if (self.limit) |limit| {
             var i: usize = 0;
