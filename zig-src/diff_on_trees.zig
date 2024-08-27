@@ -71,7 +71,7 @@ pub fn app(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, path: []const 
         defer dir.close();
         const generator = try CompileCommands.Generator.inferFromProject(dir);
         std.log.debug("skipped {} commits to find which commit contains {s}", .{ res.skipped_commits, @tagName(generator) });
-        std.log.debug("start to analyze commit from {s}", .{id});
+        std.log.debug("start to analyze commit from {s}", .{Git.commitStr(id)});
 
         if (self.limit) |limit| {
             var i: usize = 0;

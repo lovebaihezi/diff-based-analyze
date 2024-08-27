@@ -142,8 +142,10 @@ pub fn checkout(repo: Repo, oid: *OID, options: *c.git_checkout_options) Error!v
     }
 }
 
-pub fn commitStr(oid: *OID, str: []u8) void {
-    _ = c.git_oid_tostr(str.ptr, @min(str.len, c.GIT_OID_MAX_SIZE + 1), oid);
+// The mem will be managed by c, so don't free it
+pub fn commitStr(oid: *OID) []const u8 {
+    const str = c.git_oid_tostr_s(oid);
+    return std.mem.span(str);
 }
 
 pub fn lastError() ?[]const u8 {
