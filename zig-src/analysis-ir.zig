@@ -141,6 +141,7 @@ pub fn run(self: *@This(), allocator: std.mem.Allocator) !void {
             map.put(name, info) catch unreachable;
         }
         var block = BasicBlock.init(f);
+
         while (block.next()) |b| {
             var instruction = Instruction.init(b);
             while (instruction.next()) |i| {

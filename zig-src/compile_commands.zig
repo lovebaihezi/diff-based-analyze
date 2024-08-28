@@ -96,13 +96,14 @@ pub fn fromIOReader(allocator: Allocator, json_reader: anytype) !ParsedCommands 
 }
 
 pub fn compile_mv_files_name(allocator: Allocator, oid: *Git.OID) Allocator.Error![2][]u8 {
-    var buf: [Git.c.GIT_OID_SHA1_SIZE + 5]u8 = undefined;
-    Git.commitStr(oid, buf[0..]);
-    const len = std.mem.indexOf(u8, buf[0..], &.{0}) orelse 20;
+    const commit_str = Git.commitStr(oid);
+    const len = commit_str.len;
     std.debug.assert(len <= Git.c.GIT_OID_SHA1_SIZE);
-    std.debug.assert(std.mem.endsWith(u8, buf[0..], &.{ 0x0, 0xaa, 0xaa, 0xaa, 0xaa }));
-    @memcpy(buf[len .. len + 5], ".json");
-    const file = buf[0 .. len + 5];
+    std.debug.assert(std.mem.endsWith(u8, commit_str, &.{ 0x0, 0xaa, 0xaa, 0xaa, 0xaa }));
+    var buf: [Git.c.GIT_OID_SHA1_SIZE + 5]u8 = undefined;
+    @memcpy(buf[0..len], commit_str);
+    @memcpy(buf[len..], ".json");
+    const file = buf[0..];
     std.debug.assert(std.mem.endsWith(u8, file, ".json"));
     const old_file = try std.fs.path.join(allocator, &[2][]const u8{ OUTPUT_DIR, "compile_commands.json" });
     const new_file_name = try std.fs.path.join(allocator, &[2][]const u8{ ".cache", file });
