@@ -212,13 +212,12 @@ pub const Generator = union(GeneratorType) {
         return res;
     }
 
-    // NOTE: Zig 0.13.0 currently not support specific cwd_dir on ChildProcess on Windows
     pub fn generate(self: @This(), cwd: std.fs.Dir, allocator: Allocator) ![]u8 {
         const tryAccess = cwd.access("compile_commands.json", .{});
         if (tryAccess) |_| {
             return std.fs.path.join(allocator, &.{ ".", "compile_commands.json" });
         } else |e| {
-            std.log.warn("failed to access compile_commands.json: {s}", .{@errorName(e)});
+            std.log.warn("failed to access compile_commands.json: {s}; fallback to generate", .{@errorName(e)});
             var timer = try std.time.Timer.start();
             defer {
                 const end = timer.read();
