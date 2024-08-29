@@ -9,7 +9,7 @@ pub fn main() !void {
     const args = try exe_args.parse();
     const cwd = std.fs.cwd();
     var diff_on_trees = DiffOnTrees.init(allocator, args);
-    try diff_on_trees.app(cwd, allocator, args.path);
+    try diff_on_trees.app(cwd, allocator, args.repo_path);
 }
 
 test {

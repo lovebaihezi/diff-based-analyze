@@ -96,13 +96,14 @@ pub fn fromIOReader(allocator: Allocator, json_reader: anytype) !ParsedCommands 
 }
 
 pub fn compile_mv_files_name(allocator: Allocator, oid: *Git.OID) Allocator.Error![2][]u8 {
-    var buf: [Git.c.GIT_OID_SHA1_SIZE + 5]u8 = undefined;
-    Git.commitStr(oid, buf[0..]);
-    const len = std.mem.indexOf(u8, buf[0..], &.{0}) orelse 20;
+    const commit_str = Git.commitStr(oid);
+    const len = commit_str.len;
     std.debug.assert(len <= Git.c.GIT_OID_SHA1_SIZE);
-    std.debug.assert(std.mem.endsWith(u8, buf[0..], &.{ 0x0, 0xaa, 0xaa, 0xaa, 0xaa }));
-    @memcpy(buf[len .. len + 5], ".json");
-    const file = buf[0 .. len + 5];
+    std.debug.assert(std.mem.endsWith(u8, commit_str, &.{ 0x0, 0xaa, 0xaa, 0xaa, 0xaa }));
+    var buf: [Git.c.GIT_OID_SHA1_SIZE + 5]u8 = undefined;
+    @memcpy(buf[0..len], commit_str);
+    @memcpy(buf[len..], ".json");
+    const file = buf[0..];
     std.debug.assert(std.mem.endsWith(u8, file, ".json"));
     const old_file = try std.fs.path.join(allocator, &[2][]const u8{ OUTPUT_DIR, "compile_commands.json" });
     const new_file_name = try std.fs.path.join(allocator, &[2][]const u8{ ".cache", file });
@@ -211,34 +212,39 @@ pub const Generator = union(GeneratorType) {
         return res;
     }
 
-    // NOTE: Zig 0.13.0 currently not support specific cwd_dir on ChildProcess on Windows
     pub fn generate(self: @This(), cwd: std.fs.Dir, allocator: Allocator) ![]u8 {
-        var timer = try std.time.Timer.start();
-        defer {
-            const end = timer.read();
-            const fmt = std.fmt.fmtDuration(end);
-            std.log.info("running {s} cost {}", .{ @tagName(self), fmt });
-            timer.reset();
+        const tryAccess = cwd.access("compile_commands.json", .{});
+        if (tryAccess) |_| {
+            return std.fs.path.join(allocator, &.{ ".", "compile_commands.json" });
+        } else |e| {
+            std.log.warn("failed to access compile_commands.json: {s}; fallback to generate", .{@errorName(e)});
+            var timer = try std.time.Timer.start();
+            defer {
+                const end = timer.read();
+                const fmt = std.fmt.fmtDuration(end);
+                std.log.info("running {s} cost {}", .{ @tagName(self), fmt });
+                timer.reset();
+            }
+            try cleanGenerateDir(cwd);
+            // TODO: support bear
+            const res = try switch (self) {
+                .Meson => mesonSetup(cwd, allocator),
+                .CMake => cmakeSetup(cwd, allocator),
+                .Bear => GeneratorError.BearNotSupport,
+            };
+            defer allocator.free(res.stdout);
+            defer allocator.free(res.stderr);
+            if (res.term.Exited != 0) {
+                std.log.err("failed to run generator: \n{s}", .{res.stderr});
+                return GeneratorError.GenerateFailed;
+            }
+            const commands_path = try switch (self) {
+                .CMake => std.fs.path.join(allocator, &.{ OUTPUT_DIR, "compile_commands.json" }),
+                .Meson => std.fs.path.join(allocator, &.{ ".", "compile_commands.json" }),
+                else => @panic("not support generator other then cmake or meson"),
+            };
+            return commands_path;
         }
-        try cleanGenerateDir(cwd);
-        // TODO: support bear
-        const res = try switch (self) {
-            .Meson => mesonSetup(cwd, allocator),
-            .CMake => cmakeSetup(cwd, allocator),
-            .Bear => GeneratorError.BearNotSupport,
-        };
-        defer allocator.free(res.stdout);
-        defer allocator.free(res.stderr);
-        if (res.term.Exited != 0) {
-            std.log.err("failed to run generator: \n{s}", .{res.stderr});
-            return GeneratorError.GenerateFailed;
-        }
-        const commands_path = try switch (self) {
-            .CMake => std.fs.path.join(allocator, &.{ OUTPUT_DIR, "compile_commands.json" }),
-            .Meson => std.fs.path.join(allocator, &.{ ".", "compile_commands.json" }),
-            else => @panic("not support generator other then cmake or meson"),
-        };
-        return commands_path;
     }
 };
 

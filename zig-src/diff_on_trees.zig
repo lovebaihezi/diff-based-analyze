@@ -9,33 +9,45 @@ const Allocator = std.mem.Allocator;
 
 limit: ?usize = null,
 analyzer: Analyzer,
+database_path: ?[]const u8 = null,
 
 pub fn init(allocator: Allocator, arg: Arg) @This() {
     return .{
         .limit = arg.limit,
         .analyzer = Analyzer.init(allocator, arg.analyzer),
+        .database_path = arg.database_path,
     };
 }
 
-fn actions(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, repo: Git.Repo, id: *Git.OID, generator: CompileCommands.Generator) !void {
-    // We don't need reset now cause use checkout force fit the need
-    // try resetAllFiles(repo);
-    try Git.forceCheckout(repo, id);
-    const final_json_path = try generator.generate(cwd, allocator);
-    defer allocator.free(final_json_path);
-    std.log.info("running checker: {s}", .{@tagName(self.analyzer)});
+fn getDatabasePath(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, generator: CompileCommands.Generator) ![]const u8 {
+    if (self.database_path) |path| {
+        return allocator.dupe(u8, path);
+    } else {
+        return generator.generate(cwd, allocator);
+    }
+}
+
+fn analyzeCommit(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, json_path: []const u8) !void {
+    std.log.info("running checker: {s} with compile bases: {s}", .{ @tagName(self.analyzer), json_path });
     switch (self.analyzer) {
         .Infer => |*infer| {
-            try infer.analyze_compile_commands(cwd, allocator, final_json_path);
+            try infer.analyze_compile_commands(cwd, allocator, json_path);
         },
         .RWOp => |*rwop| {
             defer rwop.deinit(allocator);
-            try rwop.analyze_compile_commands(cwd, allocator, final_json_path);
+            try rwop.analyze_compile_commands(cwd, allocator, json_path);
             var stdout_file = std.io.getStdOut();
             const stdout_writer = stdout_file.writer();
             try rwop.report(allocator, stdout_writer);
         },
     }
+}
+
+fn processCommit(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, repo: Git.Repo, id: *Git.OID, generator: CompileCommands.Generator) !void {
+    try Git.forceCheckout(repo, id);
+    const json_path = try self.getDatabasePath(cwd, allocator, generator);
+    defer allocator.free(json_path);
+    try self.analyzeCommit(cwd, allocator, json_path);
 }
 
 pub fn app(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, path: []const u8) !void {
@@ -58,7 +70,8 @@ pub fn app(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, path: []const 
         var dir = try cwd.openDir(path, .{});
         defer dir.close();
         const generator = try CompileCommands.Generator.inferFromProject(dir);
-        std.log.info("skipped {} commits to find which commit contains {s}", .{ res.skipped_commits, @tagName(generator) });
+        std.log.debug("skipped {} commits to find which commit contains {s}", .{ res.skipped_commits, @tagName(generator) });
+        std.log.debug("start to analyze commit from {s}", .{Git.commitStr(id)});
 
         if (self.limit) |limit| {
             var i: usize = 0;
@@ -67,11 +80,11 @@ pub fn app(self: *@This(), cwd: std.fs.Dir, allocator: Allocator, path: []const 
                     break;
                 }
                 i += 1;
-                try self.actions(cwd, allocator, repo, id, generator);
+                try self.processCommit(cwd, allocator, repo, id, generator);
             }
         } else {
             while (try Git.revwalkNext(revwalk, id)) |_| {
-                try self.actions(cwd, allocator, repo, id, generator);
+                try self.processCommit(cwd, allocator, repo, id, generator);
             }
         }
     } else {
