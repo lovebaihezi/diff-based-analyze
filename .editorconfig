@@ -5,6 +5,11 @@ root = true
 
 [*]
 indent_style = space
+
+[*.{c, c++}]
+indent_size = 2
+
+[*.zig]
 indent_size = 4
 
 [*.ts]
