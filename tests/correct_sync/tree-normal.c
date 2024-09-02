@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int root_fn(DIR *dir, size_t level) {
+int root_fn(DIR *dir) {
   struct dirent *dirent = NULL;
   while ((dirent = readdir(dir))) {
     switch (dirent->d_type) {
@@ -12,17 +12,11 @@ int root_fn(DIR *dir, size_t level) {
       if (dirent->d_name[0] == '.') {
         continue;
       }
-      for (size_t i = 0; i < level; i++) {
-        printf("\t");
-      }
       printf("%s\n", dirent->d_name);
       DIR *subdir = opendir(dirent->d_name);
-      root_fn(subdir, level + 1);
+      root_fn(subdir);
       break;
     default:
-      for (size_t i = 0; i < level + 1; i++) {
-        printf("\t");
-      }
       printf("%s\n", dirent->d_name);
       break;
     }
@@ -33,8 +27,9 @@ int root_fn(DIR *dir, size_t level) {
   return 0;
 }
 
-int main(int argc, char *argv[]) {
-  DIR *dir = opendir(argv[1]);
-  root_fn(dir, 0);
-  return 0;
+int main(int argc, char* args[]) {
+  if (argc < 2) {
+    return 1;
+  }
+  return root_fn(opendir(args[1]));
 }
