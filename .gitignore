@@ -1,9 +1,9 @@
 /zig-cache
 /.zig-cache
 /zig-out
-*.bc
-*.ir
-*.ll
+./*.bc
+./*.ir
+./*.ll
 tests/.cache
 tests/build
 compile_commands.json
