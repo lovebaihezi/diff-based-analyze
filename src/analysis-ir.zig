@@ -40,6 +40,7 @@ pub const AnalysisIRRes = struct {
     pub fn deinit(self: *@This()) void {
         defer self.global_map.deinit();
         defer self.function_var_map.deinit();
+        // SEG Here
         for (self.global_map.keys()) |key| {
             std.log.debug("deinit global var map: {s}", .{key});
             var info = self.global_map.get(key) orelse continue;

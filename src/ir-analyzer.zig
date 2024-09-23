@@ -56,12 +56,14 @@ test "analyze_compile_commands" {
     const cwd = std.fs.cwd();
     var this = @This(){};
     defer this.deinit(allocator);
-    var tests = try cwd.openDir("tests", .{});
+    var tests = try cwd.openDir("tests", .{
+        .access_sub_paths = true,
+    });
     defer tests.close();
     var generator = try Generator.inferFromProject(tests);
     const json_path = try generator.generate(tests, allocator);
     defer allocator.free(json_path);
-    try this.analyze_compile_commands(cwd, allocator, json_path);
+    try this.analyze_compile_commands(tests, allocator, json_path);
     const jsons = this.jsons;
     const json_quanlities = jsons.count();
     try std.testing.expectEqual(json_quanlities, 30);
