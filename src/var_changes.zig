@@ -102,23 +102,31 @@ test "Case: Only Variable Name Changed" {
     const allocator = std.testing.allocator;
 
     // Run Cmake, build file-content-changes/variable-rename/{before, after} to ll, and load
-    _ = try std.process.Child.run(.{
+    const cmake_res = try std.process.Child.run(.{
         .allocator = allocator,
         .argv = &.{ "cmake", "-GNinja", "-Bbuild" },
         .cwd_dir = tmp_dir.dir,
     });
 
+    allocator.free(cmake_res.stderr);
+    allocator.free(cmake_res.stdout);
+
     // Run Ninja to compile all ll
-    _ = try std.process.Child.run(.{ .allocator = allocator, .argv = &.{ "bear", "--", "ninja", "-C", "build" }, .cwd_dir = tmp_dir.dir });
+    const ninja_res = try std.process.Child.run(.{ .allocator = allocator, .argv = &.{ "bear", "--", "ninja", "-C", "build" }, .cwd_dir = tmp_dir.dir });
+
+    allocator.free(ninja_res.stderr);
+    allocator.free(ninja_res.stdout);
 
     // load compile_commands.json
     const json_file = try tmp_dir.dir.readFileAlloc(allocator, "compile_commands.json", 4096 * 4096);
     defer allocator.free(json_file);
+
+    std.debug.print("\n{s}\n", .{json_file});
 
     var arena_allocator = std.heap.ArenaAllocator.init(allocator);
     defer arena_allocator.deinit();
     const arena = arena_allocator.allocator();
     const Value = struct { arguments: []const []const u8, directory: []const u8, file: []const u8, output: []const u8 };
     const value = try std.json.parseFromSliceLeaky([]Value, arena, json_file, .{ .allocate = std.json.AllocWhen.alloc_always });
-    try std.testing.expectEqual(value.len, 2);
+    try std.testing.expectEqual(2, value.len);
 }
