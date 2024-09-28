@@ -1,101 +1,96 @@
 const std = @import("std");
 const llvm = @import("llvm_wrap.zig");
+const Function = @import("llvm_function.zig");
+const BasicBlock = @import("llvm_basic_block.zig");
+const Instruction = @import("llvm_instruction.zig");
+const Profile = @import("profile.zig");
+const BitCode = @import("llvm_bitecode.zig");
+const MemoryBuffer = @import("llvm_memory_buffer.zig");
+const IR = @import("llvm_parse_ir.zig");
+const Operands = @import("llvm_operands.zig");
+const VariableInfo = @import("variable_info.zig");
+const GlobalVar = @import("llvm_global_var.zig");
 
-// TODO(chaibowen): current embed IR here, add script to read from the build dir based on the source files
-const before =
-    \\; ModuleID = '/home/I/projects/diff-based-analyze/challenges-a/file-content-changes/variable-rename/before.c'
-    \\source_filename = "/home/I/projects/diff-based-analyze/challenges-a/file-content-changes/variable-rename/before.c"
-    \\target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
-    \\target triple = "x86_64-pc-linux-gnu"
-    \\
-    \\@.str = private unnamed_addr constant [5 x i8] c"%zu\0A\00", align 1
-    \\
-    \\; Function Attrs: nofree nounwind sspstrong uwtable
-    \\define dso_local noundef i32 @main(i32 noundef %0, ptr nocapture noundef readnone %1) local_unnamed_addr #0 {
-    \\  %3 = sext i32 %0 to i64
-    \\  %4 = icmp ugt i32 %0, 1
-    \\  br i1 %4, label %6, label %5
-    \\
-    \\5:                                                ; preds = %6, %2
-    \\  ret i32 0
-    \\
-    \\6:                                                ; preds = %2, %6
-    \\  %7 = phi i64 [ %9, %6 ], [ 1, %2 ]
-    \\  %8 = tail call i32 (ptr, ...) @printf(ptr noundef nonnull dereferenceable(1) @.str, i64 noundef %7)
-    \\  %9 = add nuw i64 %7, 1
-    \\  %10 = icmp eq i64 %9, %3
-    \\  br i1 %10, label %5, label %6, !llvm.loop !5
-    \\}
-    \\
-    \\; Function Attrs: nofree nounwind
-    \\declare noundef i32 @printf(ptr nocapture noundef readonly, ...) local_unnamed_addr #1
-    \\
-    \\attributes #0 = { nofree nounwind sspstrong uwtable "min-legal-vector-width"="0" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
-    \\attributes #1 = { nofree nounwind "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
-    \\
-    \\!llvm.module.flags = !{!0, !1, !2, !3}
-    \\!llvm.ident = !{!4}
-    \\
-    \\!0 = !{i32 1, !"wchar_size", i32 4}
-    \\!1 = !{i32 8, !"PIC Level", i32 2}
-    \\!2 = !{i32 7, !"PIE Level", i32 2}
-    \\!3 = !{i32 7, !"uwtable", i32 2}
-    \\!4 = !{!"clang version 18.1.8"}
-    \\!5 = distinct !{!5, !6}
-    \\!6 = !{!"llvm.loop.mustprogress"}
-;
-const after =
-    \\; ModuleID = '/home/I/projects/diff-based-analyze/challenges-a/file-content-changes/variable-rename/after.c'
-    \\source_filename = "/home/I/projects/diff-based-analyze/challenges-a/file-content-changes/variable-rename/after.c"
-    \\target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
-    \\target triple = "x86_64-pc-linux-gnu"
-    \\
-    \\@.str = private unnamed_addr constant [5 x i8] c"%zu\0A\00", align 1
-    \\
-    \\; Function Attrs: nofree nounwind sspstrong uwtable
-    \\define dso_local noundef i32 @main(i32 noundef %0, ptr nocapture noundef readnone %1) local_unnamed_addr #0 {
-    \\  %3 = sext i32 %0 to i64
-    \\  %4 = icmp ugt i32 %0, 1
-    \\  br i1 %4, label %6, label %5
-    \\
-    \\5:                                                ; preds = %6, %2
-    \\  ret i32 0
-    \\
-    \\6:                                                ; preds = %2, %6
-    \\  %7 = phi i64 [ %9, %6 ], [ 1, %2 ]
-    \\  %8 = tail call i32 (ptr, ...) @printf(ptr noundef nonnull dereferenceable(1) @.str, i64 noundef %7)
-    \\  %9 = add nuw i64 %7, 1
-    \\  %10 = icmp eq i64 %9, %3
-    \\  br i1 %10, label %5, label %6, !llvm.loop !5
-    \\}
-    \\
-    \\; Function Attrs: nofree nounwind
-    \\declare noundef i32 @printf(ptr nocapture noundef readonly, ...) local_unnamed_addr #1
-    \\
-    \\attributes #0 = { nofree nounwind sspstrong uwtable "min-legal-vector-width"="0" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
-    \\attributes #1 = { nofree nounwind "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
-    \\
-    \\!llvm.module.flags = !{!0, !1, !2, !3}
-    \\!llvm.ident = !{!4}
-    \\
-    \\!0 = !{i32 1, !"wchar_size", i32 4}
-    \\!1 = !{i32 8, !"PIC Level", i32 2}
-    \\!2 = !{i32 7, !"PIE Level", i32 2}
-    \\!3 = !{i32 7, !"uwtable", i32 2}
-    \\!4 = !{!"clang version 18.1.8"}
-    \\!5 = distinct !{!5, !6}
-    \\!6 = !{!"llvm.loop.mustprogress"}
-;
+const Allocator = std.mem.Allocator;
 
-test "variable got renamed" {
-    try std.testing.expect(false);
+pub const VariableType = enum {
+    Block,
+    FnParam,
+    Global,
+};
+
+pub const Block = struct {
+    ref: llvm.BasicBlock,
+};
+
+pub const Inst = struct {
+    ref: llvm.NonNullBasicBlock,
+};
+
+pub const Fn = struct { ref: llvm.NonNullFunction };
+
+pub const Variable = union(VariableType) {
+    /// Global Var in Single LLVM IR file
+    Global: struct {
+        ref: llvm.NonNullValue = undefined,
+        operations: std.ArrayList(Inst) = undefined,
+    },
+    /// Variable inside Block of a function
+    Block: struct {
+        ref: llvm.NonNullValue = undefined,
+        operations: std.ArrayList(Inst) = undefined,
+        block_ref: ?Block = undefined,
+        func: ?Fn = undefined,
+    },
+    /// Variable that used as function parameter
+    FnParam: struct {
+        ref: llvm.NonNullValue = undefined,
+        operations: std.ArrayList(Inst) = undefined,
+        func: ?Fn = undefined,
+    },
+};
+
+variables: std.ArrayList(Variable) = undefined,
+
+pub fn init(allocator: Allocator) @This() {
+    return .{
+        .variables = std.ArrayList(Variable).init(allocator),
+    };
 }
+pub fn buildVariables(self: *@This(), allocator: Allocator, ctx: llvm.context, mem_buf: llvm.MemoryBuffer) @This() {
+    var ir: IR = try IR.parseIR(ctx, mem_buf.mem_buf);
+    defer ir.deinit();
 
-variables: std.ArrayList(llvm.Value) = undefined,
-ctx: llvm.Context = undefined,
+    var global_vars = GlobalVar.init(ir.mod_ref);
+    var functions = Function.init(ir.mod_ref);
 
-pub fn init(ctx: llvm.Context) @This() {}
+    while (global_vars.next()) |g| {
+        const variable = Variable{ .Global = .{
+            .ref = g,
+            .operations = std.ArrayList(Inst).init(allocator),
+        } };
+        try self.variables.append(variable);
+    }
 
-pub fn buildInitVariableFromInitFile(mem_buf: llvm.MemoryBuffer) {
-    self.mem_buf = mem_buf;
+    while (functions.next()) |f| {
+        var block = BasicBlock.init(f);
+        while (block.next()) |b| {
+            var insts = Instruction.init(b);
+            while (insts.next()) |i| {
+                const op_code = llvm.instructionCode(i);
+                switch (op_code) {
+                    llvm.Alloca => {
+                        const variable = Variable{ .Block = .{
+                            .ref = i,
+                            .operations = std.ArrayList(Inst).init(allocator),
+                            .block_ref = .Block{ .ref = b },
+                            .func = .Fn{ .ref = f },
+                        } };
+                        try self.variables.append(variable);
+                    },
+                    else => {},
+                }
+            }
+        }
+    }
 }

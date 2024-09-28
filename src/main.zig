@@ -17,5 +17,7 @@ test {
     _ = @import("llvm_wrap.zig");
     _ = @import("ir-analyzer.zig");
     _ = @import("analysis-ir.zig");
+    _ = @import("var_changes.zig");
+    _ = @import("var_indexer.zig");
     std.testing.refAllDecls(@This());
 }

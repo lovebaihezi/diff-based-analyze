@@ -117,7 +117,7 @@ pub fn deinit(self: *@This()) void {
 
 pub fn run(self: *@This(), allocator: std.mem.Allocator) !void {
     self.ctx = llvm.createContext();
-    self.ir = try IR.parseIR(self.ctx, self.mem_buf.mem_buf);
+    self.ir = try IR.parseIR(self.ctx, self.mem_buf.mem_buf_ref);
     var global_vars = GlobalVar.init(self.ir.mod_ref);
     var function = Function.init(self.ir.mod_ref);
     while (global_vars.next()) |g| {

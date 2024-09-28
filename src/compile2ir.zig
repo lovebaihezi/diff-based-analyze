@@ -271,6 +271,6 @@ test "compile simple function IR Module" {
     const allocator = std.testing.allocator;
     const mem_buf = try createCompiledMemBuf(allocator, "static int x;", .{ .compiler = Compiler.Clang });
     // defer mem_buf.deinit();
-    try std.testing.expect(mem_buf.mem_buf != null);
-    _ = try IR.parseIR(ctx, mem_buf.mem_buf);
+    try std.testing.expect(mem_buf.mem_buf_ref != null);
+    _ = try IR.parseIR(ctx, mem_buf.mem_buf_ref);
 }
