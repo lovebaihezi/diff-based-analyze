@@ -101,10 +101,13 @@ test "Case: Only Variable Name Changed" {
 
     const allocator = std.testing.allocator;
 
+    const cmake_file_dir = try std.fs.cwd().realpathAlloc(allocator, "challenges-a");
+    defer allocator.free(cmake_file_dir);
+
     // Run Cmake, build file-content-changes/variable-rename/{before, after} to ll, and load
     const cmake_res = try std.process.Child.run(.{
         .allocator = allocator,
-        .argv = &.{ "cmake", "-GNinja", "-Bbuild" },
+        .argv = &.{ "cmake", "-GNinja", "-Bbuild", cmake_file_dir },
         .cwd_dir = tmp_dir.dir,
     });
 
@@ -120,8 +123,6 @@ test "Case: Only Variable Name Changed" {
     // load compile_commands.json
     const json_file = try tmp_dir.dir.readFileAlloc(allocator, "compile_commands.json", 4096 * 4096);
     defer allocator.free(json_file);
-
-    std.debug.print("\n{s}\n", .{json_file});
 
     var arena_allocator = std.heap.ArenaAllocator.init(allocator);
     defer arena_allocator.deinit();

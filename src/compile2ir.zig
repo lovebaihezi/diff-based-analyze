@@ -81,7 +81,8 @@ pub fn createCompiledMemBuf(allocator: Allocator, code: []const u8, options: ?Op
         @panic("failed to open output file");
     defer output_file.close();
 
-    try output_str_buf.append(0);
+    // You don't need to do it manually as the std will help you
+    // try output_str_buf.append(0);
 
     const path = try cwd.realpathAlloc(allocator, output_str_buf.items);
     defer allocator.free(path);
