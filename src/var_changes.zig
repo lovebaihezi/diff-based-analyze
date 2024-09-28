@@ -79,7 +79,7 @@ pub fn buildVariables(self: *@This(), allocator: Allocator, ctx: llvm.context, m
             while (insts.next()) |i| {
                 const op_code = llvm.instructionCode(i);
                 switch (op_code) {
-                    llvm.Alloca => {
+                    llvm.Alloca, llvm.Store => {
                         const variable = Variable{ .Block = .{
                             .ref = i,
                             .operations = std.ArrayList(Inst).init(allocator),
@@ -93,4 +93,21 @@ pub fn buildVariables(self: *@This(), allocator: Allocator, ctx: llvm.context, m
             }
         }
     }
+}
+
+test "Case: Only Variable Name Changed" {
+    var tmp_dir = std.testing.tmpDir(.{ .access_sub_paths = true });
+    defer tmp_dir.cleanup();
+
+    const allocator = std.testing.allocator;
+
+    // Run Cmake, build file-content-changes/variable-rename/{before, after} to ll, and load
+    _ = try std.process.Child.run(.{
+        .allocator = allocator,
+        .argv = &.{ "cmake", "-GNinja", "-Bbuild" },
+        .cwd_dir = tmp_dir,
+    });
+
+    // Run Ninja to compile all ll
+    _ = try std.process.Child.run(.{ .allocator = allocator, .argv = &.{ "bear", "--", "ninja", "-C", "build" }, .cwd_dir = tmp_dir });
 }

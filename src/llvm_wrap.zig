@@ -122,6 +122,13 @@ pub fn llvmValueName(value: Value) []const u8 {
         "";
 }
 
+/// get the operation target of the instruction
+pub fn getOperationTarget(value: Value) Value {
+    std.debug.assert(value != null);
+    const target = c.LLVMGetOperand(value, 0);
+    return target;
+}
+
 pub fn functionName(value: Value) []const u8 {
     std.debug.assert(value != null);
     const function_value = c.LLVMGetCalledValue(value);
