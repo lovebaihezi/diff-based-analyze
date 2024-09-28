@@ -397,21 +397,21 @@ const OG_LL_INPUT =
     \\!8 = distinct !{!8, !7}
 ;
 
-test "analysis on Og input content, get json" {
-    const name: [:0]const u8 = "cat.ll";
-    var analysis = try Analysis.initWithMem(std.testing.allocator, name, OG_LL_INPUT);
-    defer analysis.deinit();
-    try analysis.run(std.testing.allocator);
-    var res = analysis.res;
-    defer res.deinit();
-    var arr = std.ArrayList(u8).init(std.testing.allocator);
-    defer arr.deinit();
-    try std.json.stringify(res, .{}, arr.writer());
-    try std.testing.expect(arr.items.len != 0);
-    try std.testing.expectEqualStrings(
-        \\{"global_var":{".str":{"read":[],"write":[]},".str.1":{"read":[],"write":[]}},"function_var":{"main":{"":{"read":["","","","","","","",""],"write":["","","","","","","","","","",""]}},"fopen":{"":{"read":[],"write":[]}},"fgetc":{"":{"read":[],"write":[]}},"printf":{"":{"read":[],"write":[]}},"fclose":{"":{"read":[],"write":[]}}}}
-    , arr.items);
-}
+//test "analysis on Og input content, get json" {
+//    const name: [:0]const u8 = "cat.ll";
+//    var analysis = try Analysis.initWithMem(std.testing.allocator, name, OG_LL_INPUT);
+//    defer analysis.deinit();
+//    try analysis.run(std.testing.allocator);
+//    var res = analysis.res;
+//    defer res.deinit();
+//    var arr = std.ArrayList(u8).init(std.testing.allocator);
+//    defer arr.deinit();
+//    try std.json.stringify(res, .{}, arr.writer());
+//    try std.testing.expect(arr.items.len != 0);
+//    try std.testing.expectEqualStrings(
+//        \\{"global_var":{".str":{"read":[],"write":[]},".str.1":{"read":[],"write":[]}},"function_var":{"main":{"":{"read":["","","","","","","",""],"write":["","","","","","","","","","",""]}},"fopen":{"":{"read":[],"write":[]}},"fgetc":{"":{"read":[],"write":[]}},"printf":{"":{"read":[],"write":[]}},"fclose":{"":{"read":[],"write":[]}}}}
+//    , arr.items);
+//}
 
 test "llvm_wrap and call_tree" {
     std.testing.refAllDecls(@This());

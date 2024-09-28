@@ -1,4 +1,5 @@
 const std = @import("std");
+const llvm = @import("llvm_wrap.zig");
 
 // TODO(chaibowen): current embed IR here, add script to read from the build dir based on the source files
 const before =
@@ -43,7 +44,7 @@ const before =
     \\!5 = distinct !{!5, !6}
     \\!6 = !{!"llvm.loop.mustprogress"}
 ;
-const after = 
+const after =
     \\; ModuleID = '/home/I/projects/diff-based-analyze/challenges-a/file-content-changes/variable-rename/after.c'
     \\source_filename = "/home/I/projects/diff-based-analyze/challenges-a/file-content-changes/variable-rename/after.c"
     \\target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
@@ -88,4 +89,13 @@ const after =
 
 test "variable got renamed" {
     try std.testing.expect(false);
+}
+
+variables: std.ArrayList(llvm.Value) = undefined,
+ctx: llvm.Context = undefined,
+
+pub fn init(ctx: llvm.Context) @This() {}
+
+pub fn buildInitVariableFromInitFile(mem_buf: llvm.MemoryBuffer) {
+    self.mem_buf = mem_buf;
 }
