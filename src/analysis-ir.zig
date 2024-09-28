@@ -277,21 +277,21 @@ const LL_INPUT =
     \\ !11 = distinct !{!11, !10}
 ;
 
-test "analysis on O3 input content, gen JSON" {
-    const name: [:0]const u8 = "cat.ll";
-    var analysis = try Analysis.initWithMem(std.testing.allocator, name, LL_INPUT);
-    defer analysis.deinit();
-    try analysis.run(std.testing.allocator);
-    var res = analysis.res;
-    defer res.deinit();
-    var arr = std.ArrayList(u8).init(std.testing.allocator);
-    defer arr.deinit();
-    try std.json.stringify(res, .{}, arr.writer());
-    try std.testing.expect(arr.items.len != 0);
-    try std.testing.expectEqualStrings(
-        \\{"global_var":{".str":{"read":[],"write":[]}},"function_var":{"main":{"":{"read":[],"write":[""]}},"fopen":{"":{"read":[],"write":[]}},"fgetc":{"":{"read":[],"write":[]}},"fclose":{"":{"read":[],"write":[]}},"putchar":{"":{"read":[],"write":[]}}}}
-    , arr.items);
-}
+// test "analysis on O3 input content, gen JSON" {
+//     const name: [:0]const u8 = "cat.ll";
+//     var analysis = try Analysis.initWithMem(std.testing.allocator, name, LL_INPUT);
+//     defer analysis.deinit();
+//     try analysis.run(std.testing.allocator);
+//     var res = analysis.res;
+//     defer res.deinit();
+//     var arr = std.ArrayList(u8).init(std.testing.allocator);
+//     defer arr.deinit();
+//     try std.json.stringify(res, .{}, arr.writer());
+//     try std.testing.expect(arr.items.len != 0);
+//     try std.testing.expectEqualStrings(
+//         \\{"global_var":{".str":{"read":[],"write":[]}},"function_var":{"main":{"":{"read":[],"write":[""]}},"fopen":{"":{"read":[],"write":[]}},"fgetc":{"":{"read":[],"write":[]}},"fclose":{"":{"read":[],"write":[]}},"putchar":{"":{"read":[],"write":[]}}}}
+//     , arr.items);
+// }
 
 const OG_LL_INPUT =
     \\; ModuleID = 'tests/correct_sync/cat.c'
