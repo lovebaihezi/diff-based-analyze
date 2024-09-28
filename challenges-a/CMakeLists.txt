@@ -11,7 +11,7 @@ include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
 # Find all .c files recursively
-file(GLOB_RECURSE C_SOURCES "${CMAKE_SOURCE_DIR}/*/*.c")
+file(GLOB_RECURSE C_SOURCES "${CMAKE_SOURCE_DIR}/src/*/*.c")
 
 # Function to get relative path
 function(get_relative_path absolute_path relative_path_var)
