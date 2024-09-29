@@ -81,14 +81,20 @@ pub fn createCompiledMemBuf(allocator: Allocator, code: []const u8, options: ?Op
         @panic("failed to open output file");
     defer output_file.close();
 
-    // You don't need to do it manually as the std will help you
-    // try output_str_buf.append(0);
+    const BUF_LEN = 4096 * 10;
+    var buf: [BUF_LEN]u8 = undefined;
 
-    const path = try cwd.realpathAlloc(allocator, output_str_buf.items);
-    defer allocator.free(path);
+    const path = try cwd.realpath(output_str_buf.items, buf[0..]);
+    if (std.debug.runtime_safety) {
+        if (path.len > BUF_LEN - 1) {
+            @panic("real path the output file is too long");
+        }
+    }
+    buf[path.len] = 0;
 
-    // TODO(chaibowen): cwd not ".", need to generate path
-    const memBuf = try llvmMemBuf.initWithFile(path.ptr);
+    const realpath = buf[0 .. path.len + 1];
+
+    const memBuf = try llvmMemBuf.initWithFile(realpath.ptr);
     return memBuf;
 }
 
