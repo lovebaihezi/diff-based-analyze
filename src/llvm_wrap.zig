@@ -51,6 +51,7 @@ pub const Alloca = c.LLVMAlloca;
 pub const Call = c.LLVMCall;
 pub const Add = c.LLVMAdd;
 pub const Mul = c.LLVMMul;
+pub const GetElePtr = c.LLVMGetElementPtr;
 
 pub fn isGlobalValue(value: NonNullValue) bool {
     return c.LLVMIsAGlobalValue(value) != null;
@@ -191,4 +192,8 @@ pub fn outputIRToStr(module: Module) []const u8 {
         ptr[0..len]
     else
         "";
+}
+
+pub fn isIdentical(value: Value, other: Value) bool {
+    return c.LLVMValueIsIdentical(value, other) != 0;
 }

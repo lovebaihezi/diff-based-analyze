@@ -20,11 +20,11 @@ pub const VariableType = enum {
 };
 
 pub const Block = struct {
-    ref: llvm.BasicBlock,
+    ref: llvm.NonNullBasicBlock,
 };
 
 pub const Inst = struct {
-    ref: llvm.NonNullBasicBlock,
+    ref: llvm.NonNullInstruction,
 };
 
 pub const Fn = struct { ref: llvm.NonNullFunction };
@@ -32,11 +32,13 @@ pub const Fn = struct { ref: llvm.NonNullFunction };
 pub const Variable = union(VariableType) {
     /// Global Var in Single LLVM IR file
     Global: struct {
+        name: []const u8,
         ref: llvm.NonNullValue = undefined,
         operations: std.ArrayList(Inst) = undefined,
     },
     /// Variable inside Block of a function
     Block: struct {
+        name: []const u8,
         ref: llvm.NonNullValue = undefined,
         operations: std.ArrayList(Inst) = undefined,
         block_ref: ?Block = undefined,
@@ -44,6 +46,7 @@ pub const Variable = union(VariableType) {
     },
     /// Variable that used as function parameter
     FnParam: struct {
+        name: []const u8,
         ref: llvm.NonNullValue = undefined,
         operations: std.ArrayList(Inst) = undefined,
         func: ?Fn = undefined,
@@ -88,6 +91,7 @@ pub fn build(self: *@This(), allocator: Allocator, ctx: llvm.Context, mem_buf: l
 
     while (global_vars.next()) |g| {
         const variable = Variable{ .Global = .{
+            .name = llvm.llvmValueName(g),
             .ref = g,
             .operations = std.ArrayList(Inst).init(allocator),
         } };
@@ -101,14 +105,48 @@ pub fn build(self: *@This(), allocator: Allocator, ctx: llvm.Context, mem_buf: l
             while (insts.next()) |i| {
                 const op_code = llvm.instructionCode(i);
                 switch (op_code) {
-                    llvm.Alloca, llvm.Store => {
+                    llvm.Alloca => {
+                        const operand = llvm.instNthOperand(i, 0);
+                        const name = llvm.llvmValueName(operand);
                         const variable = Variable{ .Block = .{
+                            .name = name,
                             .ref = i,
                             .operations = std.ArrayList(Inst).init(allocator),
                             .block_ref = .{ .ref = b },
                             .func = .{ .ref = f },
                         } };
                         try self.variables.append(variable);
+                    },
+                    llvm.Store => {
+                        const operand = llvm.instNthOperand(i, 1);
+                        const name = llvm.llvmValueName(operand);
+                        if (name.len > 0) {
+                            for (self.variables.items) |*variable| {
+                                switch (variable.*) {
+                                    VariableType.Block => |*v| {
+                                        if (std.mem.eql(u8, v.name, name)) {
+                                            try v.operations.append(.{ .ref = i });
+                                        }
+                                    },
+                                    VariableType.Global => |*v| {
+                                        if (std.mem.eql(u8, v.name, name)) {
+                                            try v.operations.append(.{ .ref = i });
+                                        }
+                                    },
+                                    VariableType.FnParam => |*v| {
+                                        if (std.mem.eql(u8, v.name, name)) {
+                                            try v.operations.append(.{ .ref = i });
+                                        }
+                                    },
+                                }
+                            }
+                        }
+                    },
+                    llvm.Call => {
+                        @panic("todo");
+                    },
+                    llvm.GetElePtr => {
+                        @panic("todo");
                     },
                     else => {
                         var index: usize = 0;
@@ -117,7 +155,25 @@ pub fn build(self: *@This(), allocator: Allocator, ctx: llvm.Context, mem_buf: l
                             const operand = llvm.instNthOperand(i, index);
                             const name = llvm.llvmValueName(operand);
                             if (name.len > 0) {
-                                // TODO: store other inst to the value here
+                                for (self.variables.items) |*variable| {
+                                    switch (variable.*) {
+                                        VariableType.Block => |*v| {
+                                            if (std.mem.eql(u8, v.name, name)) {
+                                                try v.operations.append(.{ .ref = i });
+                                            }
+                                        },
+                                        VariableType.Global => |*v| {
+                                            if (std.mem.eql(u8, v.name, name)) {
+                                                try v.operations.append(.{ .ref = i });
+                                            }
+                                        },
+                                        VariableType.FnParam => |*v| {
+                                            if (std.mem.eql(u8, v.name, name)) {
+                                                try v.operations.append(.{ .ref = i });
+                                            }
+                                        },
+                                    }
+                                }
                             }
                         }
                     },
