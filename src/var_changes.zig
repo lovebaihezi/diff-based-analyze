@@ -14,9 +14,9 @@ const GlobalVar = @import("llvm_global_var.zig");
 const Allocator = std.mem.Allocator;
 
 pub const VariableType = enum {
+    Global,
     Block,
     FnParam,
-    Global,
 };
 
 pub const Block = struct {
@@ -48,6 +48,20 @@ pub const Variable = union(VariableType) {
         operations: std.ArrayList(Inst) = undefined,
         func: ?Fn = undefined,
     },
+
+    pub fn deinit(self: *@This()) void {
+        switch (self.*) {
+            .Global => |*v| {
+                v.operations.deinit();
+            },
+            .Block => |*v| {
+                v.operations.deinit();
+            },
+            .FnParam => |*v| {
+                v.operations.deinit();
+            },
+        }
+    }
 };
 
 variables: std.ArrayList(Variable) = undefined,
@@ -57,8 +71,16 @@ pub fn init(allocator: Allocator) @This() {
         .variables = std.ArrayList(Variable).init(allocator),
     };
 }
-pub fn buildVariables(self: *@This(), allocator: Allocator, ctx: llvm.context, mem_buf: llvm.MemoryBuffer) @This() {
-    var ir: IR = try IR.parseIR(ctx, mem_buf.mem_buf);
+
+pub fn deinit(self: *@This()) void {
+    defer self.variables.deinit();
+    for (self.variables.items) |*variable| {
+        variable.deinit();
+    }
+}
+
+pub fn build(self: *@This(), allocator: Allocator, ctx: llvm.Context, mem_buf: llvm.MemoryBuffer) !*@This() {
+    var ir: IR = try IR.parseIR(ctx, mem_buf);
     defer ir.deinit();
 
     var global_vars = GlobalVar.init(ir.mod_ref);
@@ -83,17 +105,37 @@ pub fn buildVariables(self: *@This(), allocator: Allocator, ctx: llvm.context, m
                         const variable = Variable{ .Block = .{
                             .ref = i,
                             .operations = std.ArrayList(Inst).init(allocator),
-                            .block_ref = .Block{ .ref = b },
-                            .func = .Fn{ .ref = f },
+                            .block_ref = .{ .ref = b },
+                            .func = .{ .ref = f },
                         } };
                         try self.variables.append(variable);
                     },
-                    else => {},
+                    else => {
+                        var index: usize = 0;
+                        const num_operands = llvm.instOperandCount(i);
+                        while (index < num_operands) : (index += 1) {
+                            const operand = llvm.instNthOperand(i, index);
+                            const name = llvm.llvmValueName(operand);
+                            if (name.len > 0) {
+                                // TODO: store other inst to the value here
+                            }
+                        }
+                    },
                 }
             }
         }
     }
+
+    return self;
 }
+
+pub fn addNextVersion(self: *@This()) void {
+    _ = self;
+    @panic("todo!");
+    // TODO
+}
+
+const This = @This();
 
 test "Case: Only Variable Name Changed" {
     var tmp_dir = std.testing.tmpDir(.{ .access_sub_paths = true });
@@ -126,8 +168,29 @@ test "Case: Only Variable Name Changed" {
 
     var arena_allocator = std.heap.ArenaAllocator.init(allocator);
     defer arena_allocator.deinit();
+
     const arena = arena_allocator.allocator();
     const Value = struct { arguments: []const []const u8, directory: []const u8, file: []const u8, output: []const u8 };
-    const value = try std.json.parseFromSliceLeaky([]Value, arena, json_file, .{ .allocate = std.json.AllocWhen.alloc_always });
-    try std.testing.expectEqual(2, value.len);
+    const values = try std.json.parseFromSliceLeaky([]Value, arena, json_file, .{ .allocate = std.json.AllocWhen.alloc_always });
+    try std.testing.expectEqual(2, values.len);
+    const before = values[0];
+    const output_ll_file = before.output;
+
+    var buf: [4096]u8 = undefined;
+
+    @memcpy(buf[0..output_ll_file.len], output_ll_file);
+
+    buf[output_ll_file.len] = 0;
+
+    const ctx = llvm.createContext();
+    defer llvm.destroyContext(ctx);
+
+    const mem_buf = try MemoryBuffer.initWithFile(buf[0 .. output_ll_file.len + 1].ptr);
+    defer mem_buf.deinit();
+
+    var variables = This.init(allocator);
+    defer variables.deinit();
+
+    const self = try variables.build(allocator, ctx, mem_buf.mem_buf_ref);
+    try std.testing.expectEqual(1, self.variables.items.len);
 }
