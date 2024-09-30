@@ -143,13 +143,11 @@ pub fn build(self: *@This(), allocator: Allocator, ctx: llvm.Context, mem_buf: l
                             }
                         }
                     },
-                    llvm.Call => {
-                        @panic("todo");
-                    },
                     llvm.GetElePtr => {
                         @panic("todo");
                     },
                     else => {
+                        // TODO: Mark the LLVM Call Parameter Variable, which is different from other usages
                         var index: usize = 0;
                         const num_operands = llvm.instOperandCount(i);
                         while (index < num_operands) : (index += 1) {
@@ -245,9 +243,10 @@ test "Case: Only Variable Name Changed" {
     const mem_buf = try MemoryBuffer.initWithFile(buf[0 .. output_ll_file.len + 1].ptr);
     defer mem_buf.deinit();
 
-    var variables = This.init(allocator);
+    var variables = This.init(allocator)
     defer variables.deinit();
 
     const self = try variables.build(allocator, ctx, mem_buf.mem_buf_ref);
-    try std.testing.expectEqual(1, self.variables.items.len);
+    try std.testing.expectEqual(2, self.variables.items.len);
+    try std.testing.expectEqualStrings(self.variables.items[1].Block.name, "i");
 }
