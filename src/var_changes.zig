@@ -99,6 +99,7 @@ pub fn build(self: *@This(), allocator: Allocator, ctx: llvm.Context, mem_buf: l
     }
 
     while (functions.next()) |f| {
+        // TODO: Also check function parameters here
         var block = BasicBlock.init(f);
         while (block.next()) |b| {
             var insts = Instruction.init(b);
