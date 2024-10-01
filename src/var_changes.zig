@@ -99,9 +99,11 @@ pub fn build(self: *@This(), allocator: Allocator, ctx: llvm.Context, mem_buf: l
     }
 
     while (functions.next()) |f| {
+        std.debug.print("------f-------\n", .{});
         // TODO: Also check function parameters here
         var block = BasicBlock.init(f);
         while (block.next()) |b| {
+            std.debug.print("------b-------\n", .{});
             var insts = Instruction.init(b);
             while (insts.next()) |i| {
                 const op_code = llvm.instructionCode(i);
@@ -153,7 +155,30 @@ pub fn build(self: *@This(), allocator: Allocator, ctx: llvm.Context, mem_buf: l
                         while (index < num_operands) : (index += 1) {
                             const operand = llvm.instNthOperand(i, index);
                             const name = llvm.llvmValueName(operand);
-                            if (name.len > 0) {
+                            if (std.mem.eql(u8, name, "llvm.dbg.value")) {
+                                const value = llvm.instNthOperand(i, 0);
+                                const variable = llvm.instNthOperand(i, 1);
+                                const expression = llvm.instNthOperand(i, 2);
+
+                                std.debug.assert(llvm.isMetaData(value));
+                                std.debug.assert(llvm.isMetaData(variable));
+                                std.debug.assert(llvm.isMetaData(expression));
+
+                                const value_metadata = llvm.asMetaData(value);
+                                const variable_metadata = llvm.asMetaData(variable);
+                                const expression_metadata = llvm.asMetaData(expression);
+
+                                _ = value_metadata;
+                                _ = expression_metadata;
+                                _ = variable_metadata;
+
+                                const metadata_operands = try llvm.metadataOperands(allocator, variable);
+                                defer metadata_operands.deinit();
+                                for (metadata_operands.items) |metadata| {
+                                    const metadata_name = llvm.llvmValueName(metadata);
+                                    std.debug.print("\nmetadata_name: {s}\n", .{metadata_name});
+                                }
+                            } else if (name.len > 0) {
                                 for (self.variables.items) |*variable| {
                                     switch (variable.*) {
                                         VariableType.Block => |*v| {
@@ -243,7 +268,7 @@ test "Case: Only Variable Name Changed" {
     const mem_buf = try MemoryBuffer.initWithFile(buf[0 .. output_ll_file.len + 1].ptr);
     defer mem_buf.deinit();
 
-    var variables = This.init(allocator)
+    var variables = This.init(allocator);
     defer variables.deinit();
 
     const self = try variables.build(allocator, ctx, mem_buf.mem_buf_ref);

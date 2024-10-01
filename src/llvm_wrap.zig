@@ -9,11 +9,15 @@ pub const c = @cImport({
     @cInclude("llvm-c/IRReader.h");
     @cInclude("llvm-c/Analysis.h");
     @cInclude("llvm-c/BitWriter.h");
+    @cInclude("llvm-c/DebugInfo.h");
 });
+
+const Allocator = std.mem.Allocator;
 
 pub const MaxParam = 64;
 
 pub const Value = c.LLVMValueRef;
+pub const MetaData = c.LLVMMetadataRef;
 pub const Module = c.LLVMModuleRef;
 pub const Instruction = Value;
 pub const BasicBlock = c.LLVMBasicBlockRef;
@@ -59,9 +63,8 @@ pub fn isGlobalValue(value: NonNullValue) bool {
 
 pub fn basicBlockName(block: BasicBlock) []const u8 {
     const ptr = c.LLVMGetBasicBlockName(block);
-    const len = std.mem.len(ptr);
     return if (ptr != 0x0)
-        ptr[0..len]
+        std.mem.span(ptr)
     else
         "";
 }
@@ -106,6 +109,39 @@ pub fn instOperandCount(value: Value) usize {
     return num;
 }
 
+pub fn metadataOperandCount(value: Value) usize {
+    const num: usize = @intCast(c.LLVMGetMDNodeNumOperands(value));
+    return num;
+}
+
+pub fn metadataOperands(allocator: Allocator, value: Value) Allocator.Error!std.ArrayList(Value) {
+    std.debug.assert(value != null);
+    const size = metadataOperandCount(value);
+    const operands = try std.ArrayList(Value).initCapacity(allocator, size);
+    c.LLVMGetMDNodeOperands(
+        value,
+        operands.items.ptr,
+    );
+    return operands;
+}
+
+pub fn isMetadataStr(value: Value) bool {
+    if (c.LLVMIsAMDString(value)) |_| {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+pub fn metadataStr(value: Value) []const u8 {
+    std.debug.assert(value != null);
+    const ptr = c.LLVMGetMDString(value, null);
+    return if (ptr != 0x0)
+        std.mem.span(ptr)
+    else
+        "";
+}
+
 pub fn instNthOperand(value: Value, index: usize) Value {
     std.debug.assert(value != null);
     const operand = c.LLVMGetOperand(value, @intCast(index));
@@ -124,7 +160,7 @@ pub fn llvmValueName(value: Value) []const u8 {
 }
 
 /// get the operation target of the instruction
-pub fn getOperationTarget(value: Value) Value {
+pub fn instOperationTarget(value: Value) Value {
     std.debug.assert(value != null);
     const target = c.LLVMGetOperand(value, 0);
     return target;
@@ -187,13 +223,45 @@ pub fn addFunction(module: Module, name: []const u8, ty: Value) Function {
 
 pub fn outputIRToStr(module: Module) []const u8 {
     const ptr = c.LLVMPrintModuleToString(module);
-    const len = std.mem.len(ptr);
     return if (ptr != 0x0)
-        ptr[0..len]
+        std.mem.span(ptr)
     else
         "";
 }
 
 pub fn isIdentical(value: Value, other: Value) bool {
     return c.LLVMValueIsIdentical(value, other) != 0;
+}
+
+pub fn isConstant(value: Value) bool {
+    return c.LLVMIsConstant(value) != 0;
+}
+
+pub fn isCallInst(value: Value) bool {
+    return c.LLVMIsACallInst(value) != 0;
+}
+
+pub fn isFunction(value: Value) bool {
+    return c.LLVMIsAFunction(value) != 0;
+}
+
+pub fn isMetaData(metadata: Value) bool {
+    if (c.LLVMIsAMDNode(metadata)) |_| {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+pub fn asMetaData(value: Value) MetaData {
+    return c.LLVMValueAsMetadata(value);
+}
+
+pub fn debugInfoLocalVarName(metadata: MetaData) []const u8 {
+    std.debug.assert(metadata != null);
+    const ptr = c.LLVMDILocalVariableGetName(metadata);
+    return if (ptr != 0x0)
+        std.mem.span(ptr)
+    else
+        "";
 }
