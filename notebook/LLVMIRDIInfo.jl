@@ -17,111 +17,191 @@ LLVM.version()
 import LibGit2
 
 # ╔═╡ 0687ec67-276d-481b-820f-81df24ce29ab
-before_change_ir = """; ModuleID = '/home/bowen/Documents/diff-based-analysis/challenges-a/src/file-content-changes/variable-rename/before.c'
-source_filename = "/home/bowen/Documents/diff-based-analysis/challenges-a/src/file-content-changes/variable-rename/before.c"
-target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
-target triple = "x86_64-pc-linux-gnu"
+before_change_ir = """; ModuleID = '/app/example.c'
+source_filename = "/app/example.c"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-linux-gnu"
 
-@.str = private unnamed_addr constant [5 x i8] c"%zu\0A\00", align 1, !dbg !0
+@.str = private unnamed_addr constant [6 x i8] c"%zu\0A\00", align 1, !dbg !0
 
-; Function Attrs: nofree nounwind sspstrong uwtable
-define dso_local noundef i32 @main(i32 noundef %0, ptr nocapture noundef readnone %1) local_unnamed_addr #0 !dbg !18 {
-  tail call void @llvm.dbg.value(metadata i32 %0, metadata !25, metadata !DIExpression()), !dbg !32
-  tail call void @llvm.dbg.value(metadata ptr %1, metadata !26, metadata !DIExpression()), !dbg !32
-  tail call void @llvm.dbg.value(metadata i64 1, metadata !27, metadata !DIExpression()), !dbg !33
+; Function Attrs: nofree nounwind uwtable
+define dso_local i32 @main(i32 noundef %0, ptr nocapture noundef readnone %1) local_unnamed_addr #0 !dbg !17 {
+  call void @llvm.dbg.value(metadata i32 %0, metadata !24, metadata !DIExpression()), !dbg !31
+  call void @llvm.dbg.value(metadata ptr %1, metadata !25, metadata !DIExpression()), !dbg !31
+  call void @llvm.dbg.value(metadata i64 1, metadata !26, metadata !DIExpression()), !dbg !32
   %3 = sext i32 %0 to i64
-  tail call void @llvm.dbg.value(metadata i64 1, metadata !27, metadata !DIExpression()), !dbg !33
-  %4 = icmp ugt i32 %0, 1, !dbg !34
-  br i1 %4, label %6, label %5, !dbg !36
+  call void @llvm.dbg.value(metadata i64 1, metadata !26, metadata !DIExpression()), !dbg !32
+  %4 = icmp ugt i32 %0, 1, !dbg !33
+  br i1 %4, label %6, label %5, !dbg !35
 
 5:                                                ; preds = %6, %2
-  ret i32 0, !dbg !37
+  ret i32 0, !dbg !36
 
 6:                                                ; preds = %2, %6
   %7 = phi i64 [ %9, %6 ], [ 1, %2 ]
-  tail call void @llvm.dbg.value(metadata i64 %7, metadata !27, metadata !DIExpression()), !dbg !33
-  %8 = tail call i32 (ptr, ...) @printf(ptr noundef nonnull dereferenceable(1) @.str, i64 noundef %7), !dbg !38
-  %9 = add nuw i64 %7, 1, !dbg !40
-  tail call void @llvm.dbg.value(metadata i64 %9, metadata !27, metadata !DIExpression()), !dbg !33
-  %10 = icmp eq i64 %9, %3, !dbg !34
-  br i1 %10, label %5, label %6, !dbg !36, !llvm.loop !41
+  call void @llvm.dbg.value(metadata i64 %7, metadata !26, metadata !DIExpression()), !dbg !32
+  %8 = tail call i32 (ptr, ...) @printf(ptr noundef nonnull @.str, i64 noundef %7), !dbg !37
+  %9 = add nuw i64 %7, 1, !dbg !39
+  call void @llvm.dbg.value(metadata i64 %9, metadata !26, metadata !DIExpression()), !dbg !32
+  %10 = icmp eq i64 %9, %3, !dbg !33
+  br i1 %10, label %5, label %6, !dbg !35, !llvm.loop !40
 }
 
 ; Function Attrs: nofree nounwind
-declare !dbg !44 noundef i32 @printf(ptr nocapture noundef readonly, ...) local_unnamed_addr #1
+declare noundef i32 @printf(ptr nocapture noundef readonly, ...) local_unnamed_addr #1
 
-; Function Attrs: nocallback nofree nosync nounwind speculatable willreturn memory(none)
+; Function Attrs: nocallback nofree nosync nounwind readnone speculatable willreturn
 declare void @llvm.dbg.value(metadata, metadata, metadata) #2
 
-attributes #0 = { nofree nounwind sspstrong uwtable "min-legal-vector-width"="0" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
-attributes #1 = { nofree nounwind "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
-attributes #2 = { nocallback nofree nosync nounwind speculatable willreturn memory(none) }
+attributes #0 = { nofree nounwind uwtable "frame-pointer"="none" "min-legal-vector-width"="0" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
+attributes #1 = { nofree nounwind "frame-pointer"="none" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
+attributes #2 = { nocallback nofree nosync nounwind readnone speculatable willreturn }
 
 !llvm.dbg.cu = !{!7}
-!llvm.module.flags = !{!10, !11, !12, !13, !14, !15, !16}
-!llvm.ident = !{!17}
+!llvm.module.flags = !{!10, !11, !12, !13, !14, !15}
+!llvm.ident = !{!16}
 
 !0 = !DIGlobalVariableExpression(var: !1, expr: !DIExpression())
 !1 = distinct !DIGlobalVariable(scope: null, file: !2, line: 6, type: !3, isLocal: true, isDefinition: true)
-!2 = !DIFile(filename: "src/file-content-changes/variable-rename/before.c", directory: "/home/bowen/Documents/diff-based-analysis/challenges-a", checksumkind: CSK_MD5, checksum: "d98ec6f7fddf46bda445f93ade755516")
+!2 = !DIFile(filename: "example.c", directory: "/app")
 !3 = !DICompositeType(tag: DW_TAG_array_type, baseType: !4, size: 40, elements: !5)
 !4 = !DIBasicType(name: "char", size: 8, encoding: DW_ATE_signed_char)
 !5 = !{!6}
 !6 = !DISubrange(count: 5)
-!7 = distinct !DICompileUnit(language: DW_LANG_C11, file: !8, producer: "clang version 18.1.8", isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug, globals: !9, splitDebugInlining: false, nameTableKind: None)
-!8 = !DIFile(filename: "/home/bowen/Documents/diff-based-analysis/challenges-a/src/file-content-changes/variable-rename/before.c", directory: "/home/bowen/Documents/diff-based-analysis/challenges-a/build", checksumkind: CSK_MD5, checksum: "d98ec6f7fddf46bda445f93ade755516")
+!7 = distinct !DICompileUnit(language: DW_LANG_C99, file: !8, producer: "clang version 15.0.0 (https://github.com/llvm/llvm-project.git 4ba6a9c9f65bbc8bd06e3652cb20fd4dfc846137)", isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug, globals: !9, splitDebugInlining: false, nameTableKind: None)
+!8 = !DIFile(filename: "/app/example.c", directory: "/app")
 !9 = !{!0}
-!10 = !{i32 7, !"Dwarf Version", i32 5}
+!10 = !{i32 7, !"Dwarf Version", i32 4}
 !11 = !{i32 2, !"Debug Info Version", i32 3}
 !12 = !{i32 1, !"wchar_size", i32 4}
-!13 = !{i32 8, !"PIC Level", i32 2}
+!13 = !{i32 7, !"PIC Level", i32 2}
 !14 = !{i32 7, !"PIE Level", i32 2}
 !15 = !{i32 7, !"uwtable", i32 2}
-!16 = !{i32 7, !"debug-info-assignment-tracking", i1 true}
-!17 = !{!"clang version 18.1.8"}
-!18 = distinct !DISubprogram(name: "main", scope: !2, file: !2, line: 4, type: !19, scopeLine: 4, flags: DIFlagPrototyped | DIFlagAllCallsDescribed, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !7, retainedNodes: !24)
-!19 = !DISubroutineType(types: !20)
-!20 = !{!21, !21, !22}
-!21 = !DIBasicType(name: "int", size: 32, encoding: DW_ATE_signed)
-!22 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !23, size: 64)
-!23 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !4, size: 64)
-!24 = !{!25, !26, !27}
-!25 = !DILocalVariable(name: "argc", arg: 1, scope: !18, file: !2, line: 4, type: !21)
-!26 = !DILocalVariable(name: "argv", arg: 2, scope: !18, file: !2, line: 4, type: !22)
-!27 = !DILocalVariable(name: "index", scope: !28, file: !2, line: 5, type: !29)
-!28 = distinct !DILexicalBlock(scope: !18, file: !2, line: 5, column: 3)
-!29 = !DIDerivedType(tag: DW_TAG_typedef, name: "size_t", file: !30, line: 18, baseType: !31)
-!30 = !DIFile(filename: "/usr/lib/clang/18/include/__stddef_size_t.h", directory: "", checksumkind: CSK_MD5, checksum: "2c44e821a2b1951cde2eb0fb2e656867")
-!31 = !DIBasicType(name: "unsigned long", size: 64, encoding: DW_ATE_unsigned)
-!32 = !DILocation(line: 0, scope: !18)
-!33 = !DILocation(line: 0, scope: !28)
-!34 = !DILocation(line: 5, column: 31, scope: !35)
-!35 = distinct !DILexicalBlock(scope: !28, file: !2, line: 5, column: 3)
-!36 = !DILocation(line: 5, column: 3, scope: !28)
-!37 = !DILocation(line: 8, column: 3, scope: !18)
-!38 = !DILocation(line: 6, column: 5, scope: !39)
-!39 = distinct !DILexicalBlock(scope: !35, file: !2, line: 5, column: 50)
-!40 = !DILocation(line: 5, column: 44, scope: !35)
-!41 = distinct !{!41, !36, !42, !43}
-!42 = !DILocation(line: 7, column: 3, scope: !28)
-!43 = !{!"llvm.loop.mustprogress"}
-!44 = !DISubprogram(name: "printf", scope: !45, file: !45, line: 363, type: !46, flags: DIFlagPrototyped, spFlags: DISPFlagOptimized)
-!45 = !DIFile(filename: "/usr/include/stdio.h", directory: "", checksumkind: CSK_MD5, checksum: "bf878b5a7be9bd3141cebb72b92597e8")
-!46 = !DISubroutineType(types: !47)
-!47 = !{!21, !48, null}
-!48 = !DIDerivedType(tag: DW_TAG_restrict_type, baseType: !49)
-!49 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !50, size: 64)
-!50 = !DIDerivedType(tag: DW_TAG_const_type, baseType: !4)
-
+!16 = !{!"clang version 15.0.0 (https://github.com/llvm/llvm-project.git 4ba6a9c9f65bbc8bd06e3652cb20fd4dfc846137)"}
+!17 = distinct !DISubprogram(name: "main", scope: !2, file: !2, line: 4, type: !18, scopeLine: 4, flags: DIFlagPrototyped | DIFlagAllCallsDescribed, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !7, retainedNodes: !23)
+!18 = !DISubroutineType(types: !19)
+!19 = !{!20, !20, !21}
+!20 = !DIBasicType(name: "int", size: 32, encoding: DW_ATE_signed)
+!21 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !22, size: 64)
+!22 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !4, size: 64)
+!23 = !{!24, !25, !26}
+!24 = !DILocalVariable(name: "argc", arg: 1, scope: !17, file: !2, line: 4, type: !20)
+!25 = !DILocalVariable(name: "argv", arg: 2, scope: !17, file: !2, line: 4, type: !21)
+!26 = !DILocalVariable(name: "i", scope: !27, file: !2, line: 5, type: !28)
+!27 = distinct !DILexicalBlock(scope: !17, file: !2, line: 5, column: 3)
+!28 = !DIDerivedType(tag: DW_TAG_typedef, name: "size_t", file: !29, line: 46, baseType: !30)
+!29 = !DIFile(filename: "/opt/compiler-explorer/clang-15.0.0/lib/clang/15.0.0/include/stddef.h", directory: "")
+!30 = !DIBasicType(name: "unsigned long", size: 64, encoding: DW_ATE_unsigned)
+!31 = !DILocation(line: 0, scope: !17)
+!32 = !DILocation(line: 0, scope: !27)
+!33 = !DILocation(line: 5, column: 23, scope: !34)
+!34 = distinct !DILexicalBlock(scope: !27, file: !2, line: 5, column: 3)
+!35 = !DILocation(line: 5, column: 3, scope: !27)
+!36 = !DILocation(line: 8, column: 3, scope: !17)
+!37 = !DILocation(line: 6, column: 5, scope: !38)
+!38 = distinct !DILexicalBlock(scope: !34, file: !2, line: 5, column: 38)
+!39 = !DILocation(line: 5, column: 32, scope: !34)
+!40 = distinct !{!40, !35, !41, !42}
+!41 = !DILocation(line: 7, column: 3, scope: !27)
+!42 = !{!"llvm.loop.mustprogress"}
 """
 
-# ╔═╡ 48e1a721-5cb6-4151-8f18-b4601815a466
-Clang.
+# ╔═╡ d5a68d43-cf0e-404e-9e9d-531b682a07b3
+after_change_ir = """; ModuleID = '/app/example.c'
+source_filename = "/app/example.c"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-linux-gnu"
+
+@.str = private unnamed_addr constant [6 x i8] c"%zu\0A\00", align 1, !dbg !0
+
+; Function Attrs: nofree nounwind uwtable
+define dso_local i32 @main(i32 noundef %0, ptr nocapture noundef readnone %1) local_unnamed_addr #0 !dbg !17 {
+  call void @llvm.dbg.value(metadata i32 %0, metadata !24, metadata !DIExpression()), !dbg !31
+  call void @llvm.dbg.value(metadata ptr %1, metadata !25, metadata !DIExpression()), !dbg !31
+  call void @llvm.dbg.value(metadata i64 1, metadata !26, metadata !DIExpression()), !dbg !32
+  %3 = sext i32 %0 to i64
+  call void @llvm.dbg.value(metadata i64 1, metadata !26, metadata !DIExpression()), !dbg !32
+  %4 = icmp ugt i32 %0, 1, !dbg !33
+  br i1 %4, label %6, label %5, !dbg !35
+
+5:                                                ; preds = %6, %2
+  ret i32 0, !dbg !36
+
+6:                                                ; preds = %2, %6
+  %7 = phi i64 [ %9, %6 ], [ 1, %2 ]
+  call void @llvm.dbg.value(metadata i64 %7, metadata !26, metadata !DIExpression()), !dbg !32
+  %8 = tail call i32 (ptr, ...) @printf(ptr noundef nonnull @.str, i64 noundef %7), !dbg !37
+  %9 = add nuw i64 %7, 1, !dbg !39
+  call void @llvm.dbg.value(metadata i64 %9, metadata !26, metadata !DIExpression()), !dbg !32
+  %10 = icmp eq i64 %9, %3, !dbg !33
+  br i1 %10, label %5, label %6, !dbg !35, !llvm.loop !40
+}
+
+; Function Attrs: nofree nounwind
+declare noundef i32 @printf(ptr nocapture noundef readonly, ...) local_unnamed_addr #1
+
+; Function Attrs: nocallback nofree nosync nounwind readnone speculatable willreturn
+declare void @llvm.dbg.value(metadata, metadata, metadata) #2
+
+attributes #0 = { nofree nounwind uwtable "frame-pointer"="none" "min-legal-vector-width"="0" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
+attributes #1 = { nofree nounwind "frame-pointer"="none" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
+attributes #2 = { nocallback nofree nosync nounwind readnone speculatable willreturn }
+
+!llvm.dbg.cu = !{!7}
+!llvm.module.flags = !{!10, !11, !12, !13, !14, !15}
+!llvm.ident = !{!16}
+
+!0 = !DIGlobalVariableExpression(var: !1, expr: !DIExpression())
+!1 = distinct !DIGlobalVariable(scope: null, file: !2, line: 6, type: !3, isLocal: true, isDefinition: true)
+!2 = !DIFile(filename: "example.c", directory: "/app")
+!3 = !DICompositeType(tag: DW_TAG_array_type, baseType: !4, size: 40, elements: !5)
+!4 = !DIBasicType(name: "char", size: 8, encoding: DW_ATE_signed_char)
+!5 = !{!6}
+!6 = !DISubrange(count: 5)
+!7 = distinct !DICompileUnit(language: DW_LANG_C99, file: !8, producer: "clang version 15.0.0 (https://github.com/llvm/llvm-project.git 4ba6a9c9f65bbc8bd06e3652cb20fd4dfc846137)", isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug, globals: !9, splitDebugInlining: false, nameTableKind: None)
+!8 = !DIFile(filename: "/app/example.c", directory: "/app")
+!9 = !{!0}
+!10 = !{i32 7, !"Dwarf Version", i32 4}
+!11 = !{i32 2, !"Debug Info Version", i32 3}
+!12 = !{i32 1, !"wchar_size", i32 4}
+!13 = !{i32 7, !"PIC Level", i32 2}
+!14 = !{i32 7, !"PIE Level", i32 2}
+!15 = !{i32 7, !"uwtable", i32 2}
+!16 = !{!"clang version 15.0.0 (https://github.com/llvm/llvm-project.git 4ba6a9c9f65bbc8bd06e3652cb20fd4dfc846137)"}
+!17 = distinct !DISubprogram(name: "main", scope: !2, file: !2, line: 4, type: !18, scopeLine: 4, flags: DIFlagPrototyped | DIFlagAllCallsDescribed, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !7, retainedNodes: !23)
+!18 = !DISubroutineType(types: !19)
+!19 = !{!20, !20, !21}
+!20 = !DIBasicType(name: "int", size: 32, encoding: DW_ATE_signed)
+!21 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !22, size: 64)
+!22 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !4, size: 64)
+!23 = !{!24, !25, !26}
+!24 = !DILocalVariable(name: "argc", arg: 1, scope: !17, file: !2, line: 4, type: !20)
+!25 = !DILocalVariable(name: "argv", arg: 2, scope: !17, file: !2, line: 4, type: !21)
+!26 = !DILocalVariable(name: "index", scope: !27, file: !2, line: 5, type: !28)
+!27 = distinct !DILexicalBlock(scope: !17, file: !2, line: 5, column: 3)
+!28 = !DIDerivedType(tag: DW_TAG_typedef, name: "size_t", file: !29, line: 46, baseType: !30)
+!29 = !DIFile(filename: "/opt/compiler-explorer/clang-15.0.0/lib/clang/15.0.0/include/stddef.h", directory: "")
+!30 = !DIBasicType(name: "unsigned long", size: 64, encoding: DW_ATE_unsigned)
+!31 = !DILocation(line: 0, scope: !17)
+!32 = !DILocation(line: 0, scope: !27)
+!33 = !DILocation(line: 5, column: 31, scope: !34)
+!34 = distinct !DILexicalBlock(scope: !27, file: !2, line: 5, column: 3)
+!35 = !DILocation(line: 5, column: 3, scope: !27)
+!36 = !DILocation(line: 8, column: 3, scope: !17)
+!37 = !DILocation(line: 6, column: 5, scope: !38)
+!38 = distinct !DILexicalBlock(scope: !34, file: !2, line: 5, column: 50)
+!39 = !DILocation(line: 5, column: 44, scope: !34)
+!40 = distinct !{!40, !35, !41, !42}
+!41 = !DILocation(line: 7, column: 3, scope: !27)
+!42 = !{!"llvm.loop.mustprogress"}
+"""
+
+# ╔═╡ 29de55ff-082c-498b-929a-881eedfc950b
+@dispose ctx=Context() before_mod = parse(LLVM.Module, before_change_ir) after_mod = parse(LLVM.Module, after_change_ir) begin
+end
 
 # ╔═╡ b0b257d4-010d-41f4-83cd-3e234150f422
-@dispose ctx=Context() simple_printf_before = parse(LLVM.Module, before_change_ir) begin
-	
-end
+
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -343,8 +423,9 @@ version = "17.4.0+2"
 # ╠═e571be46-5d3e-478e-8960-dcaa1375c9d9
 # ╠═78a0bf62-0657-4487-9bd0-82ac8ea880dd
 # ╠═d4ef26ec-f047-4717-b75c-f97d86ae9819
-# ╠═0687ec67-276d-481b-820f-81df24ce29ab
-# ╠═48e1a721-5cb6-4151-8f18-b4601815a466
+# ╟─0687ec67-276d-481b-820f-81df24ce29ab
+# ╟─d5a68d43-cf0e-404e-9e9d-531b682a07b3
+# ╠═29de55ff-082c-498b-929a-881eedfc950b
 # ╠═b0b257d4-010d-41f4-83cd-3e234150f422
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
