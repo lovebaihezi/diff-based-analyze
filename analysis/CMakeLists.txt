@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.14)
-project(diff-analysis cpp)
+cmake_minimum_required(VERSION 3.20)
+project(diff-analysis)
 
 # Set the C++ standard
 set(CMAKE_CXX_STANDARD 20)
@@ -31,10 +31,10 @@ include_directories(${LLVM_INCLUDE_DIRS})
 link_libraries(${LLVM_LIBRARIES})
 
 # Add your source files
-add_executable(analysis analysis/main.cpp)
+add_executable(analysis main.cpp)
 
 # Link with libgit2
-target_link_libraries(analysis libgit2::libgit2)
+target_link_libraries(analysis git2)
 
 # Enable testing and add your tests
 # enable_testing()
