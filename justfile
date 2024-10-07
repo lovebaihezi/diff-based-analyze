@@ -165,3 +165,9 @@ build-script:
     -lLLVMIRPrinter \
     -lLLVMCoverage \
     -lz
+
+# Build Analysis Tool
+build-analysis:
+    rm -rf build
+    cmake -GNinja -Bbuild -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release analysis
+    mold -run ninja -C build
