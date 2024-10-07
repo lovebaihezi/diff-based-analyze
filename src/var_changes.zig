@@ -99,11 +99,9 @@ pub fn createVariables(self: *@This(), allocator: Allocator, ctx: llvm.Context, 
     }
 
     while (functions.next()) |f| {
-        std.debug.print("------f-------\n", .{});
         // TODO: Also check function parameters here
         var block = BasicBlock.init(f);
         while (block.next()) |b| {
-            std.debug.print("------b-------\n", .{});
             var insts = Instruction.init(b);
             while (insts.next()) |i| {
                 const op_code = llvm.instructionCode(i);
@@ -163,14 +161,6 @@ pub fn createVariables(self: *@This(), allocator: Allocator, ctx: llvm.Context, 
                                 std.debug.assert(llvm.isMetaData(value));
                                 std.debug.assert(llvm.isMetaData(variable));
                                 std.debug.assert(llvm.isMetaData(expression));
-
-                                const value_metadata = llvm.asMetaData(value);
-                                const variable_metadata = llvm.asMetaData(variable);
-                                const expression_metadata = llvm.asMetaData(expression);
-
-                                _ = value_metadata;
-                                _ = expression_metadata;
-                                _ = variable_metadata;
 
                                 const metadata_operands = try llvm.metadataOperands(allocator, variable);
                                 defer metadata_operands.deinit();
