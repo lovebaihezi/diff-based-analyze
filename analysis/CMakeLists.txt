@@ -1,0 +1,43 @@
+cmake_minimum_required(VERSION 3.14)
+project(diff-analysis cpp)
+
+# Set the C++ standard
+set(CMAKE_CXX_STANDARD 20)
+
+# Use FetchContent to download and include libgit2 and Catch2
+include(FetchContent)
+FetchContent_Declare(
+  libgit2
+  GIT_REPOSITORY https://github.com/libgit2/libgit2.git
+  GIT_TAG        v1.5.0  # Use the desired version
+)
+FetchContent_MakeAvailable(libgit2)
+
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        v3.3.2  # Use the desired version
+)
+FetchContent_MakeAvailable(Catch2)
+
+# Find LLVM and libclang
+find_package(LLVM REQUIRED CONFIG)
+message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+
+# Include directories for LLVM and libclang
+include_directories(${LLVM_INCLUDE_DIRS})
+
+# Link with LLVM and libclang libraries
+link_libraries(${LLVM_LIBRARIES})
+
+# Add your source files
+add_executable(analysis analysis/main.cpp)
+
+# Link with libgit2
+target_link_libraries(analysis libgit2::libgit2)
+
+# Enable testing and add your tests
+# enable_testing()
+# add_executable(AnalysisTest )
+# target_link_libraries(MyTests Catch2::Catch2)
+# add_test(NAME MyTests COMMAND MyTests)
