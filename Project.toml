@@ -1,0 +1,4 @@
+[deps]
+LLVM = "929cbde3-209d-540e-8aea-75f648917ca0"
+LibGit2 = "76f85450-5226-5b5a-8eaa-529ad045b433"
+Pluto = "c3e4b0f8-55cb-11ea-2926-15256bba5781"

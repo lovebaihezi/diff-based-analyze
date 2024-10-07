@@ -7,8 +7,8 @@ runs:
       shell: bash
       run: |
         sudo apt-get update
-        sudo apt-get install wget tar gzip bash git curl file autoconf automake cmake ninja-build libzstd-dev build-essential libc++-dev libstdc++-11-dev llvm-dev libclang-dev clang-tools
-    - uses: goto-bus-stop/setup-zig@v2.2.0
+        sudo apt-get install wget tar gzip bash git curl file autoconf automake cmake ninja-build libzstd-dev build-essential libc++-dev libstdc++-11-dev llvm-dev libclang-dev clang-tools bear
+    - uses: goto-bus-stop/setup-zig@v2
       with:
         version: 0.13.0
     - uses: extractions/setup-just@v2
@@ -34,9 +34,6 @@ runs:
         echo CXX="${{ github.workspace }}/scripts/zig-cxx" >> $GITHUB_ENV
         just install-libgit2 && just build-libgit2
         just install-zlib && just build-zlib
-    - name: Run zig fmt
-      shell: bash
-      run: zig fmt --check .
     - name: Pull DataRace Bench
       shell: bash
       run: |

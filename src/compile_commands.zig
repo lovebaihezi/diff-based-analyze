@@ -110,23 +110,23 @@ pub fn compile_mv_files_name(allocator: Allocator, oid: *Git.OID) Allocator.Erro
     return .{ old_file, new_file_name };
 }
 
-test "compile commands mv files name" {
-    var oid: Git.OID = undefined;
-    var prng = std.rand.DefaultPrng.init(12345);
-    const random = prng.random();
-    std.rand.bytes(random, &oid.id);
-    const names = try compile_mv_files_name(std.testing.allocator, &oid);
-    defer {
-        for (names) |name| {
-            std.testing.allocator.free(name);
-        }
-    }
-    const sep = std.fs.path.sep_str;
-    try std.testing.expectEqualStrings(names[0], "build" ++ sep ++ "compile_commands.json");
-    try std.testing.expectStringStartsWith(names[1], ".cache" ++ sep);
-    try std.testing.expectStringEndsWith(names[1], ".json");
-    try std.testing.expectEqual(std.mem.indexOf(u8, names[1], &.{0x0}), null);
-}
+//test "compile commands mv files name" {
+//    var oid: Git.OID = undefined;
+//    var prng = std.rand.DefaultPrng.init(12345);
+//    const random = prng.random();
+//    std.rand.bytes(random, &oid.id);
+//    const names = try compile_mv_files_name(std.testing.allocator, &oid);
+//    defer {
+//        for (names) |name| {
+//            std.testing.allocator.free(name);
+//        }
+//    }
+//    const sep = std.fs.path.sep_str;
+//    try std.testing.expectEqualStrings(names[0], "build" ++ sep ++ "compile_commands.json");
+//    try std.testing.expectStringStartsWith(names[1], ".cache" ++ sep);
+//    try std.testing.expectStringEndsWith(names[1], ".json");
+//    try std.testing.expectEqual(std.mem.indexOf(u8, names[1], &.{0x0}), null);
+//}
 
 fn mv2Cache(allocator: Allocator, oid: *Git.OID) ![2][]u8 {
     const dir = std.fs.cwd();

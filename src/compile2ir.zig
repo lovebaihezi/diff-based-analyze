@@ -18,6 +18,7 @@ pub const Compiler = enum {
 
 pub const Options = struct {
     compiler: Compiler,
+    cwd: ?std.fs.Dir = null,
     source_file_name: ?[]const u8 = null,
     output_file_name: ?[]const u8 = null,
     pub fn getCompiler(self: @This()) []const u8 {
@@ -39,11 +40,10 @@ pub const CompiledResult = struct {
     pub fn deinit() void {}
 };
 
-// TODO: temp file should able to been cleaned up
 pub fn createCompiledMemBuf(allocator: Allocator, code: []const u8, options: ?Options) !llvmMemBuf {
-    const nonnull_options = options orelse Options{ .compiler = Compiler.CC };
+    const nonnull_options = options orelse Options{ .compiler = Compiler.CC, .cwd = std.fs.cwd() };
     const compiler = nonnull_options.getCompiler();
-    var cwd = std.fs.cwd();
+    var cwd = nonnull_options.cwd orelse std.fs.cwd();
 
     const id = uuid.init();
 
@@ -63,6 +63,7 @@ pub fn createCompiledMemBuf(allocator: Allocator, code: []const u8, options: ?Op
 
     // run "zig cc -S -emit-llvm temp-{uuid}.c" in child process
     var child = std.process.Child.init(&.{ compiler, "-S", "-emit-llvm", str_buf.items }, allocator);
+    child.cwd_dir = cwd;
     child.stderr_behavior = .Inherit;
     try child.spawn();
     _ = try child.wait();
@@ -80,16 +81,27 @@ pub fn createCompiledMemBuf(allocator: Allocator, code: []const u8, options: ?Op
         @panic("failed to open output file");
     defer output_file.close();
 
-    try output_str_buf.append(0);
+    const BUF_LEN = 4096 * 10;
+    var buf: [BUF_LEN]u8 = undefined;
 
-    const memBuf = try llvmMemBuf.initWithFile(output_str_buf.items.ptr);
+    const path = try cwd.realpath(output_str_buf.items, buf[0..]);
+    if (std.debug.runtime_safety) {
+        if (path.len > BUF_LEN - 1) {
+            @panic("real path the output file is too long");
+        }
+    }
+    buf[path.len] = 0;
+
+    const realpath = buf[0 .. path.len + 1];
+
+    const memBuf = try llvmMemBuf.initWithFile(realpath.ptr);
     return memBuf;
 }
 
 pub fn compileByCMD(allocator: Allocator, code: []const u8, options: ?Options) ![]u8 {
-    const nonnull_options = options orelse Options{ .compiler = Compiler.CC };
+    const nonnull_options = options orelse Options{ .compiler = Compiler.CC, .cwd = std.fs.cwd() };
     const compiler = nonnull_options.getCompiler();
-    var cwd = std.fs.cwd();
+    var cwd = nonnull_options.cwd orelse std.fs.cwd();
 
     const id = uuid.init();
 
@@ -109,6 +121,7 @@ pub fn compileByCMD(allocator: Allocator, code: []const u8, options: ?Options) !
 
     // run "zig cc -S -emit-llvm temp-{uuid}.c" in child process
     var child = std.process.Child.init(&.{ compiler, "-S", "-emit-llvm", str_buf.items }, allocator);
+    child.cwd_dir = cwd;
     child.stderr_behavior = .Inherit;
     try child.spawn();
     _ = try child.wait();
@@ -259,18 +272,24 @@ test "compile whole project based on compile_commands" {
 }
 
 test "compile simple function to IR str" {
+    var tmp_dir = std.testing.tmpDir(.{ .access_sub_paths = true });
+    defer tmp_dir.cleanup();
+
     const allocator = std.testing.allocator;
-    const output = try compileByCMD(allocator, "void* test(void* args) {int* arg = (int*)args; *arg += 1;return arg;}", .{ .compiler = Compiler.Clang });
+    const output = try compileByCMD(allocator, "void* test(void* args) {int* arg = (int*)args; *arg += 1;return arg;}", .{ .compiler = Compiler.Clang, .cwd = tmp_dir.dir });
     defer allocator.free(output);
     try std.testing.expect(output.len > 100);
 }
 
 test "compile simple function IR Module" {
+    var tmp_dir = std.testing.tmpDir(.{ .access_sub_paths = true });
+    defer tmp_dir.cleanup();
+
     const ctx = llvm.createContext();
     defer llvm.destroyContext(ctx);
     const allocator = std.testing.allocator;
-    const mem_buf = try createCompiledMemBuf(allocator, "static int x;", .{ .compiler = Compiler.Clang });
+    const mem_buf = try createCompiledMemBuf(allocator, "static int x;", .{ .compiler = Compiler.Clang, .cwd = tmp_dir.dir });
     // defer mem_buf.deinit();
-    try std.testing.expect(mem_buf.mem_buf != null);
-    _ = try IR.parseIR(ctx, mem_buf.mem_buf);
+    try std.testing.expect(mem_buf.mem_buf_ref != null);
+    _ = try IR.parseIR(ctx, mem_buf.mem_buf_ref);
 }
