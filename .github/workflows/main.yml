@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  zig-build:
+  build:
     uses: ./.github/workflows/build.yml
   clang-static-analyzer:
     uses: ./.github/workflows/clang-static-analyzer.yml

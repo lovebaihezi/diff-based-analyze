@@ -20,8 +20,6 @@ runs:
         sudo ./llvm.sh 18
         # echo DIFF_LLVM_SHARED_LIB="LLVM-18" >> $GITHUB_ENV
         # echo DIFF_clang_SHARED_LIB="clang-18" >> $GITHUB_ENV
-        sudo ln -s /usr/lib/llvm-18/lib/libclang-18.so.1 /usr/lib/libclang.so
-        sudo ln -s /usr/lib/llvm-18/lib/libLLVM-18.so /usr/lib/libLLVM.so
         sudo apt-get install libclang-common-18-dev libclang-18-dev libclang1-18
     - name: Check Zig ENV
       shell: bash

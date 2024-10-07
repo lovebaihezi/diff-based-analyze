@@ -15,10 +15,3 @@ zig build -Doptimize=ReleaseSafe
 ## Usage
 
 Currently not available
-
-## Todo
-
-- [x] Add CI to build libgit2 static library for linking
-
-- ~~[x] Add CI to build static link llvm binary~~
-

@@ -6,7 +6,7 @@ root = true
 [*]
 indent_style = space
 
-[*.{c, c++}]
+[*.{c, cpp, hpp, h}]
 indent_size = 2
 
 [*.zig]
