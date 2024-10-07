@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 
   atomic_int *arrays = arrays = malloc(sizeof(atomic_int) * len);
 
-  for (size_t i = 0;i < len;i += 1) {
+  for (size_t i = 0; i < len; i += 1) {
     arrays[i] = 0;
   }
 
@@ -67,4 +67,3 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
-

@@ -2,7 +2,8 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java:
 // https://pvs-studio.com
 
-// Consider a function that will gain some data from OS and process them in different thread
+// Consider a function that will gain some data from OS and process them in
+// different thread
 
 #include <assert.h>
 #include <pthread.h>
@@ -33,7 +34,7 @@ int main(int argc, char *argv[]) {
 
   atomic_int *arrays = arrays = malloc(sizeof(atomic_int) * len);
 
-  for (size_t i = 0;i < len;i += 1) {
+  for (size_t i = 0; i < len; i += 1) {
     arrays[i] = 0;
   }
 
