@@ -82,7 +82,7 @@ pub fn deinit(self: *@This()) void {
     }
 }
 
-pub fn build(self: *@This(), allocator: Allocator, ctx: llvm.Context, mem_buf: llvm.MemoryBuffer) !*@This() {
+pub fn createVariables(self: *@This(), allocator: Allocator, ctx: llvm.Context, mem_buf: llvm.MemoryBuffer) !*@This() {
     var ir: IR = try IR.parseIR(ctx, mem_buf);
     defer ir.deinit();
 
@@ -271,7 +271,7 @@ test "Case: Only Variable Name Changed" {
     var variables = This.init(allocator);
     defer variables.deinit();
 
-    const self = try variables.build(allocator, ctx, mem_buf.mem_buf_ref);
+    const self = try variables.createVariables(allocator, ctx, mem_buf.mem_buf_ref);
     try std.testing.expectEqual(2, self.variables.items.len);
     try std.testing.expectEqualStrings(self.variables.items[1].Block.name, "i");
 }
