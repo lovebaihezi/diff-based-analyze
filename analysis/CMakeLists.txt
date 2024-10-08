@@ -3,6 +3,7 @@ project(diff-analysis)
 
 # Set the C++ standard
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Use FetchContent to download and include libgit2 and Catch2
 include(FetchContent)
