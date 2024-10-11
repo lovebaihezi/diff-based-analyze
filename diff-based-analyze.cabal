@@ -23,7 +23,7 @@ name:               diff-based-analyze
 version:            0.1.0.0
 
 -- A short (one-line) description of the package.
--- synopsis:
+synopsis:           Analysis tool based on LLVM and Git history
 
 -- A longer description of the package.
 -- description:
@@ -68,7 +68,7 @@ executable diff-based-analyze
     -- other-extensions:
 
     -- Other library packages from which modules are imported.
-    build-depends:    base ^>=4.16.4.0
+    build-depends:    base ^>=4.17.2.1, llvm-hs-pure ^>=9.0.0
 
     -- Directories containing source files.
     hs-source-dirs:   app
