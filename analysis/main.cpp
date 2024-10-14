@@ -18,17 +18,20 @@
 
 struct VariableInstMap {
   llvm::StringRef variableName{};
-  llvm::SetVector<llvm::Instruction> instructions{};
+  std::vector<llvm::Instruction *> instructions{};
+
+  ~VariableInstMap() {
+  }
 };
 
-using Variables = llvm::SetVector<VariableInstMap>;
+using Variables = std::vector<VariableInstMap>;
 
 auto variables(const llvm::Module &M) -> Variables {
   Variables variables;
   // Global variables
   for (const auto &globalVariable : M.globals()) {
     if (!globalVariable.getName().empty()) {
-      variables.insert(
+      variables.emplace_back(
           VariableInstMap{.variableName = globalVariable.getName()});
     }
   }
@@ -37,7 +40,7 @@ auto variables(const llvm::Module &M) -> Variables {
     // Function arguments
     for (const auto &Arg : F.args()) {
       if (!Arg.getName().empty()) {
-        variables.insert(VariableInstMap{.variableName = Arg.getName()});
+        variables.emplace_back(VariableInstMap{.variableName = Arg.getName()});
       }
     }
 
@@ -47,7 +50,7 @@ auto variables(const llvm::Module &M) -> Variables {
         if (auto dbg = llvm::dyn_cast<llvm::DbgValueInst>(&I)) {
           auto name = dbg->getVariable()->getName();
           if (!name.empty()) {
-            variables.insert(VariableInstMap{.variableName = name});
+            variables.emplace_back(VariableInstMap{.variableName = name});
           }
         }
       }
