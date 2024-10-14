@@ -21,6 +21,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
+# Add Quill for logging
+FetchContent_Declare(
+  quill
+  GIT_REPOSITORY https://github.com/odygrd/quill.git
+  GIT_TAG        v7.2.0  # Use the desired version
+)
+FetchContent_MakeAvailable(quill)
+
 # Find LLVM and libclang
 find_package(LLVM REQUIRED CONFIG)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
@@ -35,7 +43,7 @@ link_libraries(${LLVM_LIBRARIES})
 add_executable(analysis main.cpp)
 
 # Link with libgit2
-target_link_libraries(analysis git2)
+target_link_libraries(analysis git2 quill)
 
 add_executable(FileVarA tests/challenges-a/FileVarA.cpp)
 target_link_libraries(FileVarA PRIVATE Catch2::Catch2)

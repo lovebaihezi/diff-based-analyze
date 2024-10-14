@@ -61,12 +61,23 @@ auto variables(const llvm::Module &M) -> Variables {
 }
 
 int main(int argc, char **argv) {
+  argparse::ArgumentParser program("variables");
+
+  program.add_argument("project")
+      .help("The path to the project for analysis")
+      .default_value(std::string());
+
+  program.parse_args(argc, argv);
+
   llvm::SMDiagnostic Err;
   llvm::LLVMContext Context;
   std::unique_ptr<llvm::Module> module =
-      llvm::parseIRFile(argv[1], Err, Context);
+      llvm::parseIRFile(program.get<std::string>("project"), Err, Context);
 
-  assert(module != nullptr);
+  if (!module) {
+    Err.print(argv[0], llvm::errs());
+    return 1;
+  }
 
   auto variableNames = variables(*module);
 
