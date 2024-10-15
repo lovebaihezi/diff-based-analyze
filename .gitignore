@@ -39,3 +39,4 @@ target_wasm
 tests/temp-*.c
 
 /dist*
+/.zed

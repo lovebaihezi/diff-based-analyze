@@ -1,8 +1,8 @@
-#include "dirent.h"
-
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "dirent.h"
 
 int root_fn(DIR *dir) {
   struct dirent *dirent = NULL;
@@ -27,7 +27,7 @@ int root_fn(DIR *dir) {
   return 0;
 }
 
-int main(int argc, char* args[]) {
+int main(int argc, char *args[]) {
   if (argc < 2) {
     return 1;
   }

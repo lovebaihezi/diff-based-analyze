@@ -31,7 +31,7 @@ void thread_set_mask(void *arg) {
 
 int main(int argc, char *args[]) {
   threadpool pool = thpool_init(31);
-  DIR** dirs = (DIR**)malloc(sizeof(DIR*) * argc);
+  DIR **dirs = (DIR **)malloc(sizeof(DIR *) * argc);
   for (int i = 1; i < argc; i += 1) {
     NotAtomicProtect *data =
         (NotAtomicProtect *)malloc(sizeof(NotAtomicProtect));
@@ -56,8 +56,8 @@ int main(int argc, char *args[]) {
     thpool_add_work(pool, thread_set_mask, data);
   }
   thpool_wait(pool);
-  for (int i = 0;i < argc;i += 1) {
-    DIR* dir = dirs[i];
+  for (int i = 0; i < argc; i += 1) {
+    DIR *dir = dirs[i];
     closedir(dir);
   }
   free(dirs);
