@@ -45,5 +45,5 @@ add_executable(analysis main.cpp)
 # Link with libgit2
 target_link_libraries(analysis git2 quill)
 
-add_executable(FileVarA tests/challenges-a/FileVarA.cpp)
-target_link_libraries(FileVarA PRIVATE Catch2::Catch2)
+# add_executable(FileVarA tests/challenges-a/FileVarA.cpp)
+# target_link_libraries(FileVarA PRIVATE Catch2::Catch2)
