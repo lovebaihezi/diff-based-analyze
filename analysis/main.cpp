@@ -1,27 +1,29 @@
 #include "argparse.hpp"
+#include "quill/Backend.h"
+#include "quill/Frontend.h"
+#include "quill/LogMacros.h"
+#include "quill/Logger.h"
+#include "quill/sinks/ConsoleSink.h"
 
 #include <cassert>
+#include <memory>
+
 #include <llvm/ADT/MapVector.h>
 #include <llvm/ADT/SetVector.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/StringRef.h>
+#include <llvm/IR/DebugInfo.h>
+#include <llvm/IR/DebugInfoMetadata.h>
+#include <llvm/IR/Function.h>
 #include <llvm/IR/Instruction.h>
-#include <memory>
-
-#include "llvm/IR/DebugInfo.h"
-#include "llvm/IR/DebugInfoMetadata.h"
-#include "llvm/IR/Function.h"
-#include "llvm/IR/Instructions.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IRReader/IRReader.h"
-#include "llvm/Support/SourceMgr.h"
+#include <llvm/IR/Instructions.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IRReader/IRReader.h>
+#include <llvm/Support/SourceMgr.h>
 
 struct VariableInstMap {
   llvm::StringRef variableName{};
   std::vector<llvm::Instruction *> instructions{};
-
-  ~VariableInstMap() {
-  }
 };
 
 using Variables = std::vector<VariableInstMap>;
@@ -48,7 +50,8 @@ auto variables(const llvm::Module &M) -> Variables {
     for (const auto &BB : F) {
       for (const auto &I : BB) {
         if (auto dbg = llvm::dyn_cast<llvm::DbgValueInst>(&I)) {
-          auto name = dbg->getVariable()->getName();
+          auto variable = dbg->getVariable();
+          auto name = variable->getName();
           if (!name.empty()) {
             variables.emplace_back(VariableInstMap{.variableName = name});
           }
@@ -67,15 +70,23 @@ int main(int argc, char **argv) {
       .help("The path to the project for analysis")
       .default_value(std::string());
 
+  quill::Backend::start();
+
+  quill::Logger *logger = quill::Frontend::create_or_get_logger(
+      "root",
+      quill::Frontend::create_or_get_sink<quill::ConsoleSink>("sink_id_1"));
+
   program.parse_args(argc, argv);
+
+  auto project = program.get<std::string>("project");
 
   llvm::SMDiagnostic Err;
   llvm::LLVMContext Context;
   std::unique_ptr<llvm::Module> module =
-      llvm::parseIRFile(program.get<std::string>("project"), Err, Context);
+      llvm::parseIRFile(project, Err, Context);
 
   if (!module) {
-    Err.print(argv[0], llvm::errs());
+    LOGJ_CRITICAL(logger, "FAILED TO PARSE MODULE FROM IR FILE: {}", project);
     return 1;
   }
 
