@@ -42,8 +42,8 @@ link_libraries(${LLVM_LIBRARIES})
 # Add your source files
 add_executable(analysis main.cpp)
 
-# Link with libgit2
-target_link_libraries(analysis git2 quill)
+# Link with libgit2, quill, LLVM
+target_link_libraries(analysis git2 quill ${LLVM_LIBS})
 
 # add_executable(FileVarA tests/challenges-a/FileVarA.cpp)
 # target_link_libraries(FileVarA PRIVATE Catch2::Catch2)
