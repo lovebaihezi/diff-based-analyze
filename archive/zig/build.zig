@@ -35,7 +35,7 @@ pub fn build(b: *std.Build) void {
     exe.linkSystemLibrary2("ssl", .{ .needed = true });
     exe.linkSystemLibrary2("crypto", .{ .preferred_link_mode = .static, .needed = true });
     exe.linkSystemLibrary2("pcre", .{ .preferred_link_mode = .static, .needed = true });
-    // exe.addCSourceFile(.{ .file = b.path("./src/compile2ir.cpp"), .flags = &.{ "-std=c++17", "-O3" } });
+    // exe.addCSourceFile(.{ .file = b.path("./src/llvmir.cpp"), .flags = &.{ "-std=c++2a", "-O3" } });
     exe.addIncludePath(b.path("./libgit2/include"));
     exe.addLibraryPath(b.path("./libgit2/lib"));
     exe.addLibraryPath(b.path("./zlib"));
