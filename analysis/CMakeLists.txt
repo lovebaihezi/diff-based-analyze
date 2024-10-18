@@ -5,6 +5,10 @@ project(diff-analysis LANGUAGES CXX VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(BUILD_SHARED_LIBS OFF)
+set(BUILD_TESTS OFF)
+set(BUILD_CLAR OFF)
+
 # Use FetchContent to download and include libgit2 and Catch2
 include(FetchContent)
 FetchContent_Declare(
@@ -43,7 +47,7 @@ link_libraries(${LLVM_LIBRARIES})
 add_executable(analysis main.cpp)
 
 # Link with libgit2, quill, LLVM
-target_link_libraries(analysis git2 quill ${LLVM_LIBS})
+target_link_libraries(analysis git2 quill ${LLVM_AVAILABLE_LIBS})
 
 # add_executable(FileVarA tests/challenges-a/FileVarA.cpp)
 # target_link_libraries(FileVarA PRIVATE Catch2::Catch2)

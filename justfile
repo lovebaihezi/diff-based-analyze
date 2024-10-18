@@ -14,10 +14,9 @@ pvs_url         := "https://cdn.pvs-studio.com/" + pvs_tar
 pvs_cre_type    := "Free"
 pvs_credentials := "FREE-FREE-FREE-FREE"
 coverity_url    := "https://scan.coverity.com/download/cxx/linux64"
-llvm_version    := "17.0.6"
+llvm_version    := "18.1.8"
 llvm_url        := "https://github.com/llvm/llvm-project/releases/download/llvmorg-" + llvm_version + "/clang+llvm-" + llvm_version + "-x86_64-linux-gnu-ubuntu-22.04.tar.xz"
-zig_llvm_url    := "https://github.com/lovebaihezi/diff-based-analyze/releases/download/amd64/zig-llvm-amd64.7z"
-llvm_src_version:= "18.1.7"
+llvm_src_version:= "18.1.8"
 llvm_src_url    := "https://github.com/llvm/llvm-project/releases/download/llvmorg-" + llvm_src_version + "/llvm-project-" + llvm_src_version + ".src.tar.xz"
 
 install-tools: install-pmd install-infer install-pvs
@@ -175,7 +174,7 @@ build-analysis:
 # Build And test Analysis
 build-analysis-test:
     rm -rf build
-    cmake -GNinja -Bbuild -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Rel analysis
+    CC=clang CXX=clang++ cmake -GNinja -Bbuild -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Rel analysis
     mold -run ninja -C build
 
 # Format the code
