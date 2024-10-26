@@ -35,7 +35,7 @@ foreach(SOURCE_FILE ${C_SOURCES})
     # Add custom command to generate LLVM IR
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}
-        COMMAND ${LLVM_TOOLS_BINARY_DIR}/clang -I${PROJECT_SOURCE_DIR} -O3 -g -S -emit-llvm -o ${OUTPUT_FILE} ${SOURCE_FILE}
+        COMMAND ${LLVM_TOOLS_BINARY_DIR}/clang -Xclang -fexperimental-assignment-tracking=enabled -I${PROJECT_SOURCE_DIR} -O3 -g -S -emit-llvm -o ${OUTPUT_FILE} ${SOURCE_FILE}
         DEPENDS ${SOURCE_FILE}
         COMMENT "Generating LLVM IR for ${REL_PATH}"
     )

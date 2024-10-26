@@ -28,6 +28,7 @@ mkpkgs:
   mkdir pkgs
 
 install-llvm:
+  rm -rf llvm
   wget {{llvm_url}}
   tar xf LLVM-19.1.2-Linux-X64.tar.xz
   mv LLVM-19.1.2-Linux-X64 llvm

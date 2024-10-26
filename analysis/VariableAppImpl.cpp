@@ -7,54 +7,56 @@
 #include <llvm/Support/SourceMgr.h>
 
 #include "quill/LogMacros.h"
-#include "llvm/IR/IntrinsicInst.h"
+#include "llvm/IR/DebugProgramInstruction.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace diff_analysis {
 auto VariableApp::getMap(const llvm::Module &currentModule) -> Variables {
   Variables variables;
-  for (const auto &globalVariable : currentModule.globals()) {
-    if (!globalVariable.getName().empty() && !globalVariable.isConstant() &&
-        !globalVariable.getName().starts_with(".")) {
-      variables.emplace(globalVariable.getName(), VariableInstMap{});
+  for (const auto &global_var : currentModule.globals()) {
+    if (!global_var.getName().empty() && !global_var.isConstant() &&
+        !global_var.getName().starts_with(".")) {
+      variables.emplace(global_var.getName(), VariableInstMap{});
     }
   }
 
   for (const auto &function : currentModule) {
     LOG_INFO(App::logger(), "Function: {}", function.getName().str());
-    for (const auto &functionArg : function.args()) {
-      if (!functionArg.getName().empty() &&
-          !functionArg.getName().starts_with(".")) {
-        variables.emplace(functionArg.getName(), VariableInstMap{});
+    for (const auto &function_arg : function.args()) {
+      if (!function_arg.getName().empty() &&
+          !function_arg.getName().starts_with(".")) {
+        variables.emplace(function_arg.getName(), VariableInstMap{});
       }
     }
 
     // Local variables and global variables
     for (const auto &basic_block : function) {
       for (const auto &inst : basic_block) {
-        LOG_INFO(App::logger(), "inst: {}", inst.getName().str());
-        if (auto dbg = llvm::dyn_cast<llvm::DbgValueInst>(&inst)) {
-          auto variable = dbg->getVariable();
-          auto name = variable->getName();
-          LOG_INFO(App::logger(),
-                   "Add Variable from debug value instruction: {}", name.str());
-          if (!name.empty() && !name.starts_with(".")) {
-            auto nameStr = name.str();
-            auto insts = VariableInstMap{};
-            for (const auto &value : dbg->getValues()) {
-              for (const auto &use : value->users()) {
-                auto casted_inst = llvm::dyn_cast<llvm::Instruction>(use);
-                insts.instructions.insert(casted_inst);
+        for (llvm::DbgVariableRecord &dvr :
+             llvm::filterDbgVars(inst.getDbgRecordRange())) {
+          auto variable = dvr.getVariable();
+          if (dvr.isDbgValue()) {
+            auto value = dvr.getValue();
+            auto variableName = variable->getName();
+            LOG_INFO(App::logger(), "Variable Name: {}", variableName.str());
+            if (!variableName.empty() && !variableName.starts_with(".")) {
+              auto name_str = variableName.str();
+              auto insts = VariableInstMap{};
+
+              for (const auto &user : value->users()) {
+                if (auto inst = llvm::cast<llvm::Instruction>(user)) {
+                  insts.instructions.emplace(inst);
+                }
               }
+              variables.emplace(variableName, insts);
             }
-            variables.emplace(name, insts);
           }
-        } else {
-          LOG_INFO(App::logger(), "failed to cast to DbgValueInst {}", inst.getName().str());
         }
       }
     }
   }
-
   return variables;
 }
 
