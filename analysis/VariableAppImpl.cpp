@@ -7,6 +7,7 @@
 #include <llvm/Support/SourceMgr.h>
 
 #include "quill/LogMacros.h"
+#include "llvm/IR/IntrinsicInst.h"
 
 namespace diff_analysis {
 auto VariableApp::getMap(const llvm::Module &currentModule) -> Variables {
@@ -19,6 +20,7 @@ auto VariableApp::getMap(const llvm::Module &currentModule) -> Variables {
   }
 
   for (const auto &function : currentModule) {
+    LOG_INFO(App::logger(), "Function: {}", function.getName().str());
     for (const auto &functionArg : function.args()) {
       if (!functionArg.getName().empty() &&
           !functionArg.getName().starts_with(".")) {
@@ -29,6 +31,7 @@ auto VariableApp::getMap(const llvm::Module &currentModule) -> Variables {
     // Local variables and global variables
     for (const auto &basic_block : function) {
       for (const auto &inst : basic_block) {
+        LOG_INFO(App::logger(), "inst: {}", inst.getName().str());
         if (auto dbg = llvm::dyn_cast<llvm::DbgValueInst>(&inst)) {
           auto variable = dbg->getVariable();
           auto name = variable->getName();
@@ -45,6 +48,8 @@ auto VariableApp::getMap(const llvm::Module &currentModule) -> Variables {
             }
             variables.emplace(name, insts);
           }
+        } else {
+          LOG_INFO(App::logger(), "failed to cast to DbgValueInst {}", inst.getName().str());
         }
       }
     }
