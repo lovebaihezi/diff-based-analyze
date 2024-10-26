@@ -15,11 +15,10 @@
 extern "C" {
 #endif
 
-/* =================================== API ======================================= */
+/* =================================== API
+ * ======================================= */
 
-
-typedef struct thpool_* threadpool;
-
+typedef struct thpool_ *threadpool;
 
 /**
  * @brief  Initialize threadpool
@@ -31,7 +30,8 @@ typedef struct thpool_* threadpool;
  *
  *    ..
  *    threadpool thpool;                     //First we declare a threadpool
- *    thpool = thpool_init(4);               //then we initialize it to 4 threads
+ *    thpool = thpool_init(4);               //then we initialize it to 4
+ * threads
  *    ..
  *
  * @param  num_threads   number of threads to be created in the threadpool
@@ -39,7 +39,6 @@ typedef struct thpool_* threadpool;
  *                       NULL on error
  */
 threadpool thpool_init(int num_threads);
-
 
 /**
  * @brief Add work to the job queue
@@ -68,8 +67,7 @@ threadpool thpool_init(int num_threads);
  * @param  arg_p         pointer to an argument
  * @return 0 on success, -1 otherwise.
  */
-int thpool_add_work(threadpool, void (*function_p)(void*), void* arg_p);
-
+int thpool_add_work(threadpool, void (*function_p)(void *), void *arg_p);
 
 /**
  * @brief Wait for all queued jobs to finish
@@ -100,7 +98,6 @@ int thpool_add_work(threadpool, void (*function_p)(void*), void* arg_p);
  */
 void thpool_wait(threadpool);
 
-
 /**
  * @brief Pauses all threads immediately
  *
@@ -124,7 +121,6 @@ void thpool_wait(threadpool);
  */
 void thpool_pause(threadpool);
 
-
 /**
  * @brief Unpauses all threads if they are paused
  *
@@ -139,7 +135,6 @@ void thpool_pause(threadpool);
  * @return nothing
  */
 void thpool_resume(threadpool);
-
 
 /**
  * @brief Destroy the threadpool
@@ -162,7 +157,6 @@ void thpool_resume(threadpool);
  */
 void thpool_destroy(threadpool);
 
-
 /**
  * @brief Show currently working threads
  *
@@ -182,7 +176,6 @@ void thpool_destroy(threadpool);
  * @return integer       number of threads working
  */
 int thpool_num_threads_working(threadpool);
-
 
 #ifdef __cplusplus
 }

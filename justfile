@@ -14,28 +14,24 @@ pvs_url         := "https://cdn.pvs-studio.com/" + pvs_tar
 pvs_cre_type    := "Free"
 pvs_credentials := "FREE-FREE-FREE-FREE"
 coverity_url    := "https://scan.coverity.com/download/cxx/linux64"
-llvm_version    := "17.0.6"
-llvm_url        := "https://github.com/llvm/llvm-project/releases/download/llvmorg-" + llvm_version + "/clang+llvm-" + llvm_version + "-x86_64-linux-gnu-ubuntu-22.04.tar.xz"
-zig_llvm_url    := "https://github.com/lovebaihezi/diff-based-analyze/releases/download/amd64/zig-llvm-amd64.7z"
-llvm_src_version:= "18.1.7"
+llvm_url        := "https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.2/LLVM-19.1.2-Linux-X64.tar.xz"
+llvm_src_version:= "18.1.8"
 llvm_src_url    := "https://github.com/llvm/llvm-project/releases/download/llvmorg-" + llvm_src_version + "/llvm-project-" + llvm_src_version + ".src.tar.xz"
 
 install-tools: install-pmd install-infer install-pvs
 
-install-deps: install-libgit2 install-zlib
+init-deps: install-libgit2 install-zlib install-llvm
+
+install-deps: build-libgit2 build-zlib
+
+mkpkgs:
+  mkdir pkgs
 
 install-llvm:
+  rm -rf llvm
   wget {{llvm_url}}
-  tar xf clang+llvm-{{llvm_version}}-x86_64-linux-gnu-ubuntu-22.04.tar.xz
-
-fetch-llvm:
-  wget {{llvm_src_url}}
-  tar xf llvm-project-{{llvm_src_version}}.src.tar.xz
-
-build-llvm:
-  # cd llvm-project-{{llvm_src_version}}.src
-  CC="$(pwd)/scripts/zig-cc" CXX="$(pwd)/scripts/zig-cxx" cmake -S llvm-project-{{llvm_src_version}}.src/llvm -G Ninja -B build -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi" -DLLVM_TARGETS_TO_BUILD=X86
-  ninja -C build
+  tar xf LLVM-19.1.2-Linux-X64.tar.xz
+  mv LLVM-19.1.2-Linux-X64 llvm
 
 install-pvs:
   wget {{ pvs_url }}
@@ -85,22 +81,15 @@ config-examples:
 build-examples: config-examples
   time ninja -C examples-build
 
-build-lib:
-  clang++ -o compile2ir.o -c src/compile2ir.cpp
-  ar rcs libcompile2ir.a compile2ir.o ./zlib/libz.a ./llvm/lib/libclangTooling.a ./llvm/lib/libclangFrontend.a ./llvm/lib/libclangFrontendTool.a ./llvm/lib/libclangDriver.a ./llvm/lib/libclangSerialization.a ./llvm/lib/libclangCodeGen.a ./llvm/lib/libclangParse.a ./llvm/lib/libclangSema.a ./llvm/lib/libclangStaticAnalyzerFrontend.a ./llvm/lib/libclangStaticAnalyzerCheckers.a ./llvm/lib/libclangStaticAnalyzerCore.a ./llvm/lib/libclangAnalysis.a ./llvm/lib/libclangARCMigrate.a ./llvm/lib/libclangRewrite.a ./llvm/lib/libclangRewriteFrontend.a ./llvm/lib/libclangEdit.a ./llvm/lib/libclangAST.a ./llvm/lib/libclangLex.a ./llvm/lib/libclangBasic.a ./llvm/lib/libLLVMCore.a ./llvm/lib/libLLVMCodeGen.a ./llvm/lib/libLLVMSupport.a ./llvm/lib/libLLVMCodeGenTypes.a ./llvm/lib/libLLVMIRReader.a ./llvm/lib/libLLVMIRPrinter.a ./llvm/lib/libLLVMCoverage.a
-
 build-libgit2:
   rm -rf libgit2-build
   cmake -GNinja -Blibgit2-build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTS=OFF -DBUILD_CLAR=OFF libgit2-{{libgit_version}}
-  ninja -C libgit2-build
-  cmake --install libgit2-build --prefix libgit2
+  mold -run ninja -C libgit2-build
 
 build-zlib:
   rm -rf zlib-build zlib
   cmake -GNinja -Bzlib-build -DCMAKE_BUILD_TYPE=Release -DZLIB_BUILD_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX=$PWD/zlib zlib-{{zlib_version}}
-  cmake --build zlib-build
-  mkdir zlib
-  mv zlib-build/libz.a zlib
+  mold -run ninja -C zlib-build
 
 update-stringzilla:
   wget https://raw.githubusercontent.com/ashvardanian/StringZilla/main/include/stringzilla/stringzilla.h
@@ -136,32 +125,29 @@ fetch-micros:
   git clone https://github.com/antirez/sds
   git clone https://github.com/rhasspy/piper
 
-build-script:
-  clang++ src/AutoApplyVulnerbilities.cpp -Illvm/include -Lllvm/lib $(./llvm/bin/llvm-config --cxxflags) -lc++ --std=c++2a \
-    -lclangTooling \
-    -lclangFrontend \
-    -lclangFrontendTool \
-    -lclangDriver \
-    -lclangSerialization \
-    -lclangCodeGen \
-    -lclangParse \
-    -lclangSema \
-    -lclangStaticAnalyzerFrontend \
-    -lclangStaticAnalyzerCheckers \
-    -lclangStaticAnalyzerCore \
-    -lclangAnalysis \
-    -lclangARCMigrate \
-    -lclangRewrite \
-    -lclangRewriteFrontend \
-    -lclangEdit \
-    -lclangAST \
-    -lclangLex \
-    -lclangBasic \
-    -lLLVMCore \
-    -lLLVMCodeGen \
-    -lLLVMSupport \
-    -lLLVMCodeGenTypes \
-    -lLLVMIRReader \
-    -lLLVMIRPrinter \
-    -lLLVMCoverage \
-    -lz
+# Build Analysis Tool
+build-all:
+    CC=$PWD/llvm/bin/clang CXX=$PWD/llvm/bin/clang++ cmake \
+      -GNinja \
+      -Bbuild \
+      -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_PREFIX_PATH=$PWD/llvm
+    ninja -C build
+
+# Run Analysis Tests
+run-analysis-tests:
+    ./build/analysis/tests
+
+# Clean up All local builds
+clean-all:
+    cmake --build build --target clean
+
+# Clean up All local build everything
+full-clean-all:
+    rm -rf build
+
+# Format the code
+format:
+    clang-format --style=file -i $(fd --extension cpp --extension cc --extension hh --extension hpp)
+    clang-format --style=file -i $(fd --extension c --extension h)

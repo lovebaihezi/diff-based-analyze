@@ -2,6 +2,9 @@
 
 name: CI
 
+on:
+  workflow_call:
+
 env:
   # --cfg=web_sys_unstable_apis is required to enable the web_sys clipboard API which egui_web uses
   # https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.Clipboard.html

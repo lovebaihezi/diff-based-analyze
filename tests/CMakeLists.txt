@@ -1,36 +1,45 @@
-cmake_minimum_required(VERSION 3.10)
-project(test VERSION 0.1 LANGUAGES C CXX)
+cmake_minimum_required(VERSION 3.29)
+project(LLVM_IR_Generation)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+# Find LLVM package
+find_package(LLVM REQUIRED CONFIG)
+message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-set(SRC_DIRS ${CMAKE_CURRENT_LIST_DIR}/shared_var ${CMAKE_CURRENT_LIST_DIR}/thread_pool ${CMAKE_CURRENT_LIST_DIR}/correct_sync)
+# Include LLVM headers
+include_directories(${LLVM_INCLUDE_DIRS})
+add_definitions(${LLVM_DEFINITIONS})
 
-foreach(SRC_DIR ${SRC_DIRS})
-  execute_process(
-    COMMAND find ${SRC_DIR} -name "*.c"
-    OUTPUT_VARIABLE C_SOURCES
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-  string(REPLACE "\n" ";" C_SOURCES "${C_SOURCES}")
+# Find all .c files recursively
+file(GLOB_RECURSE C_SOURCES "${PROJECT_SOURCE_DIR}/**/*.c")
 
-  foreach(SRC ${C_SOURCES})
-    get_filename_component(EXE_NAME ${SRC} NAME_WE)
-    add_executable(${EXE_NAME} ${SRC} ${CMAKE_CURRENT_LIST_DIR}/thpool.h ${CMAKE_CURRENT_LIST_DIR}/thpool.c ${CMAKE_CURRENT_LIST_DIR}/types.h)
-    target_include_directories(${EXE_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-  endforeach()
+# Function to get relative path
+function(get_relative_path absolute_path relative_path_var)
+    file(RELATIVE_PATH rel_path "${CMAKE_SOURCE_DIR}" "${absolute_path}")
+    set(${relative_path_var} "${rel_path}" PARENT_SCOPE)
+endfunction()
 
-  execute_process(
-    COMMAND find ${SRC_DIR} -name "*.cpp"
-    OUTPUT_VARIABLE CPP_SOURCES
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-  string(REPLACE "\n" ";" CPP_SOURCES "${CPP_SOURCES}")
+# Create custom targets for each .c file
+foreach(SOURCE_FILE ${C_SOURCES})
+    # Get the relative path and filename
+    get_relative_path(${SOURCE_FILE} REL_PATH)
+    get_filename_component(FILE_NAME ${SOURCE_FILE} NAME_WE)
 
-  foreach(SRC ${CPP_SOURCES})
-    get_filename_component(EXE_NAME ${SRC} NAME_WE)
-    add_executable(${EXE_NAME}_cpp ${SRC} ${CMAKE_CURRENT_LIST_DIR}/types.h)
-  endforeach()
+    # Create output directory if it doesn't exist
+    get_filename_component(OUTPUT_DIR "${CMAKE_BINARY_DIR}/${REL_PATH}" DIRECTORY)
+    file(MAKE_DIRECTORY ${OUTPUT_DIR})
+
+    # Set the output .ll file path
+    set(OUTPUT_FILE "${OUTPUT_DIR}/${FILE_NAME}.ll")
+
+    # Add custom command to generate LLVM IR
+    add_custom_command(
+        OUTPUT ${OUTPUT_FILE}
+        COMMAND ${LLVM_TOOLS_BINARY_DIR}/clang -Xclang -fexperimental-assignment-tracking=enabled -I${PROJECT_SOURCE_DIR} -O3 -g -S -emit-llvm -o ${OUTPUT_FILE} ${SOURCE_FILE}
+        DEPENDS ${SOURCE_FILE}
+        COMMENT "Generating LLVM IR for ${REL_PATH}"
+    )
+
+    # Add custom target
+    add_custom_target(${FILE_NAME}_llvm_ir ALL DEPENDS ${OUTPUT_FILE})
 endforeach()
-
-add_executable(privileges privileges.c ${CMAKE_CURRENT_LIST_DIR}/thpool.h ${CMAKE_CURRENT_LIST_DIR}/thpool.c ${CMAKE_CURRENT_LIST_DIR}/types.h)

@@ -5,9 +5,9 @@
 #include <atomic>
 #include <cstdlib>
 #include <iostream>
+#include <mutex>
 #include <thread>
 #include <vector>
-#include <mutex>
 
 class SharedArray {
 private:

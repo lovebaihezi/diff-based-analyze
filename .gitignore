@@ -39,3 +39,8 @@ target_wasm
 tests/temp-*.c
 
 /dist*
+/.zed
+/tests-build
+*.tar.gz
+/LLVM-*
+/irs

@@ -33,7 +33,6 @@ void handle_client(void *arg) {
 }
 
 int main(void) {
-
   int server_socket, client_socket;
   struct sockaddr_in server_addr, client_addr;
   socklen_t addr_size;
@@ -82,7 +81,7 @@ int main(void) {
     // Create a new thread to handle the client connection
     int *client_socket_ptr = malloc(sizeof(int));
     *client_socket_ptr = client_socket;
-    thpool_add_work(pool, handle_client, (void* )client_socket_ptr);
+    thpool_add_work(pool, handle_client, (void *)client_socket_ptr);
   }
 
   // Close the server socket
