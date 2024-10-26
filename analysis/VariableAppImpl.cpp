@@ -11,22 +11,20 @@
 namespace diff_analysis {
 auto VariableApp::getMap(const llvm::Module &currentModule) -> Variables {
   Variables variables;
-  // Global variables
-  // for (const auto &globalVariable : currentModule.globals()) {
-  //   if (!globalVariable.getName().empty() && !globalVariable.isConstant() &&
-  //       !globalVariable.getName().starts_with(".")) {
-  //     variables.emplace(globalVariable.getName(), VariableInstMap{});
-  //   }
-  // }
+  for (const auto &globalVariable : currentModule.globals()) {
+    if (!globalVariable.getName().empty() && !globalVariable.isConstant() &&
+        !globalVariable.getName().starts_with(".")) {
+      variables.emplace(globalVariable.getName(), VariableInstMap{});
+    }
+  }
 
   for (const auto &function : currentModule) {
-    // Function arguments
-    // for (const auto &functionArg : function.args()) {
-    //   if (!functionArg.getName().empty() &&
-    //       !functionArg.getName().starts_with(".")) {
-    //     variables.emplace(functionArg.getName(), VariableInstMap{});
-    //   }
-    // }
+    for (const auto &functionArg : function.args()) {
+      if (!functionArg.getName().empty() &&
+          !functionArg.getName().starts_with(".")) {
+        variables.emplace(functionArg.getName(), VariableInstMap{});
+      }
+    }
 
     // Local variables and global variables
     for (const auto &basic_block : function) {

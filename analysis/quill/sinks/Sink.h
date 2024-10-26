@@ -26,16 +26,14 @@ QUILL_BEGIN_NAMESPACE
 /** Forward Declarations **/
 class MacroMetadata;
 
-namespace detail
-{
+namespace detail {
 class BackendWorker;
 }
 
 /**
  * Base class for sinks
  */
-class Sink
-{
+class Sink {
 public:
   /**
    * Constructor
@@ -48,16 +46,15 @@ public:
    */
   virtual ~Sink() = default;
 
-  Sink(Sink const&) = delete;
-  Sink& operator=(Sink const&) = delete;
+  Sink(Sink const &) = delete;
+  Sink &operator=(Sink const &) = delete;
 
   /**
    * @brief Sets a log level filter on the sink.
    * @note Thread safe.
    * @param log_level The log level severity.
    */
-  void set_log_level_filter(LogLevel log_level)
-  {
+  void set_log_level_filter(LogLevel log_level) {
     _log_level.store(log_level, std::memory_order_relaxed);
   }
 
@@ -66,8 +63,7 @@ public:
    * @note Thread safe.
    * @return The current log level filter.
    */
-  QUILL_NODISCARD LogLevel get_log_level_filter() const noexcept
-  {
+  QUILL_NODISCARD LogLevel get_log_level_filter() const noexcept {
     return _log_level.load(std::memory_order_relaxed);
   }
 
@@ -76,24 +72,25 @@ public:
    * @note Thread safe.
    * @param filter Unique pointer to the filter instance.
    */
-  void add_filter(std::unique_ptr<Filter> filter)
-  {
+  void add_filter(std::unique_ptr<Filter> filter) {
     // Lock and add this filter to our global collection
     detail::LockGuard const lock{_global_filters_lock};
 
     // Check if the same filter already exists
     auto const search_filter_it = std::find_if(
-      _global_filters.cbegin(), _global_filters.cend(), [&filter](std::unique_ptr<Filter> const& elem_filter)
-      { return elem_filter->get_filter_name() == filter->get_filter_name(); });
+        _global_filters.cbegin(), _global_filters.cend(),
+        [&filter](std::unique_ptr<Filter> const &elem_filter) {
+          return elem_filter->get_filter_name() == filter->get_filter_name();
+        });
 
-    if (QUILL_UNLIKELY(search_filter_it != _global_filters.cend()))
-    {
+    if (QUILL_UNLIKELY(search_filter_it != _global_filters.cend())) {
       QUILL_THROW(QuillError{"Filter with the same name already exists"});
     }
 
     _global_filters.push_back(std::move(filter));
 
-    // Indicate a new filter was added - here relaxed is okay as the spinlock will do acq-rel on destruction
+    // Indicate a new filter was added - here relaxed is okay as the spinlock
+    // will do acq-rel on destruction
     _new_filter.store(true, std::memory_order_relaxed);
   }
 
@@ -114,23 +111,27 @@ protected:
    * @param log_message The log message.
    * @param log_statement The log statement.
    */
-  QUILL_ATTRIBUTE_HOT virtual void write_log(
-    MacroMetadata const* log_metadata, uint64_t log_timestamp, std::string_view thread_id,
-    std::string_view thread_name, std::string const& process_id, std::string_view logger_name,
-    LogLevel log_level, std::string_view log_level_description, std::string_view log_level_short_code,
-    std::vector<std::pair<std::string, std::string>> const* named_args,
-    std::string_view log_message, std::string_view log_statement) = 0;
+  QUILL_ATTRIBUTE_HOT virtual void
+  write_log(MacroMetadata const *log_metadata, uint64_t log_timestamp,
+            std::string_view thread_id, std::string_view thread_name,
+            std::string const &process_id, std::string_view logger_name,
+            LogLevel log_level, std::string_view log_level_description,
+            std::string_view log_level_short_code,
+            std::vector<std::pair<std::string, std::string>> const *named_args,
+            std::string_view log_message, std::string_view log_statement) = 0;
 
   /**
-   * @brief Flushes the sink, synchronizing the associated sink with its controlled output sequence.
+   * @brief Flushes the sink, synchronizing the associated sink with its
+   * controlled output sequence.
    */
   QUILL_ATTRIBUTE_HOT virtual void flush_sink() = 0;
 
   /**
-   * @brief Executes periodic tasks by the backend thread, providing an opportunity for the user
-   * to perform custom tasks. For example, batch committing to a database, or any other
-   * desired periodic operations.
-   * @note It is recommended to avoid heavy operations within this function as it may affect performance of the backend thread.
+   * @brief Executes periodic tasks by the backend thread, providing an
+   * opportunity for the user to perform custom tasks. For example, batch
+   * committing to a database, or any other desired periodic operations.
+   * @note It is recommended to avoid heavy operations within this function as
+   * it may affect performance of the backend thread.
    */
   QUILL_ATTRIBUTE_HOT virtual void run_periodic_tasks() noexcept {}
 
@@ -147,26 +148,24 @@ protected:
    * @param log_statement The log message.
    * @return True if the log record passes all filters, false otherwise.
    */
-  QUILL_NODISCARD bool apply_all_filters(MacroMetadata const* log_metadata, uint64_t log_timestamp,
-                                         std::string_view thread_id, std::string_view thread_name,
-                                         std::string_view logger_name, LogLevel log_level,
-                                         std::string_view log_message, std::string_view log_statement)
-  {
-    if (log_level < _log_level.load(std::memory_order_relaxed))
-    {
+  QUILL_NODISCARD bool
+  apply_all_filters(MacroMetadata const *log_metadata, uint64_t log_timestamp,
+                    std::string_view thread_id, std::string_view thread_name,
+                    std::string_view logger_name, LogLevel log_level,
+                    std::string_view log_message,
+                    std::string_view log_statement) {
+    if (log_level < _log_level.load(std::memory_order_relaxed)) {
       return false;
     }
 
     // Update our local collection of the filters
-    if (QUILL_UNLIKELY(_new_filter.load(std::memory_order_relaxed)))
-    {
+    if (QUILL_UNLIKELY(_new_filter.load(std::memory_order_relaxed))) {
       // if there is a new filter we have to update
       _local_filters.clear();
 
       detail::LockGuard const lock{_global_filters_lock};
 
-      for (auto const& filter : _global_filters)
-      {
+      for (auto const &filter : _global_filters) {
         _local_filters.push_back(filter.get());
       }
 
@@ -174,19 +173,17 @@ protected:
       _new_filter.store(false, std::memory_order_relaxed);
     }
 
-    if (_local_filters.empty())
-    {
+    if (_local_filters.empty()) {
       return true;
-    }
-    else
-    {
-      return std::all_of(_local_filters.begin(), _local_filters.end(),
-                         [log_metadata, log_timestamp, thread_id, thread_name, logger_name,
-                          log_level, log_message, log_statement](Filter* filter_elem)
-                         {
-                           return filter_elem->filter(log_metadata, log_timestamp, thread_id, thread_name,
-                                                      logger_name, log_level, log_message, log_statement);
-                         });
+    } else {
+      return std::all_of(
+          _local_filters.begin(), _local_filters.end(),
+          [log_metadata, log_timestamp, thread_id, thread_name, logger_name,
+           log_level, log_message, log_statement](Filter *filter_elem) {
+            return filter_elem->filter(log_metadata, log_timestamp, thread_id,
+                                       thread_name, logger_name, log_level,
+                                       log_message, log_statement);
+          });
     }
   }
 
@@ -194,7 +191,7 @@ private:
   friend class detail::BackendWorker;
 
   /** Local Filters for this sink **/
-  std::vector<Filter*> _local_filters;
+  std::vector<Filter *> _local_filters;
 
   /** Global filter for this sink **/
   std::vector<std::unique_ptr<Filter>> _global_filters;

@@ -9,7 +9,7 @@
 #define FMTQUILL_COMPILE_H_
 
 #ifndef FMTQUILL_MODULE
-#  include <iterator>  // std::back_inserter
+#include <iterator> // std::back_inserter
 #endif
 
 #include "format.h"
@@ -22,8 +22,8 @@ FMTQUILL_EXPORT class compiled_string {};
 namespace detail {
 
 template <typename T, typename InputIt>
-FMTQUILL_CONSTEXPR inline auto copy(InputIt begin, InputIt end, counting_iterator it)
-    -> counting_iterator {
+FMTQUILL_CONSTEXPR inline auto copy(InputIt begin, InputIt end,
+                                    counting_iterator it) -> counting_iterator {
   return it + (end - begin);
 }
 
@@ -42,9 +42,10 @@ struct is_compiled_string : std::is_base_of<compiled_string, S> {};
  *     std::string s = fmtquill::format(FMTQUILL_COMPILE("{}"), 42);
  */
 #if defined(__cpp_if_constexpr) && defined(__cpp_return_type_deduction)
-#  define FMTQUILL_COMPILE(s) FMTQUILL_STRING_IMPL(s, fmtquill::compiled_string, explicit)
+#define FMTQUILL_COMPILE(s)                                                    \
+  FMTQUILL_STRING_IMPL(s, fmtquill::compiled_string, explicit)
 #else
-#  define FMTQUILL_COMPILE(s) FMTQUILL_STRING(s)
+#define FMTQUILL_COMPILE(s) FMTQUILL_STRING(s)
 #endif
 
 #if FMTQUILL_USE_NONTYPE_TEMPLATE_ARGS
@@ -59,7 +60,7 @@ struct udl_compiled_string : compiled_string {
 #endif
 
 template <typename T, typename... Tail>
-auto first(const T& value, const Tail&...) -> const T& {
+auto first(const T &value, const Tail &...) -> const T & {
   return value;
 }
 
@@ -68,8 +69,8 @@ template <typename... Args> struct type_list {};
 
 // Returns a reference to the argument at index N from [first, rest...].
 template <int N, typename T, typename... Args>
-constexpr const auto& get([[maybe_unused]] const T& first,
-                          [[maybe_unused]] const Args&... rest) {
+constexpr const auto &get([[maybe_unused]] const T &first,
+                          [[maybe_unused]] const Args &...rest) {
   static_assert(N < 1 + sizeof...(Args), "index is out of bounds");
   if constexpr (N == 0)
     return first;
@@ -100,7 +101,7 @@ template <typename Char> struct text {
   using char_type = Char;
 
   template <typename OutputIt, typename... Args>
-  constexpr OutputIt format(OutputIt out, const Args&...) const {
+  constexpr OutputIt format(OutputIt out, const Args &...) const {
     return write<Char>(out, data);
   }
 };
@@ -119,7 +120,7 @@ template <typename Char> struct code_unit {
   using char_type = Char;
 
   template <typename OutputIt, typename... Args>
-  constexpr OutputIt format(OutputIt out, const Args&...) const {
+  constexpr OutputIt format(OutputIt out, const Args &...) const {
     *out++ = value;
     return out;
   }
@@ -127,8 +128,8 @@ template <typename Char> struct code_unit {
 
 // This ensures that the argument type is convertible to `const T&`.
 template <typename T, int N, typename... Args>
-constexpr const T& get_arg_checked(const Args&... args) {
-  const auto& arg = detail::get<N>(args...);
+constexpr const T &get_arg_checked(const Args &...args) {
+  const auto &arg = detail::get<N>(args...);
   if constexpr (detail::is_named_arg<remove_cvref_t<decltype(arg)>>()) {
     return arg.value;
   } else {
@@ -144,8 +145,8 @@ template <typename Char, typename T, int N> struct field {
   using char_type = Char;
 
   template <typename OutputIt, typename... Args>
-  constexpr OutputIt format(OutputIt out, const Args&... args) const {
-    const T& arg = get_arg_checked<T, N>(args...);
+  constexpr OutputIt format(OutputIt out, const Args &...args) const {
+    const T &arg = get_arg_checked<T, N>(args...);
     if constexpr (std::is_convertible<T, basic_string_view<Char>>::value) {
       auto s = basic_string_view<Char>(arg);
       return copy<Char>(s.begin(), s.end(), out);
@@ -164,9 +165,9 @@ template <typename Char> struct runtime_named_field {
 
   template <typename OutputIt, typename T>
   constexpr static bool try_format_argument(
-      OutputIt& out,
+      OutputIt &out,
       // [[maybe_unused]] due to unused-but-set-parameter warning in GCC 7,8,9
-      [[maybe_unused]] basic_string_view<Char> arg_name, const T& arg) {
+      [[maybe_unused]] basic_string_view<Char> arg_name, const T &arg) {
     if constexpr (is_named_arg<typename std::remove_cv<T>::type>::value) {
       if (arg_name == arg.name) {
         out = write<Char>(out, arg.value);
@@ -177,7 +178,7 @@ template <typename Char> struct runtime_named_field {
   }
 
   template <typename OutputIt, typename... Args>
-  constexpr OutputIt format(OutputIt out, const Args&... args) const {
+  constexpr OutputIt format(OutputIt out, const Args &...args) const {
     bool found = (try_format_argument(out, name, args) || ...);
     if (!found) {
       FMTQUILL_THROW(format_error("argument with specified name is not found"));
@@ -196,9 +197,10 @@ template <typename Char, typename T, int N> struct spec_field {
 
   template <typename OutputIt, typename... Args>
   constexpr FMTQUILL_INLINE OutputIt format(OutputIt out,
-                                       const Args&... args) const {
-    const auto& vargs =
-        fmtquill::make_format_args<basic_format_context<OutputIt, Char>>(args...);
+                                            const Args &...args) const {
+    const auto &vargs =
+        fmtquill::make_format_args<basic_format_context<OutputIt, Char>>(
+            args...);
     basic_format_context<OutputIt, Char> ctx(out, vargs);
     return fmt.format(get_arg_checked<T, N>(args...), ctx);
   }
@@ -213,7 +215,7 @@ template <typename L, typename R> struct concat {
   using char_type = typename L::char_type;
 
   template <typename OutputIt, typename... Args>
-  constexpr OutputIt format(OutputIt out, const Args&... args) const {
+  constexpr OutputIt format(OutputIt out, const Args &...args) const {
     out = lhs.format(out, args...);
     return rhs.format(out, args...);
   }
@@ -232,7 +234,8 @@ struct unknown_format {};
 template <typename Char>
 constexpr size_t parse_text(basic_string_view<Char> str, size_t pos) {
   for (size_t size = str.size(); pos != size; ++pos) {
-    if (str[pos] == '{' || str[pos] == '}') break;
+    if (str[pos] == '{' || str[pos] == '}')
+      break;
   }
   return pos;
 }
@@ -293,11 +296,11 @@ template <typename Char> struct arg_id_handler {
 
 template <typename Char> struct parse_arg_id_result {
   arg_ref<Char> arg_id;
-  const Char* arg_id_end;
+  const Char *arg_id_end;
 };
 
 template <int ID, typename Char>
-constexpr auto parse_arg_id(const Char* begin, const Char* end) {
+constexpr auto parse_arg_id(const Char *begin, const Char *end) {
   auto handler = arg_id_handler<Char>{arg_ref<Char>{}};
   auto arg_id_end = parse_arg_id(begin, end, handler);
   return parse_arg_id_result<Char>{handler.arg_id, arg_id_end};
@@ -386,7 +389,7 @@ constexpr auto compile_format_string(S fmt) {
               runtime_named_field<char_type>{arg_id_result.arg_id.val.name},
               fmt);
         } else if constexpr (c == ':') {
-          return unknown_format();  // no type info for specs parsing
+          return unknown_format(); // no type info for specs parsing
         }
       }
     }
@@ -416,8 +419,8 @@ constexpr auto compile(S fmt) {
     return result;
   }
 }
-#endif  // defined(__cpp_if_constexpr) && defined(__cpp_return_type_deduction)
-}  // namespace detail
+#endif // defined(__cpp_if_constexpr) && defined(__cpp_return_type_deduction)
+} // namespace detail
 
 FMTQUILL_BEGIN_EXPORT
 
@@ -426,8 +429,8 @@ FMTQUILL_BEGIN_EXPORT
 template <typename CompiledFormat, typename... Args,
           typename Char = typename CompiledFormat::char_type,
           FMTQUILL_ENABLE_IF(detail::is_compiled_format<CompiledFormat>::value)>
-FMTQUILL_INLINE std::basic_string<Char> format(const CompiledFormat& cf,
-                                          const Args&... args) {
+FMTQUILL_INLINE std::basic_string<Char> format(const CompiledFormat &cf,
+                                               const Args &...args) {
   auto s = std::basic_string<Char>();
   cf.format(std::back_inserter(s), args...);
   return s;
@@ -435,19 +438,20 @@ FMTQUILL_INLINE std::basic_string<Char> format(const CompiledFormat& cf,
 
 template <typename OutputIt, typename CompiledFormat, typename... Args,
           FMTQUILL_ENABLE_IF(detail::is_compiled_format<CompiledFormat>::value)>
-constexpr FMTQUILL_INLINE OutputIt format_to(OutputIt out, const CompiledFormat& cf,
-                                        const Args&... args) {
+constexpr FMTQUILL_INLINE OutputIt format_to(OutputIt out,
+                                             const CompiledFormat &cf,
+                                             const Args &...args) {
   return cf.format(out, args...);
 }
 
 template <typename S, typename... Args,
           FMTQUILL_ENABLE_IF(detail::is_compiled_string<S>::value)>
-FMTQUILL_INLINE std::basic_string<typename S::char_type> format(const S&,
-                                                           Args&&... args) {
+FMTQUILL_INLINE std::basic_string<typename S::char_type>
+format(const S &, Args &&...args) {
   if constexpr (std::is_same<typename S::char_type, char>::value) {
     constexpr auto str = basic_string_view<typename S::char_type>(S());
     if constexpr (str.size() == 2 && str[0] == '{' && str[1] == '}') {
-      const auto& first = detail::first(args...);
+      const auto &first = detail::first(args...);
       if constexpr (detail::is_named_arg<
                         remove_cvref_t<decltype(first)>>::value) {
         return fmtquill::to_string(first.value);
@@ -469,7 +473,7 @@ FMTQUILL_INLINE std::basic_string<typename S::char_type> format(const S&,
 
 template <typename OutputIt, typename S, typename... Args,
           FMTQUILL_ENABLE_IF(detail::is_compiled_string<S>::value)>
-FMTQUILL_CONSTEXPR OutputIt format_to(OutputIt out, const S&, Args&&... args) {
+FMTQUILL_CONSTEXPR OutputIt format_to(OutputIt out, const S &, Args &&...args) {
   constexpr auto compiled = detail::compile<Args...>(S());
   if constexpr (std::is_same<remove_cvref_t<decltype(compiled)>,
                              detail::unknown_format>()) {
@@ -484,24 +488,25 @@ FMTQUILL_CONSTEXPR OutputIt format_to(OutputIt out, const S&, Args&&... args) {
 
 template <typename OutputIt, typename S, typename... Args,
           FMTQUILL_ENABLE_IF(detail::is_compiled_string<S>::value)>
-auto format_to_n(OutputIt out, size_t n, const S& fmt, Args&&... args)
-    -> format_to_n_result<OutputIt> {
+auto format_to_n(OutputIt out, size_t n, const S &fmt,
+                 Args &&...args) -> format_to_n_result<OutputIt> {
   using traits = detail::fixed_buffer_traits;
   auto buf = detail::iterator_buffer<OutputIt, char, traits>(out, n);
-  fmtquill::format_to(std::back_inserter(buf), fmt, std::forward<Args>(args)...);
+  fmtquill::format_to(std::back_inserter(buf), fmt,
+                      std::forward<Args>(args)...);
   return {buf.out(), buf.count()};
 }
 
 template <typename S, typename... Args,
           FMTQUILL_ENABLE_IF(detail::is_compiled_string<S>::value)>
-FMTQUILL_CONSTEXPR20 auto formatted_size(const S& fmt, const Args&... args)
-    -> size_t {
+FMTQUILL_CONSTEXPR20 auto formatted_size(const S &fmt,
+                                         const Args &...args) -> size_t {
   return fmtquill::format_to(detail::counting_iterator(), fmt, args...).count();
 }
 
 template <typename S, typename... Args,
           FMTQUILL_ENABLE_IF(detail::is_compiled_string<S>::value)>
-void print(std::FILE* f, const S& fmt, const Args&... args) {
+void print(std::FILE *f, const S &fmt, const Args &...args) {
   memory_buffer buffer;
   fmtquill::format_to(std::back_inserter(buffer), fmt, args...);
   detail::print(f, {buffer.data(), buffer.size()});
@@ -509,7 +514,7 @@ void print(std::FILE* f, const S& fmt, const Args&... args) {
 
 template <typename S, typename... Args,
           FMTQUILL_ENABLE_IF(detail::is_compiled_string<S>::value)>
-void print(const S& fmt, const Args&... args) {
+void print(const S &fmt, const Args &...args) {
   print(stdout, fmt, args...);
 }
 
@@ -520,10 +525,10 @@ template <detail_exported::fixed_string Str> constexpr auto operator""_cf() {
   return detail::udl_compiled_string<char_t, sizeof(Str.data) / sizeof(char_t),
                                      Str>();
 }
-}  // namespace literals
+} // namespace literals
 #endif
 
 FMTQUILL_END_EXPORT
 FMTQUILL_END_NAMESPACE
 
-#endif  // FMTQUILL_COMPILE_H_
+#endif // FMTQUILL_COMPILE_H_

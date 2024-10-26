@@ -136,7 +136,7 @@ build-all:
 
 # Run Analysis Tests
 run-analysis-tests:
-    ./build/tests
+    ./build/analysis/tests
 
 # Clean up All local builds
 clean-all:

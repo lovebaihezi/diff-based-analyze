@@ -11,67 +11,68 @@
 #include "format.h"
 
 #ifndef FMTQUILL_MODULE
-#  include <cerrno>
-#  include <cstddef>
-#  include <cstdio>
-#  include <system_error>  // std::system_error
+#include <cerrno>
+#include <cstddef>
+#include <cstdio>
+#include <system_error> // std::system_error
 
-#  if FMTQUILL_HAS_INCLUDE(<xlocale.h>)
-#    include <xlocale.h>  // LC_NUMERIC_MASK on macOS
-#  endif
-#endif  // FMTQUILL_MODULE
+#if FMTQUILL_HAS_INCLUDE(<xlocale.h>)
+#include <xlocale.h> // LC_NUMERIC_MASK on macOS
+#endif
+#endif // FMTQUILL_MODULE
 
 #ifndef FMTQUILL_USE_FCNTL
 // UWP doesn't provide _pipe.
-#  if FMTQUILL_HAS_INCLUDE("winapifamily.h")
-#    include <winapifamily.h>
-#  endif
-#  if (FMTQUILL_HAS_INCLUDE(<fcntl.h>) || defined(__APPLE__) || \
-       defined(__linux__)) &&                              \
-      (!defined(WINAPI_FAMILY) ||                          \
-       (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP))
-#    include <fcntl.h>  // for O_RDONLY
-#    define FMTQUILL_USE_FCNTL 1
-#  else
-#    define FMTQUILL_USE_FCNTL 0
-#  endif
+#if FMTQUILL_HAS_INCLUDE("winapifamily.h")
+#include <winapifamily.h>
+#endif
+#if (FMTQUILL_HAS_INCLUDE(<fcntl.h>) || defined(__APPLE__) ||                  \
+     defined(__linux__)) &&                                                    \
+    (!defined(WINAPI_FAMILY) || (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP))
+#include <fcntl.h> // for O_RDONLY
+#define FMTQUILL_USE_FCNTL 1
+#else
+#define FMTQUILL_USE_FCNTL 0
+#endif
 #endif
 
 #ifndef FMTQUILL_POSIX
-#  if defined(_WIN32) && !defined(__MINGW32__)
+#if defined(_WIN32) && !defined(__MINGW32__)
 // Fix warnings about deprecated symbols.
-#    define FMTQUILL_POSIX(call) _##call
-#  else
-#    define FMTQUILL_POSIX(call) call
-#  endif
+#define FMTQUILL_POSIX(call) _##call
+#else
+#define FMTQUILL_POSIX(call) call
+#endif
 #endif
 
 // Calls to system functions are wrapped in FMTQUILL_SYSTEM for testability.
 #ifdef FMTQUILL_SYSTEM
-#  define FMTQUILL_HAS_SYSTEM
-#  define FMTQUILL_POSIX_CALL(call) FMTQUILL_SYSTEM(call)
+#define FMTQUILL_HAS_SYSTEM
+#define FMTQUILL_POSIX_CALL(call) FMTQUILL_SYSTEM(call)
 #else
-#  define FMTQUILL_SYSTEM(call) ::call
-#  ifdef _WIN32
+#define FMTQUILL_SYSTEM(call) ::call
+#ifdef _WIN32
 // Fix warnings about deprecated symbols.
-#    define FMTQUILL_POSIX_CALL(call) ::_##call
-#  else
-#    define FMTQUILL_POSIX_CALL(call) ::call
-#  endif
+#define FMTQUILL_POSIX_CALL(call) ::_##call
+#else
+#define FMTQUILL_POSIX_CALL(call) ::call
+#endif
 #endif
 
 // Retries the expression while it evaluates to error_result and errno
 // equals to EINTR.
 #ifndef _WIN32
-#  define FMTQUILL_RETRY_VAL(result, expression, error_result) \
-    do {                                                  \
-      (result) = (expression);                            \
-    } while ((result) == (error_result) && errno == EINTR)
+#define FMTQUILL_RETRY_VAL(result, expression, error_result)                   \
+  do {                                                                         \
+    (result) = (expression);                                                   \
+  } while ((result) == (error_result) && errno == EINTR)
 #else
-#  define FMTQUILL_RETRY_VAL(result, expression, error_result) result = (expression)
+#define FMTQUILL_RETRY_VAL(result, expression, error_result)                   \
+  result = (expression)
 #endif
 
-#define FMTQUILL_RETRY(result, expression) FMTQUILL_RETRY_VAL(result, expression, -1)
+#define FMTQUILL_RETRY(result, expression)                                     \
+  FMTQUILL_RETRY_VAL(result, expression, -1)
 
 FMTQUILL_BEGIN_NAMESPACE
 FMTQUILL_BEGIN_EXPORT
@@ -93,33 +94,33 @@ FMTQUILL_BEGIN_EXPORT
  * This class is most useful as a parameter type for functions that wrap C APIs.
  */
 template <typename Char> class basic_cstring_view {
- private:
-  const Char* data_;
+private:
+  const Char *data_;
 
- public:
+public:
   /// Constructs a string reference object from a C string.
-  basic_cstring_view(const Char* s) : data_(s) {}
+  basic_cstring_view(const Char *s) : data_(s) {}
 
   /// Constructs a string reference from an `std::string` object.
-  basic_cstring_view(const std::basic_string<Char>& s) : data_(s.c_str()) {}
+  basic_cstring_view(const std::basic_string<Char> &s) : data_(s.c_str()) {}
 
   /// Returns the pointer to a C string.
-  auto c_str() const -> const Char* { return data_; }
+  auto c_str() const -> const Char * { return data_; }
 };
 
 using cstring_view = basic_cstring_view<char>;
 using wcstring_view = basic_cstring_view<wchar_t>;
 
 #ifdef _WIN32
-FMTQUILL_API const std::error_category& system_category() noexcept;
+FMTQUILL_API const std::error_category &system_category() noexcept;
 
 namespace detail {
-FMTQUILL_API void format_windows_error(buffer<char>& out, int error_code,
-                                  const char* message) noexcept;
+FMTQUILL_API void format_windows_error(buffer<char> &out, int error_code,
+                                       const char *message) noexcept;
 }
 
-FMTQUILL_API std::system_error vwindows_error(int error_code, string_view format_str,
-                                         format_args args);
+FMTQUILL_API std::system_error
+vwindows_error(int error_code, string_view format_str, format_args args);
 
 /**
  * Constructs a `std::system_error` object with the description of the form
@@ -148,39 +149,41 @@ FMTQUILL_API std::system_error vwindows_error(int error_code, string_view format
  */
 template <typename... Args>
 std::system_error windows_error(int error_code, string_view message,
-                                const Args&... args) {
-  return vwindows_error(error_code, message, fmtquill::make_format_args(args...));
+                                const Args &...args) {
+  return vwindows_error(error_code, message,
+                        fmtquill::make_format_args(args...));
 }
 
 // Reports a Windows error without throwing an exception.
 // Can be used to report errors from destructors.
-FMTQUILL_API void report_windows_error(int error_code, const char* message) noexcept;
+FMTQUILL_API void report_windows_error(int error_code,
+                                       const char *message) noexcept;
 #else
-inline auto system_category() noexcept -> const std::error_category& {
+inline auto system_category() noexcept -> const std::error_category & {
   return std::system_category();
 }
-#endif  // _WIN32
+#endif // _WIN32
 
 // std::system is not available on some platforms such as iOS (#2248).
 #ifdef __OSX__
 template <typename S, typename... Args, typename Char = char_t<S>>
-void say(const S& format_str, Args&&... args) {
+void say(const S &format_str, Args &&...args) {
   std::system(format("say \"{}\"", format(format_str, args...)).c_str());
 }
 #endif
 
 // A buffered file.
 class buffered_file {
- private:
-  FILE* file_;
+private:
+  FILE *file_;
 
   friend class file;
 
-  explicit buffered_file(FILE* f) : file_(f) {}
+  explicit buffered_file(FILE *f) : file_(f) {}
 
- public:
-  buffered_file(const buffered_file&) = delete;
-  void operator=(const buffered_file&) = delete;
+public:
+  buffered_file(const buffered_file &) = delete;
+  void operator=(const buffered_file &) = delete;
 
   // Constructs a buffered_file object which doesn't represent any file.
   buffered_file() noexcept : file_(nullptr) {}
@@ -188,12 +191,12 @@ class buffered_file {
   // Destroys the object closing the file it represents if any.
   FMTQUILL_API ~buffered_file() noexcept;
 
- public:
-  buffered_file(buffered_file&& other) noexcept : file_(other.file_) {
+public:
+  buffered_file(buffered_file &&other) noexcept : file_(other.file_) {
     other.file_ = nullptr;
   }
 
-  auto operator=(buffered_file&& other) -> buffered_file& {
+  auto operator=(buffered_file &&other) -> buffered_file & {
     close();
     file_ = other.file_;
     other.file_ = nullptr;
@@ -207,13 +210,13 @@ class buffered_file {
   FMTQUILL_API void close();
 
   // Returns the pointer to a FILE object representing this file.
-  auto get() const noexcept -> FILE* { return file_; }
+  auto get() const noexcept -> FILE * { return file_; }
 
   FMTQUILL_API auto descriptor() const -> int;
 
   template <typename... T>
-  inline void print(string_view fmt, const T&... args) {
-    const auto& vargs = fmtquill::make_format_args(args...);
+  inline void print(string_view fmt, const T &...args) {
+    const auto &vargs = fmtquill::make_format_args(args...);
     detail::is_locking<T...>() ? fmtquill::vprint_buffered(file_, fmt, vargs)
                                : fmtquill::vprint(file_, fmt, vargs);
   }
@@ -228,23 +231,23 @@ class buffered_file {
 // than an exception. You can get standard behavior by overriding the
 // invalid parameter handler with _set_invalid_parameter_handler.
 class FMTQUILL_API file {
- private:
-  int fd_;  // File descriptor.
+private:
+  int fd_; // File descriptor.
 
   // Constructs a file object with a given descriptor.
   explicit file(int fd) : fd_(fd) {}
 
   friend struct pipe;
 
- public:
+public:
   // Possible values for the oflag argument to the constructor.
   enum {
-    RDONLY = FMTQUILL_POSIX(O_RDONLY),  // Open for reading only.
-    WRONLY = FMTQUILL_POSIX(O_WRONLY),  // Open for writing only.
-    RDWR = FMTQUILL_POSIX(O_RDWR),      // Open for reading and writing.
-    CREATE = FMTQUILL_POSIX(O_CREAT),   // Create if the file doesn't exist.
-    APPEND = FMTQUILL_POSIX(O_APPEND),  // Open in append mode.
-    TRUNC = FMTQUILL_POSIX(O_TRUNC)     // Truncate the content of the file.
+    RDONLY = FMTQUILL_POSIX(O_RDONLY), // Open for reading only.
+    WRONLY = FMTQUILL_POSIX(O_WRONLY), // Open for writing only.
+    RDWR = FMTQUILL_POSIX(O_RDWR),     // Open for reading and writing.
+    CREATE = FMTQUILL_POSIX(O_CREAT),  // Create if the file doesn't exist.
+    APPEND = FMTQUILL_POSIX(O_APPEND), // Open in append mode.
+    TRUNC = FMTQUILL_POSIX(O_TRUNC)    // Truncate the content of the file.
   };
 
   // Constructs a file object which doesn't represent any file.
@@ -253,14 +256,14 @@ class FMTQUILL_API file {
   // Opens a file and constructs a file object representing this file.
   file(cstring_view path, int oflag);
 
- public:
-  file(const file&) = delete;
-  void operator=(const file&) = delete;
+public:
+  file(const file &) = delete;
+  void operator=(const file &) = delete;
 
-  file(file&& other) noexcept : fd_(other.fd_) { other.fd_ = -1; }
+  file(file &&other) noexcept : fd_(other.fd_) { other.fd_ = -1; }
 
   // Move assignment is not noexcept because close may throw.
-  auto operator=(file&& other) -> file& {
+  auto operator=(file &&other) -> file & {
     close();
     fd_ = other.fd_;
     other.fd_ = -1;
@@ -281,10 +284,10 @@ class FMTQUILL_API file {
   auto size() const -> long long;
 
   // Attempts to read count bytes from the file into the specified buffer.
-  auto read(void* buffer, size_t count) -> size_t;
+  auto read(void *buffer, size_t count) -> size_t;
 
   // Attempts to write count bytes from the specified buffer to the file.
-  auto write(const void* buffer, size_t count) -> size_t;
+  auto write(const void *buffer, size_t count) -> size_t;
 
   // Duplicates a file descriptor with the dup function and returns
   // the duplicate as a file object.
@@ -296,17 +299,17 @@ class FMTQUILL_API file {
 
   // Makes fd be the copy of this file descriptor, closing fd first if
   // necessary.
-  void dup2(int fd, std::error_code& ec) noexcept;
+  void dup2(int fd, std::error_code &ec) noexcept;
 
   // Creates a buffered_file object associated with this file and detaches
   // this file object from the file.
-  auto fdopen(const char* mode) -> buffered_file;
+  auto fdopen(const char *mode) -> buffered_file;
 
-#  if defined(_WIN32) && !defined(__MINGW32__)
+#if defined(_WIN32) && !defined(__MINGW32__)
   // Opens a file and constructs a file object representing this file by
   // wcstring_view filename. Windows only.
   static file open_windows_file(wcstring_view path, int oflag);
-#  endif
+#endif
 };
 
 struct FMTQUILL_API pipe {
@@ -352,25 +355,26 @@ struct ostream_params {
 
 // Intel has a bug that results in failure to deduce a constructor
 // for empty parameter packs.
-#  if defined(__INTEL_COMPILER) && __INTEL_COMPILER < 2000
+#if defined(__INTEL_COMPILER) && __INTEL_COMPILER < 2000
   ostream_params(int new_oflag) : oflag(new_oflag) {}
   ostream_params(detail::buffer_size bs) : buffer_size(bs.value) {}
-#  endif
+#endif
 };
 
 class file_buffer final : public buffer<char> {
- private:
+private:
   file file_;
 
-  FMTQUILL_API static void grow(buffer<char>& buf, size_t);
+  FMTQUILL_API static void grow(buffer<char> &buf, size_t);
 
- public:
-  FMTQUILL_API file_buffer(cstring_view path, const ostream_params& params);
-  FMTQUILL_API file_buffer(file_buffer&& other) noexcept;
+public:
+  FMTQUILL_API file_buffer(cstring_view path, const ostream_params &params);
+  FMTQUILL_API file_buffer(file_buffer &&other) noexcept;
   FMTQUILL_API ~file_buffer();
 
   void flush() {
-    if (size() == 0) return;
+    if (size() == 0)
+      return;
     file_.write(data(), size() * sizeof(data()[0]));
     clear();
   }
@@ -381,22 +385,22 @@ class file_buffer final : public buffer<char> {
   }
 };
 
-}  // namespace detail
+} // namespace detail
 
 constexpr auto buffer_size = detail::buffer_size();
 
 /// A fast output stream for writing from a single thread. Writing from
 /// multiple threads without external synchronization may result in a data race.
 class FMTQUILL_API ostream {
- private:
+private:
   FMTQUILL_MSC_WARNING(suppress : 4251)
   detail::file_buffer buffer_;
 
-  ostream(cstring_view path, const detail::ostream_params& params)
+  ostream(cstring_view path, const detail::ostream_params &params)
       : buffer_(path, params) {}
 
- public:
-  ostream(ostream&& other) : buffer_(std::move(other.buffer_)) {}
+public:
+  ostream(ostream &&other) : buffer_(std::move(other.buffer_)) {}
 
   ~ostream();
 
@@ -409,7 +413,7 @@ class FMTQUILL_API ostream {
 
   /// Formats `args` according to specifications in `fmt` and writes the
   /// output to the file.
-  template <typename... T> void print(format_string<T...> fmt, T&&... args) {
+  template <typename... T> void print(format_string<T...> fmt, T &&...args) {
     vformat_to(appender(buffer_), fmt, fmtquill::make_format_args(args...));
   }
 };
@@ -431,9 +435,9 @@ template <typename... T>
 inline auto output_file(cstring_view path, T... params) -> ostream {
   return {path, detail::ostream_params(params...)};
 }
-#endif  // FMTQUILL_USE_FCNTL
+#endif // FMTQUILL_USE_FCNTL
 
 FMTQUILL_END_EXPORT
 FMTQUILL_END_NAMESPACE
 
-#endif  // FMTQUILL_OS_H_
+#endif // FMTQUILL_OS_H_

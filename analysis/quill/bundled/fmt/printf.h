@@ -9,8 +9,8 @@
 #define FMTQUILL_PRINTF_H_
 
 #ifndef FMTQUILL_MODULE
-#  include <algorithm>  // std::max
-#  include <limits>     // std::numeric_limits
+#include <algorithm> // std::max
+#include <limits>    // std::numeric_limits
 #endif
 
 #include "format.h"
@@ -23,7 +23,7 @@ template <typename T> struct printf_formatter {
 };
 
 template <typename Char> class basic_printf_context {
- private:
+private:
   basic_appender<Char> out_;
   basic_format_args<basic_printf_context> args_;
 
@@ -31,7 +31,7 @@ template <typename Char> class basic_printf_context {
                     std::is_same<Char, wchar_t>::value,
                 "Unsupported code unit type.");
 
- public:
+public:
   using char_type = Char;
   using parse_context_type = basic_format_parse_context<Char>;
   template <typename T> using formatter_type = printf_formatter<T>;
@@ -107,18 +107,19 @@ template <> struct make_unsigned_or_bool<bool> {
 };
 
 template <typename T, typename Context> class arg_converter {
- private:
+private:
   using char_type = typename Context::char_type;
 
-  basic_format_arg<Context>& arg_;
+  basic_format_arg<Context> &arg_;
   char_type type_;
 
- public:
-  arg_converter(basic_format_arg<Context>& arg, char_type type)
+public:
+  arg_converter(basic_format_arg<Context> &arg, char_type type)
       : arg_(arg), type_(type) {}
 
   void operator()(bool value) {
-    if (type_ != 's') operator()<bool>(value);
+    if (type_ != 's')
+      operator()<bool>(value);
   }
 
   template <typename U, FMTQUILL_ENABLE_IF(std::is_integral<U>::value)>
@@ -150,7 +151,7 @@ template <typename T, typename Context> class arg_converter {
   }
 
   template <typename U, FMTQUILL_ENABLE_IF(!std::is_integral<U>::value)>
-  void operator()(U) {}  // No conversion needed for non-integral types.
+  void operator()(U) {} // No conversion needed for non-integral types.
 };
 
 // Converts an integer argument to T for printf, if T is an integral type.
@@ -158,17 +159,17 @@ template <typename T, typename Context> class arg_converter {
 // type depending on the type specifier: 'd' and 'i' - signed, other -
 // unsigned).
 template <typename T, typename Context, typename Char>
-void convert_arg(basic_format_arg<Context>& arg, Char type) {
+void convert_arg(basic_format_arg<Context> &arg, Char type) {
   arg.visit(arg_converter<T, Context>(arg, type));
 }
 
 // Converts an integer argument to char for printf.
 template <typename Context> class char_converter {
- private:
-  basic_format_arg<Context>& arg_;
+private:
+  basic_format_arg<Context> &arg_;
 
- public:
-  explicit char_converter(basic_format_arg<Context>& arg) : arg_(arg) {}
+public:
+  explicit char_converter(basic_format_arg<Context> &arg) : arg_(arg) {}
 
   template <typename T, FMTQUILL_ENABLE_IF(std::is_integral<T>::value)>
   void operator()(T value) {
@@ -177,24 +178,24 @@ template <typename Context> class char_converter {
   }
 
   template <typename T, FMTQUILL_ENABLE_IF(!std::is_integral<T>::value)>
-  void operator()(T) {}  // No conversion needed for non-integral types.
+  void operator()(T) {} // No conversion needed for non-integral types.
 };
 
 // An argument visitor that return a pointer to a C string if argument is a
 // string or null otherwise.
 template <typename Char> struct get_cstring {
-  template <typename T> auto operator()(T) -> const Char* { return nullptr; }
-  auto operator()(const Char* s) -> const Char* { return s; }
+  template <typename T> auto operator()(T) -> const Char * { return nullptr; }
+  auto operator()(const Char *s) -> const Char * { return s; }
 };
 
 // Checks if an argument is a valid printf width specifier and sets
 // left alignment if it is negative.
 class printf_width_handler {
- private:
-  format_specs& specs_;
+private:
+  format_specs &specs_;
 
- public:
-  explicit printf_width_handler(format_specs& specs) : specs_(specs) {}
+public:
+  explicit printf_width_handler(format_specs &specs) : specs_(specs) {}
 
   template <typename T, FMTQUILL_ENABLE_IF(std::is_integral<T>::value)>
   auto operator()(T value) -> unsigned {
@@ -204,7 +205,8 @@ class printf_width_handler {
       width = 0 - width;
     }
     unsigned int_max = to_unsigned(max_value<int>());
-    if (width > int_max) report_error("number is too big");
+    if (width > int_max)
+      report_error("number is too big");
     return static_cast<unsigned>(width);
   }
 
@@ -218,19 +220,19 @@ class printf_width_handler {
 // Workaround for a bug with the XL compiler when initializing
 // printf_arg_formatter's base class.
 template <typename Char>
-auto make_arg_formatter(basic_appender<Char> iter, format_specs& s)
-    -> arg_formatter<Char> {
+auto make_arg_formatter(basic_appender<Char> iter,
+                        format_specs &s) -> arg_formatter<Char> {
   return {iter, s, locale_ref()};
 }
 
 // The `printf` argument formatter.
 template <typename Char>
 class printf_arg_formatter : public arg_formatter<Char> {
- private:
+private:
   using base = arg_formatter<Char>;
   using context_type = basic_printf_context<Char>;
 
-  context_type& context_;
+  context_type &context_;
 
   void write_null_pointer(bool is_string = false) {
     auto s = this->specs;
@@ -238,9 +240,9 @@ class printf_arg_formatter : public arg_formatter<Char> {
     write_bytes<Char>(this->out, is_string ? "(null)" : "(nil)", s);
   }
 
- public:
-  printf_arg_formatter(basic_appender<Char> iter, format_specs& s,
-                       context_type& ctx)
+public:
+  printf_arg_formatter(basic_appender<Char> iter, format_specs &s,
+                       context_type &ctx)
       : base(make_arg_formatter(iter, s)), context_(ctx) {}
 
   void operator()(monostate value) { base::operator()(value); }
@@ -259,7 +261,7 @@ class printf_arg_formatter : public arg_formatter<Char> {
     }
     s.sign = sign::none;
     s.alt = false;
-    s.fill = ' ';  // Ignore '0' flag for char types.
+    s.fill = ' '; // Ignore '0' flag for char types.
     // align::numeric needs to be overwritten here since the '0' flag is
     // ignored for non-numeric types
     if (s.align == align::none || s.align == align::numeric)
@@ -272,14 +274,14 @@ class printf_arg_formatter : public arg_formatter<Char> {
     base::operator()(value);
   }
 
-  void operator()(const char* value) {
+  void operator()(const char *value) {
     if (value)
       base::operator()(value);
     else
       write_null_pointer(this->specs.type != presentation_type::pointer);
   }
 
-  void operator()(const wchar_t* value) {
+  void operator()(const wchar_t *value) {
     if (value)
       base::operator()(value);
     else
@@ -288,7 +290,7 @@ class printf_arg_formatter : public arg_formatter<Char> {
 
   void operator()(basic_string_view<Char> value) { base::operator()(value); }
 
-  void operator()(const void* value) {
+  void operator()(const void *value) {
     if (value)
       base::operator()(value);
     else
@@ -302,7 +304,7 @@ class printf_arg_formatter : public arg_formatter<Char> {
 };
 
 template <typename Char>
-void parse_flags(format_specs& specs, const Char*& it, const Char* end) {
+void parse_flags(format_specs &specs, const Char *&it, const Char *end) {
   for (; it != end; ++it) {
     switch (*it) {
     case '-':
@@ -315,7 +317,8 @@ void parse_flags(format_specs& specs, const Char*& it, const Char* end) {
       specs.fill = '0';
       break;
     case ' ':
-      if (specs.sign != sign::plus) specs.sign = sign::space;
+      if (specs.sign != sign::plus)
+        specs.sign = sign::space;
       break;
     case '#':
       specs.alt = true;
@@ -327,7 +330,7 @@ void parse_flags(format_specs& specs, const Char*& it, const Char* end) {
 }
 
 template <typename Char, typename GetArg>
-auto parse_header(const Char*& it, const Char* end, format_specs& specs,
+auto parse_header(const Char *&it, const Char *end, format_specs &specs,
                   GetArg get_arg) -> int {
   int arg_index = -1;
   Char c = *it;
@@ -335,15 +338,17 @@ auto parse_header(const Char*& it, const Char* end, format_specs& specs,
     // Parse an argument index (if followed by '$') or a width possibly
     // preceded with '0' flag(s).
     int value = parse_nonnegative_int(it, end, -1);
-    if (it != end && *it == '$') {  // value is an argument index
+    if (it != end && *it == '$') { // value is an argument index
       ++it;
       arg_index = value != -1 ? value : max_value<int>();
     } else {
-      if (c == '0') specs.fill = '0';
+      if (c == '0')
+        specs.fill = '0';
       if (value != 0) {
         // Nonzero value means that we parsed width and don't need to
         // parse it or flags again, so return now.
-        if (value == -1) report_error("number is too big");
+        if (value == -1)
+          report_error("number is too big");
         specs.width = value;
         return arg_index;
       }
@@ -354,7 +359,8 @@ auto parse_header(const Char*& it, const Char* end, format_specs& specs,
   if (it != end) {
     if (*it >= '0' && *it <= '9') {
       specs.width = parse_nonnegative_int(it, end, -1);
-      if (specs.width == -1) report_error("number is too big");
+      if (specs.width == -1)
+        report_error("number is too big");
     } else if (*it == '*') {
       ++it;
       specs.width = static_cast<int>(
@@ -364,8 +370,8 @@ auto parse_header(const Char*& it, const Char* end, format_specs& specs,
   return arg_index;
 }
 
-inline auto parse_printf_presentation_type(char c, type t, bool& upper)
-    -> presentation_type {
+inline auto parse_printf_presentation_type(char c, type t,
+                                           bool &upper) -> presentation_type {
   using pt = presentation_type;
   constexpr auto integral_set = sint_set | uint_set | bool_set | char_set;
   switch (c) {
@@ -410,7 +416,7 @@ inline auto parse_printf_presentation_type(char c, type t, bool& upper)
 }
 
 template <typename Char, typename Context>
-void vprintf(buffer<Char>& buf, basic_string_view<Char> format,
+void vprintf(buffer<Char> &buf, basic_string_view<Char> format,
              basic_format_args<Context> args) {
   using iterator = basic_appender<Char>;
   auto out = iterator(buf);
@@ -427,12 +433,12 @@ void vprintf(buffer<Char>& buf, basic_string_view<Char> format,
     return detail::get_arg(context, arg_index);
   };
 
-  const Char* start = parse_ctx.begin();
-  const Char* end = parse_ctx.end();
+  const Char *start = parse_ctx.begin();
+  const Char *end = parse_ctx.end();
   auto it = start;
   while (it != end) {
     if (!find<false, Char>(it, end, '%', it)) {
-      it = end;  // find leaves it == nullptr if it doesn't find '%'.
+      it = end; // find leaves it == nullptr if it doesn't find '%'.
       break;
     }
     Char c = *it++;
@@ -448,7 +454,8 @@ void vprintf(buffer<Char>& buf, basic_string_view<Char> format,
 
     // Parse argument index, flags and width.
     int arg_index = parse_header(it, end, specs, get_arg);
-    if (arg_index == 0) report_error("argument not found");
+    if (arg_index == 0)
+      report_error("argument not found");
 
     // Parse precision.
     if (it != end && *it == '.') {
@@ -480,13 +487,14 @@ void vprintf(buffer<Char>& buf, basic_string_view<Char> format,
           str, to_unsigned(nul != str_end ? nul - str : specs.precision));
       arg = make_arg<basic_printf_context<Char>>(sv);
     }
-    if (specs.alt && arg.visit(is_zero_int())) specs.alt = false;
+    if (specs.alt && arg.visit(is_zero_int()))
+      specs.alt = false;
     if (specs.fill.template get<Char>() == '0') {
       if (arg.is_arithmetic() && specs.align != align::left)
         specs.align = align::numeric;
       else
-        specs.fill = ' ';  // Ignore '0' flag for non-numeric types or if '-'
-                           // flag is also present.
+        specs.fill = ' '; // Ignore '0' flag for non-numeric types or if '-'
+                          // flag is also present.
     }
 
     // Parse length and convert the argument to the required type.
@@ -530,7 +538,8 @@ void vprintf(buffer<Char>& buf, basic_string_view<Char> format,
     }
 
     // Parse type.
-    if (it == end) report_error("invalid format string");
+    if (it == end)
+      report_error("invalid format string");
     char type = static_cast<char>(*it++);
     if (arg.is_integral()) {
       // Normalize type.
@@ -557,7 +566,7 @@ void vprintf(buffer<Char>& buf, basic_string_view<Char> format,
   }
   write(out, basic_string_view<Char>(start, to_unsigned(it - start)));
 }
-}  // namespace detail
+} // namespace detail
 
 using printf_context = basic_printf_context<char>;
 using wprintf_context = basic_printf_context<wchar_t>;
@@ -568,8 +577,9 @@ using wprintf_args = basic_format_args<wprintf_context>;
 /// Constructs an `format_arg_store` object that contains references to
 /// arguments and can be implicitly converted to `printf_args`.
 template <typename Char = char, typename... T>
-inline auto make_printf_args(T&... args)
-    -> decltype(fmtquill::make_format_args<basic_printf_context<Char>>(args...)) {
+inline auto make_printf_args(T &...args)
+    -> decltype(fmtquill::make_format_args<basic_printf_context<Char>>(
+        args...)) {
   return fmtquill::make_format_args<basic_printf_context<Char>>(args...);
 }
 
@@ -578,9 +588,9 @@ template <typename Char> struct vprintf_args {
 };
 
 template <typename Char>
-inline auto vsprintf(basic_string_view<Char> fmt,
-                     typename vprintf_args<Char>::type args)
-    -> std::basic_string<Char> {
+inline auto
+vsprintf(basic_string_view<Char> fmt,
+         typename vprintf_args<Char>::type args) -> std::basic_string<Char> {
   auto buf = basic_memory_buffer<Char>();
   detail::vprintf(buf, fmt, args);
   return to_string(buf);
@@ -595,13 +605,14 @@ inline auto vsprintf(basic_string_view<Char> fmt,
  *     std::string message = fmtquill::sprintf("The answer is %d", 42);
  */
 template <typename S, typename... T, typename Char = char_t<S>>
-inline auto sprintf(const S& fmt, const T&... args) -> std::basic_string<Char> {
-  return vsprintf(detail::to_string_view(fmt),
-                  fmtquill::make_format_args<basic_printf_context<Char>>(args...));
+inline auto sprintf(const S &fmt, const T &...args) -> std::basic_string<Char> {
+  return vsprintf(
+      detail::to_string_view(fmt),
+      fmtquill::make_format_args<basic_printf_context<Char>>(args...));
 }
 
 template <typename Char>
-inline auto vfprintf(std::FILE* f, basic_string_view<Char> fmt,
+inline auto vfprintf(std::FILE *f, basic_string_view<Char> fmt,
                      typename vprintf_args<Char>::type args) -> int {
   auto buf = basic_memory_buffer<Char>();
   detail::vprintf(buf, fmt, args);
@@ -620,15 +631,15 @@ inline auto vfprintf(std::FILE* f, basic_string_view<Char> fmt,
  *     fmtquill::fprintf(stderr, "Don't %s!", "panic");
  */
 template <typename S, typename... T, typename Char = char_t<S>>
-inline auto fprintf(std::FILE* f, const S& fmt, const T&... args) -> int {
+inline auto fprintf(std::FILE *f, const S &fmt, const T &...args) -> int {
   return vfprintf(f, detail::to_string_view(fmt),
                   make_printf_args<Char>(args...));
 }
 
 template <typename Char>
-FMTQUILL_DEPRECATED inline auto vprintf(basic_string_view<Char> fmt,
-                                   typename vprintf_args<Char>::type args)
-    -> int {
+FMTQUILL_DEPRECATED inline auto
+vprintf(basic_string_view<Char> fmt,
+        typename vprintf_args<Char>::type args) -> int {
   return vfprintf(stdout, fmt, args);
 }
 
@@ -641,16 +652,16 @@ FMTQUILL_DEPRECATED inline auto vprintf(basic_string_view<Char> fmt,
  *   fmtquill::printf("Elapsed time: %.2f seconds", 1.23);
  */
 template <typename... T>
-inline auto printf(string_view fmt, const T&... args) -> int {
+inline auto printf(string_view fmt, const T &...args) -> int {
   return vfprintf(stdout, fmt, make_printf_args(args...));
 }
 template <typename... T>
 FMTQUILL_DEPRECATED inline auto printf(basic_string_view<wchar_t> fmt,
-                                  const T&... args) -> int {
+                                       const T &...args) -> int {
   return vfprintf(stdout, fmt, make_printf_args<wchar_t>(args...));
 }
 
 FMTQUILL_END_EXPORT
 FMTQUILL_END_NAMESPACE
 
-#endif  // FMTQUILL_PRINTF_H_
+#endif // FMTQUILL_PRINTF_H_

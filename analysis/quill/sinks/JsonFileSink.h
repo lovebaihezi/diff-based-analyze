@@ -26,22 +26,20 @@
 QUILL_BEGIN_NAMESPACE
 
 /**
- * The JsonFileSinkConfig class holds the configuration options for the JsonFileSink
+ * The JsonFileSinkConfig class holds the configuration options for the
+ * JsonFileSink
  */
-class JsonFileSinkConfig : public FileSinkConfig
-{
+class JsonFileSinkConfig : public FileSinkConfig {
 public:
   JsonFileSinkConfig() = default;
 };
 
-class JsonFileSink : public FileSink
-{
+class JsonFileSink : public FileSink {
 public:
-  JsonFileSink(fs::path const& filename, JsonFileSinkConfig const& config,
+  JsonFileSink(fs::path const &filename, JsonFileSinkConfig const &config,
                FileEventNotifier file_event_notifier = FileEventNotifier{})
-    : FileSink(filename, static_cast<FileSinkConfig const&>(config), std::move(file_event_notifier))
-  {
-  }
+      : FileSink(filename, static_cast<FileSinkConfig const &>(config),
+                 std::move(file_event_notifier)) {}
 
   ~JsonFileSink() override = default;
 
@@ -59,43 +57,41 @@ public:
    * @param log_level_short_code Short code representing the log level.
    * @param named_args Vector of key-value pairs of named args
    */
-  QUILL_ATTRIBUTE_HOT void write_log(MacroMetadata const* log_metadata, uint64_t log_timestamp,
-                                     std::string_view thread_id, std::string_view thread_name,
-                                     std::string const& process_id, std::string_view logger_name, LogLevel log_level, std::string_view log_level_description,
-                                     std::string_view log_level_short_code,
-                                     std::vector<std::pair<std::string, std::string>> const* named_args,
-                                     std::string_view, std::string_view) override
-  {
+  QUILL_ATTRIBUTE_HOT void
+  write_log(MacroMetadata const *log_metadata, uint64_t log_timestamp,
+            std::string_view thread_id, std::string_view thread_name,
+            std::string const &process_id, std::string_view logger_name,
+            LogLevel log_level, std::string_view log_level_description,
+            std::string_view log_level_short_code,
+            std::vector<std::pair<std::string, std::string>> const *named_args,
+            std::string_view, std::string_view) override {
     _json_message.clear();
 
-    char const* message_format;
+    char const *message_format;
 
-    if (strchr(log_metadata->message_format(), '\n') != nullptr)
-    {
-      // The format string contains at least one new line and that would break the json message, it needs to be removed
+    if (strchr(log_metadata->message_format(), '\n') != nullptr) {
+      // The format string contains at least one new line and that would break
+      // the json message, it needs to be removed
       _format = log_metadata->message_format();
 
-      for (size_t pos = 0; (pos = _format.find('\n', pos)) != std::string::npos; pos++)
-      {
+      for (size_t pos = 0; (pos = _format.find('\n', pos)) != std::string::npos;
+           pos++) {
         _format.replace(pos, 1, " ");
       }
 
       message_format = _format.data();
-    }
-    else
-    {
+    } else {
       message_format = log_metadata->message_format();
     }
 
     _json_message.append(fmtquill::format(
-      R"({{"timestamp":"{}","file_name":"{}","line":"{}","thread_id":"{}","logger":"{}","log_level":"{}","message":"{}")",
-      std::to_string(log_timestamp), log_metadata->file_name(), log_metadata->line(), thread_id,
-      logger_name, log_level_description, message_format));
+        R"({{"timestamp":"{}","file_name":"{}","line":"{}","thread_id":"{}","logger":"{}","log_level":"{}","message":"{}")",
+        std::to_string(log_timestamp), log_metadata->file_name(),
+        log_metadata->line(), thread_id, logger_name, log_level_description,
+        message_format));
 
-    if (named_args)
-    {
-      for (auto const& [key, value] : *named_args)
-      {
+    if (named_args) {
+      for (auto const &[key, value] : *named_args) {
         _json_message.append(std::string_view{",\""});
         _json_message.append(key);
         _json_message.append(std::string_view{"\":\""});
@@ -106,9 +102,11 @@ public:
 
     _json_message.append(std::string_view{"}\n"});
 
-    StreamSink::write_log(log_metadata, log_timestamp, thread_id, thread_name, process_id, logger_name, log_level,
-                          log_level_description, log_level_short_code, named_args, std::string_view{},
-                          std::string_view{_json_message.data(), _json_message.size()});
+    StreamSink::write_log(
+        log_metadata, log_timestamp, thread_id, thread_name, process_id,
+        logger_name, log_level, log_level_description, log_level_short_code,
+        named_args, std::string_view{},
+        std::string_view{_json_message.data(), _json_message.size()});
   }
 
 private:

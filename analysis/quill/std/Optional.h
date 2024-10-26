@@ -12,8 +12,8 @@
 #include "quill/core/InlinedVector.h"
 #include "quill/core/Utf8Conv.h"
 
-#include "quill/bundled/fmt/std.h"
 #include "quill/bundled/fmt/format.h"
+#include "quill/bundled/fmt/std.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -21,51 +21,51 @@
 #include <vector>
 
 #if defined(_WIN32)
-  #include <string>
+#include <string>
 #endif
 
 QUILL_BEGIN_NAMESPACE
 
-template <typename T>
-struct Codec<std::optional<T>>
-{
-  static size_t compute_encoded_size(detail::SizeCacheVector& conditional_arg_size_cache,
-                                     std::optional<T> const& arg) noexcept
-  {
-    // We need to store the size of the vector in the buffer, so we reserve space for it.
-    // We add sizeof(bool) bytes to accommodate the size information.
+template <typename T> struct Codec<std::optional<T>> {
+  static size_t
+  compute_encoded_size(detail::SizeCacheVector &conditional_arg_size_cache,
+                       std::optional<T> const &arg) noexcept {
+    // We need to store the size of the vector in the buffer, so we reserve
+    // space for it. We add sizeof(bool) bytes to accommodate the size
+    // information.
     size_t total_size{sizeof(bool)};
 
-    if (arg.has_value())
-    {
-      total_size += Codec<T>::compute_encoded_size(conditional_arg_size_cache, *arg);
+    if (arg.has_value()) {
+      total_size +=
+          Codec<T>::compute_encoded_size(conditional_arg_size_cache, *arg);
     }
 
     return total_size;
   }
 
-  static void encode(std::byte*& buffer, detail::SizeCacheVector const& conditional_arg_size_cache,
-                     uint32_t& conditional_arg_size_cache_index, std::optional<T> const& arg) noexcept
-  {
-    Codec<bool>::encode(buffer, conditional_arg_size_cache, conditional_arg_size_cache_index, arg.has_value());
+  static void encode(std::byte *&buffer,
+                     detail::SizeCacheVector const &conditional_arg_size_cache,
+                     uint32_t &conditional_arg_size_cache_index,
+                     std::optional<T> const &arg) noexcept {
+    Codec<bool>::encode(buffer, conditional_arg_size_cache,
+                        conditional_arg_size_cache_index, arg.has_value());
 
-    if (arg.has_value())
-    {
-      Codec<T>::encode(buffer, conditional_arg_size_cache, conditional_arg_size_cache_index, *arg);
+    if (arg.has_value()) {
+      Codec<T>::encode(buffer, conditional_arg_size_cache,
+                       conditional_arg_size_cache_index, *arg);
     }
   }
 
-  static auto decode_arg(std::byte*& buffer)
-  {
+  static auto decode_arg(std::byte *&buffer) {
 #if defined(_WIN32)
-    if constexpr (std::disjunction_v<std::is_same<T, wchar_t*>, std::is_same<T, wchar_t const*>,
-                                     std::is_same<T, std::wstring>, std::is_same<T, std::wstring_view>>)
-    {
+    if constexpr (std::disjunction_v<std::is_same<T, wchar_t *>,
+                                     std::is_same<T, wchar_t const *>,
+                                     std::is_same<T, std::wstring>,
+                                     std::is_same<T, std::wstring_view>>) {
       std::string encoded_value{"none"};
 
       bool const has_value = Codec<bool>::decode_arg(buffer);
-      if (has_value)
-      {
+      if (has_value) {
         std::wstring_view arg = Codec<T>::decode_arg(buffer);
         encoded_value = "optional(\"";
         encoded_value += detail::utf8_encode(arg);
@@ -73,15 +73,12 @@ struct Codec<std::optional<T>>
       }
 
       return encoded_value;
-    }
-    else
-    {
+    } else {
 #endif
       std::optional<T> arg{std::nullopt};
 
       bool const has_value = Codec<bool>::decode_arg(buffer);
-      if (has_value)
-      {
+      if (has_value) {
         arg = Codec<T>::decode_arg(buffer);
       }
 
@@ -92,8 +89,8 @@ struct Codec<std::optional<T>>
 #endif
   }
 
-  static void decode_and_store_arg(std::byte*& buffer, DynamicFormatArgStore* args_store)
-  {
+  static void decode_and_store_arg(std::byte *&buffer,
+                                   DynamicFormatArgStore *args_store) {
     args_store->push_back(decode_arg(buffer));
   }
 };

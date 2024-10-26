@@ -22,20 +22,20 @@
 #include <vector>
 
 #if defined(_WIN32)
-  #if !defined(WIN32_LEAN_AND_MEAN)
-    #define WIN32_LEAN_AND_MEAN
-  #endif
+#if !defined(WIN32_LEAN_AND_MEAN)
+#define WIN32_LEAN_AND_MEAN
+#endif
 
-  #if !defined(NOMINMAX)
-    // Mingw already defines this, so no need to redefine
-    #define NOMINMAX
-  #endif
+#if !defined(NOMINMAX)
+// Mingw already defines this, so no need to redefine
+#define NOMINMAX
+#endif
 
-  #include <io.h>
-  #include <windows.h>
+#include <io.h>
+#include <windows.h>
 #else
-  #include <cstdlib>
-  #include <unistd.h>
+#include <cstdlib>
+#include <unistd.h>
 #endif
 
 QUILL_BEGIN_NAMESPACE
@@ -47,22 +47,15 @@ class MacroMetadata;
 /**
  * Represents console colours
  */
-class ConsoleColours
-{
+class ConsoleColours {
 private:
   // define our own to avoid including windows.h in the header..
   using WORD = unsigned short;
 
 public:
-  enum class ColourMode
-  {
-    Always,
-    Automatic,
-    Never
-  };
+  enum class ColourMode { Always, Automatic, Never };
 
-  ConsoleColours()
-  {
+  ConsoleColours() {
     // by default _using_colours is false
     _colours.fill(white);
   }
@@ -72,8 +65,7 @@ public:
   /**
    * Sets some default colours for terminal
    */
-  void set_default_colours() noexcept
-  {
+  void set_default_colours() noexcept {
     set_colour(LogLevel::TraceL3, white);
     set_colour(LogLevel::TraceL2, white);
     set_colour(LogLevel::TraceL1, white);
@@ -82,7 +74,8 @@ public:
     set_colour(LogLevel::Notice, white | bold);
     set_colour(LogLevel::Warning, yellow | bold);
     set_colour(LogLevel::Error, red | bold);
-    set_colour(LogLevel::Critical, on_red | bold | white); // white bold on red background
+    set_colour(LogLevel::Critical,
+               on_red | bold | white); // white bold on red background
     set_colour(LogLevel::Backtrace, magenta);
   }
 
@@ -91,8 +84,7 @@ public:
    * @param log_level the log level
    * @param colour the colour
    */
-  void set_colour(LogLevel log_level, WORD colour) noexcept
-  {
+  void set_colour(LogLevel log_level, WORD colour) noexcept {
     auto const log_lvl = static_cast<uint32_t>(log_level);
     _colours[log_lvl] = colour;
     _using_colours = true;
@@ -101,8 +93,7 @@ public:
   /**
    * @return true if we are in terminal and have also enabled colours
    */
-  QUILL_NODISCARD bool can_use_colours() const noexcept
-  {
+  QUILL_NODISCARD bool can_use_colours() const noexcept {
     return _can_use_colours && _using_colours;
   }
 
@@ -116,8 +107,7 @@ public:
    * @param log_level the message log level
    * @return the configured colour for this log level
    */
-  QUILL_NODISCARD WORD colour_code(LogLevel log_level) const noexcept
-  {
+  QUILL_NODISCARD WORD colour_code(LogLevel log_level) const noexcept {
     auto const log_lvl = static_cast<uint32_t>(log_level);
     return _colours[log_lvl];
   }
@@ -131,7 +121,8 @@ public:
   static constexpr WORD blue = FOREGROUND_BLUE;
   static constexpr WORD magenta = FOREGROUND_RED | FOREGROUND_BLUE;
   static constexpr WORD cyan = FOREGROUND_GREEN | FOREGROUND_BLUE;
-  static constexpr WORD white = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+  static constexpr WORD white =
+      FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
 
   static constexpr WORD on_red = BACKGROUND_RED;
   static constexpr WORD on_green = BACKGROUND_GREEN;
@@ -139,36 +130,33 @@ public:
   static constexpr WORD on_blue = BACKGROUND_BLUE;
   static constexpr WORD on_magenta = BACKGROUND_RED | BACKGROUND_BLUE;
   static constexpr WORD on_cyan = BACKGROUND_GREEN | BACKGROUND_BLUE;
-  static constexpr WORD on_white = BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_BLUE;
+  static constexpr WORD on_white =
+      BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_BLUE;
 
 private:
   friend class ConsoleSink;
 
   /***/
-  QUILL_NODISCARD QUILL_ATTRIBUTE_COLD static bool _is_in_terminal(FILE* file) noexcept
-  {
+  QUILL_NODISCARD QUILL_ATTRIBUTE_COLD static bool
+  _is_in_terminal(FILE *file) noexcept {
     bool const is_atty = _isatty(_fileno(file)) != 0;
 
-    // ::GetConsoleMode() should return 0 if file is redirected or does not point to the actual console
+    // ::GetConsoleMode() should return 0 if file is redirected or does not
+    // point to the actual console
     DWORD console_mode;
     bool const is_console =
-      GetConsoleMode(reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(file))), &console_mode) != 0;
+        GetConsoleMode(reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(file))),
+                       &console_mode) != 0;
 
     return is_atty && is_console;
   }
 
-  void _set_can_use_colours(FILE* file, ColourMode colour_mode) noexcept
-  {
-    if (colour_mode == ColourMode::Always)
-    {
+  void _set_can_use_colours(FILE *file, ColourMode colour_mode) noexcept {
+    if (colour_mode == ColourMode::Always) {
       _can_use_colours = true;
-    }
-    else if (colour_mode == ColourMode::Automatic)
-    {
+    } else if (colour_mode == ColourMode::Automatic) {
       _can_use_colours = _is_in_terminal(file);
-    }
-    else
-    {
+    } else {
       _can_use_colours = false;
     }
   }
@@ -182,18 +170,11 @@ private:
 /**
  * Represents console colours
  */
-class ConsoleColours
-{
+class ConsoleColours {
 public:
-  enum class ColourMode
-  {
-    Always,
-    Automatic,
-    Never
-  };
+  enum class ColourMode { Always, Automatic, Never };
 
-  ConsoleColours()
-  {
+  ConsoleColours() {
     // by default _using_colours is false
     _colours.fill(white);
   }
@@ -203,8 +184,7 @@ public:
   /**
    * Sets some default colours for terminal
    */
-  void set_default_colours() noexcept
-  {
+  void set_default_colours() noexcept {
     set_colour(LogLevel::TraceL3, white);
     set_colour(LogLevel::TraceL2, white);
     set_colour(LogLevel::TraceL1, white);
@@ -222,8 +202,7 @@ public:
    * @param log_level the log level
    * @param colour the colour
    */
-  void set_colour(LogLevel log_level, std::string_view colour) noexcept
-  {
+  void set_colour(LogLevel log_level, std::string_view colour) noexcept {
     auto const log_lvl = static_cast<uint32_t>(log_level);
     _colours[log_lvl] = colour;
     _using_colours = true;
@@ -232,8 +211,7 @@ public:
   /**
    * @return true if we are in terminal and have also enabled colours
    */
-  QUILL_NODISCARD bool can_use_colours() const noexcept
-  {
+  QUILL_NODISCARD bool can_use_colours() const noexcept {
     return _can_use_colours && _using_colours;
   }
 
@@ -247,8 +225,8 @@ public:
    * @param log_level the message log level
    * @return the configured colour for this log level
    */
-  QUILL_NODISCARD std::string_view colour_code(LogLevel log_level) const noexcept
-  {
+  QUILL_NODISCARD std::string_view
+  colour_code(LogLevel log_level) const noexcept {
     auto const log_lvl = static_cast<uint32_t>(log_level);
     return _colours[log_lvl];
   }
@@ -293,28 +271,27 @@ private:
   friend class ConsoleSink;
 
   /***/
-  QUILL_NODISCARD QUILL_ATTRIBUTE_COLD static bool _is_colour_terminal() noexcept
-  {
+  QUILL_NODISCARD QUILL_ATTRIBUTE_COLD static bool
+  _is_colour_terminal() noexcept {
     // Get term from env
-    auto* env_p = std::getenv("TERM");
+    auto *env_p = std::getenv("TERM");
 
-    if (env_p == nullptr)
-    {
+    if (env_p == nullptr) {
       return false;
     }
 
-    static constexpr const char* terms[] = {
-      "ansi",           "color",      "console",       "cygwin",     "gnome",     "konsole",
-      "kterm",          "linux",      "msys",          "putty",      "rxvt",      "screen",
-      "vt100",          "xterm",      "tmux",          "terminator", "alacritty", "gnome-terminal",
-      "xfce4-terminal", "lxterminal", "mate-terminal", "uxterm",     "eterm",     "tilix",
-      "rxvt-unicode",   "kde-konsole"};
+    static constexpr const char *terms[] = {
+        "ansi",          "color",          "console",        "cygwin",
+        "gnome",         "konsole",        "kterm",          "linux",
+        "msys",          "putty",          "rxvt",           "screen",
+        "vt100",         "xterm",          "tmux",           "terminator",
+        "alacritty",     "gnome-terminal", "xfce4-terminal", "lxterminal",
+        "mate-terminal", "uxterm",         "eterm",          "tilix",
+        "rxvt-unicode",  "kde-konsole"};
 
     // Loop through each term and check if it's found in env_p
-    for (const char* term : terms)
-    {
-      if (std::strstr(env_p, term) != nullptr)
-      {
+    for (const char *term : terms) {
+      if (std::strstr(env_p, term) != nullptr) {
         // term found
         return true;
       }
@@ -325,24 +302,18 @@ private:
   }
 
   /***/
-  QUILL_NODISCARD QUILL_ATTRIBUTE_COLD static bool _is_in_terminal(FILE* file) noexcept
-  {
+  QUILL_NODISCARD QUILL_ATTRIBUTE_COLD static bool
+  _is_in_terminal(FILE *file) noexcept {
     return ::isatty(fileno(file)) != 0;
   }
 
   /***/
-  void _set_can_use_colours(FILE* file, ColourMode colour_mode) noexcept
-  {
-    if (colour_mode == ColourMode::Always)
-    {
+  void _set_can_use_colours(FILE *file, ColourMode colour_mode) noexcept {
+    if (colour_mode == ColourMode::Always) {
       _can_use_colours = true;
-    }
-    else if (colour_mode == ColourMode::Automatic)
-    {
+    } else if (colour_mode == ColourMode::Automatic) {
       _can_use_colours = _is_in_terminal(file) && _is_colour_terminal();
-    }
-    else
-    {
+    } else {
       _can_use_colours = false;
     }
   }
@@ -355,8 +326,7 @@ private:
 #endif
 
 /***/
-class ConsoleSink : public StreamSink
-{
+class ConsoleSink : public StreamSink {
 public:
   /**
    * @brief Constructor
@@ -364,16 +334,19 @@ public:
    * @param stream stream name can only be "stdout" or "stderr"
    * @param colour_mode Determines when console colours are enabled.
    *                    - Always: Colours are always enabled.
-   *                    - Automatic: Colours are enabled automatically based on the environment (e.g., terminal support).
+   *                    - Automatic: Colours are enabled automatically based on
+   * the environment (e.g., terminal support).
    *                    - Never: Colours are never enabled.
    */
-  explicit ConsoleSink(ConsoleColours const& console_colours, std::string const& stream = "stdout",
-                       ConsoleColours::ColourMode colour_mode = ConsoleColours::ColourMode::Automatic)
-    : StreamSink{stream, nullptr}, _console_colours(console_colours)
-  {
+  explicit ConsoleSink(ConsoleColours const &console_colours,
+                       std::string const &stream = "stdout",
+                       ConsoleColours::ColourMode colour_mode =
+                           ConsoleColours::ColourMode::Automatic)
+      : StreamSink{stream, nullptr}, _console_colours(console_colours) {
     assert((stream == "stdout") || (stream == "stderr"));
 
-    // In this ctor we take a full copy of console_colours and in our instance we modify it
+    // In this ctor we take a full copy of console_colours and in our instance
+    // we modify it
     _console_colours._set_can_use_colours(_file, colour_mode);
   }
 
@@ -382,14 +355,14 @@ public:
    * @param enable_colours enable or disable console colours
    * @param stream stream name can only be "stdout" or "stderr"
    */
-  explicit ConsoleSink(bool enable_colours = true, std::string const& stream = "stdout")
-    : StreamSink{stream, nullptr}
-  {
+  explicit ConsoleSink(bool enable_colours = true,
+                       std::string const &stream = "stdout")
+      : StreamSink{stream, nullptr} {
     assert((stream == "stdout") || (stream == "stderr"));
 
-    if (enable_colours)
-    {
-      _console_colours._set_can_use_colours(_file, ConsoleColours::ColourMode::Automatic);
+    if (enable_colours) {
+      _console_colours._set_can_use_colours(
+          _file, ConsoleColours::ColourMode::Automatic);
       _console_colours.set_default_colours();
     }
   }
@@ -398,19 +371,19 @@ public:
    * @brief Constructor
    * @param colour_mode Determines when console colours are enabled.
    *                    - Always: Colours are always enabled.
-   *                    - Automatic: Colours are enabled automatically based on the environment (e.g., terminal support).
+   *                    - Automatic: Colours are enabled automatically based on
+   * the environment (e.g., terminal support).
    *                    - Never: Colours are never enabled.
    * @param stream stream name can only be "stdout" or "stderr"
    */
-  explicit ConsoleSink(ConsoleColours::ColourMode colour_mode, std::string const& stream = "stdout")
-    : StreamSink{stream, nullptr}
-  {
+  explicit ConsoleSink(ConsoleColours::ColourMode colour_mode,
+                       std::string const &stream = "stdout")
+      : StreamSink{stream, nullptr} {
     assert((stream == "stdout") || (stream == "stderr"));
 
     _console_colours._set_can_use_colours(_file, colour_mode);
 
-    if (colour_mode != ConsoleColours::ColourMode::Never)
-    {
+    if (colour_mode != ConsoleColours::ColourMode::Never) {
       _console_colours.set_default_colours();
     }
   }
@@ -431,36 +404,34 @@ public:
    * @param named_args vector of key-value pairs of named args
    * @param log_message log message
    */
-  QUILL_ATTRIBUTE_HOT void write_log(MacroMetadata const* log_metadata, uint64_t log_timestamp,
-                                     std::string_view thread_id, std::string_view thread_name,
-                                     std::string const& process_id, std::string_view logger_name,
-                                     LogLevel log_level, std::string_view log_level_description,
-                                     std::string_view log_level_short_code,
-                                     std::vector<std::pair<std::string, std::string>> const* named_args,
-                                     std::string_view log_message, std::string_view log_statement) override
-  {
+  QUILL_ATTRIBUTE_HOT void
+  write_log(MacroMetadata const *log_metadata, uint64_t log_timestamp,
+            std::string_view thread_id, std::string_view thread_name,
+            std::string const &process_id, std::string_view logger_name,
+            LogLevel log_level, std::string_view log_level_description,
+            std::string_view log_level_short_code,
+            std::vector<std::pair<std::string, std::string>> const *named_args,
+            std::string_view log_message,
+            std::string_view log_statement) override {
 #if defined(_WIN32)
-    if (_console_colours.using_colours())
-    {
+    if (_console_colours.using_colours()) {
       WORD const colour_code = _console_colours.colour_code(log_level);
       WORD orig_attribs{0};
 
-      QUILL_TRY
-      {
+      QUILL_TRY {
         // Set foreground colour and store the original attributes
         orig_attribs = _set_foreground_colour(colour_code);
       }
-  #if !defined(QUILL_NO_EXCEPTIONS)
-      QUILL_CATCH(std::exception const& e)
-      {
-        // GetConsoleScreenBufferInfo can fail sometimes on windows, in that case still write
-        // the log without colours
-        StreamSink::write_log(log_metadata, log_timestamp, thread_id, thread_name, process_id,
-                              logger_name, log_level, log_level_description, log_level_short_code,
+#if !defined(QUILL_NO_EXCEPTIONS)
+      QUILL_CATCH(std::exception const &e) {
+        // GetConsoleScreenBufferInfo can fail sometimes on windows, in that
+        // case still write the log without colours
+        StreamSink::write_log(log_metadata, log_timestamp, thread_id,
+                              thread_name, process_id, logger_name, log_level,
+                              log_level_description, log_level_short_code,
                               named_args, log_message, log_statement);
 
-        if (!_report_write_log_error_once)
-        {
+        if (!_report_write_log_error_once) {
           // Report the error once
           _report_write_log_error_once = true;
           QUILL_THROW(QuillError{e.what()});
@@ -469,84 +440,97 @@ public:
         // do not resume further, we already wrote the log statement
         return;
       }
-  #endif
+#endif
 
-      auto out_handle = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(_file)));
+      auto out_handle =
+          reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(_file)));
 
       // Write to console
       bool const write_to_console = WriteConsoleA(
-        out_handle, log_statement.data(), static_cast<DWORD>(log_statement.size()), nullptr, nullptr);
+          out_handle, log_statement.data(),
+          static_cast<DWORD>(log_statement.size()), nullptr, nullptr);
 
-      if (QUILL_UNLIKELY(!write_to_console))
-      {
-        auto const error = std::error_code(GetLastError(), std::system_category());
-        QUILL_THROW(QuillError{std::string{"WriteConsoleA failed. error: "} + error.message() +
-                               std::string{" errno: "} + std::to_string(error.value())});
+      if (QUILL_UNLIKELY(!write_to_console)) {
+        auto const error =
+            std::error_code(GetLastError(), std::system_category());
+        QUILL_THROW(QuillError{std::string{"WriteConsoleA failed. error: "} +
+                               error.message() + std::string{" errno: "} +
+                               std::to_string(error.value())});
       }
 
       // reset to orig colors
-      bool const set_text_attr = SetConsoleTextAttribute(out_handle, orig_attribs);
-      if (QUILL_UNLIKELY(!set_text_attr))
-      {
-        auto const error = std::error_code(GetLastError(), std::system_category());
-        QUILL_THROW(QuillError{std::string{"SetConsoleTextAttribute failed. error: "} + error.message() +
-                               std::string{" errno: "} + std::to_string(error.value())});
+      bool const set_text_attr =
+          SetConsoleTextAttribute(out_handle, orig_attribs);
+      if (QUILL_UNLIKELY(!set_text_attr)) {
+        auto const error =
+            std::error_code(GetLastError(), std::system_category());
+        QUILL_THROW(
+            QuillError{std::string{"SetConsoleTextAttribute failed. error: "} +
+                       error.message() + std::string{" errno: "} +
+                       std::to_string(error.value())});
       }
-    }
-    else
-    {
-      StreamSink::write_log(log_metadata, log_timestamp, thread_id, thread_name, process_id,
-                            logger_name, log_level, log_level_description, log_level_short_code,
+    } else {
+      StreamSink::write_log(log_metadata, log_timestamp, thread_id, thread_name,
+                            process_id, logger_name, log_level,
+                            log_level_description, log_level_short_code,
                             named_args, log_message, log_statement);
     }
 #else
-    if (_console_colours.can_use_colours())
-    {
+    if (_console_colours.can_use_colours()) {
       // Write colour code
-      std::string_view const colour_code = _console_colours.colour_code(log_level);
+      std::string_view const colour_code =
+          _console_colours.colour_code(log_level);
       safe_fwrite(colour_code.data(), sizeof(char), colour_code.size(), _file);
     }
 
     // Write record to file
-    StreamSink::write_log(log_metadata, log_timestamp, thread_id, thread_name, process_id,
-                          logger_name, log_level, log_level_description, log_level_short_code,
+    StreamSink::write_log(log_metadata, log_timestamp, thread_id, thread_name,
+                          process_id, logger_name, log_level,
+                          log_level_description, log_level_short_code,
                           named_args, log_message, log_statement);
 
-    if (_console_colours.can_use_colours())
-    {
-      safe_fwrite(ConsoleColours::reset.data(), sizeof(char), ConsoleColours::reset.size(), _file);
+    if (_console_colours.can_use_colours()) {
+      safe_fwrite(ConsoleColours::reset.data(), sizeof(char),
+                  ConsoleColours::reset.size(), _file);
     }
 #endif
   }
 
 private:
 #if defined(_WIN32)
-  QUILL_NODISCARD ConsoleColours::WORD _set_foreground_colour(ConsoleColours::WORD attributes)
-  {
+  QUILL_NODISCARD ConsoleColours::WORD
+  _set_foreground_colour(ConsoleColours::WORD attributes) {
     CONSOLE_SCREEN_BUFFER_INFO orig_buffer_info;
-    auto const out_handle = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(_file)));
+    auto const out_handle =
+        reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(_file)));
 
-    bool const screen_buffer_info = GetConsoleScreenBufferInfo(out_handle, &orig_buffer_info);
-    if (QUILL_UNLIKELY(!screen_buffer_info))
-    {
-      auto const error = std::error_code(GetLastError(), std::system_category());
-      QUILL_THROW(QuillError{std::string{"GetConsoleScreenBufferInfo failed. error: "} +
-                             error.message() + std::string{" errno: "} + std::to_string(error.value())});
+    bool const screen_buffer_info =
+        GetConsoleScreenBufferInfo(out_handle, &orig_buffer_info);
+    if (QUILL_UNLIKELY(!screen_buffer_info)) {
+      auto const error =
+          std::error_code(GetLastError(), std::system_category());
+      QUILL_THROW(
+          QuillError{std::string{"GetConsoleScreenBufferInfo failed. error: "} +
+                     error.message() + std::string{" errno: "} +
+                     std::to_string(error.value())});
     }
 
     WORD back_color = orig_buffer_info.wAttributes;
 
     // retrieve the current background color
-    back_color &=
-      static_cast<WORD>(~(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY));
+    back_color &= static_cast<WORD>(~(FOREGROUND_RED | FOREGROUND_GREEN |
+                                      FOREGROUND_BLUE | FOREGROUND_INTENSITY));
 
     // keep the background color unchanged
-    bool const console_text_attr = SetConsoleTextAttribute(out_handle, attributes | back_color);
-    if (QUILL_UNLIKELY(!console_text_attr))
-    {
-      auto const error = std::error_code(GetLastError(), std::system_category());
-      QUILL_THROW(QuillError{std::string{"SetConsoleTextAttribute failed. error: "} + error.message() +
-                             std::string{" errno: "} + std::to_string(error.value())});
+    bool const console_text_attr =
+        SetConsoleTextAttribute(out_handle, attributes | back_color);
+    if (QUILL_UNLIKELY(!console_text_attr)) {
+      auto const error =
+          std::error_code(GetLastError(), std::system_category());
+      QUILL_THROW(
+          QuillError{std::string{"SetConsoleTextAttribute failed. error: "} +
+                     error.message() + std::string{" errno: "} +
+                     std::to_string(error.value())});
     }
 
     return orig_buffer_info.wAttributes; // return orig attribs
@@ -554,7 +538,8 @@ private:
 #endif
 
 protected:
-  // protected in case someone wants to derive from this class and create a custom one, e.g. for json logging to stdout
+  // protected in case someone wants to derive from this class and create a
+  // custom one, e.g. for json logging to stdout
   ConsoleColours _console_colours;
 
 #if defined(_WIN32)

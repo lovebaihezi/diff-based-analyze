@@ -23,16 +23,14 @@
 
 QUILL_BEGIN_NAMESPACE
 
-namespace detail
-{
+namespace detail {
 /** Forward declaration */
 class LoggerBase;
 
 /***/
-struct TransitEvent
-{
+struct TransitEvent {
   using FormatBuffer = fmtquill::basic_memory_buffer<char, 88>;
-  
+
   /***/
   TransitEvent() = default;
 
@@ -40,26 +38,20 @@ struct TransitEvent
   ~TransitEvent() = default;
 
   /***/
-  TransitEvent(TransitEvent const& other) = delete;
-  TransitEvent& operator=(TransitEvent const& other) = delete;
+  TransitEvent(TransitEvent const &other) = delete;
+  TransitEvent &operator=(TransitEvent const &other) = delete;
 
   /***/
-  TransitEvent(TransitEvent&& other) noexcept
-    : timestamp(other.timestamp),
-      macro_metadata(other.macro_metadata),
-      logger_base(other.logger_base),
-      formatted_msg(std::move(other.formatted_msg)),
-      named_args(std::move(other.named_args)),
-      flush_flag(other.flush_flag),
-      dynamic_log_level(other.dynamic_log_level)
-  {
-  }
+  TransitEvent(TransitEvent &&other) noexcept
+      : timestamp(other.timestamp), macro_metadata(other.macro_metadata),
+        logger_base(other.logger_base),
+        formatted_msg(std::move(other.formatted_msg)),
+        named_args(std::move(other.named_args)), flush_flag(other.flush_flag),
+        dynamic_log_level(other.dynamic_log_level) {}
 
   /***/
-  TransitEvent& operator=(TransitEvent&& other) noexcept
-  {
-    if (this != &other)
-    {
+  TransitEvent &operator=(TransitEvent &&other) noexcept {
+    if (this != &other) {
       timestamp = other.timestamp;
       macro_metadata = other.macro_metadata;
       logger_base = other.logger_base;
@@ -73,24 +65,24 @@ struct TransitEvent
   }
 
   /***/
-  QUILL_NODISCARD QUILL_ATTRIBUTE_HOT LogLevel log_level() const noexcept
-  {
-    if (macro_metadata->log_level() != LogLevel::Dynamic)
-    {
+  QUILL_NODISCARD QUILL_ATTRIBUTE_HOT LogLevel log_level() const noexcept {
+    if (macro_metadata->log_level() != LogLevel::Dynamic) {
       return macro_metadata->log_level();
-    }
-    else
-    {
+    } else {
       return dynamic_log_level;
     }
   }
 
   uint64_t timestamp{0};
-  MacroMetadata const* macro_metadata{nullptr};
-  detail::LoggerBase* logger_base{nullptr};
-  std::unique_ptr<FormatBuffer> formatted_msg{std::make_unique<FormatBuffer>()}; /** buffer for message **/
-  std::unique_ptr<std::vector<std::pair<std::string, std::string>>> named_args; /** A unique ptr to save space as named args feature is not always used */
-  std::atomic<bool>* flush_flag{nullptr}; /** This is only used in the case of Event::Flush **/
+  MacroMetadata const *macro_metadata{nullptr};
+  detail::LoggerBase *logger_base{nullptr};
+  std::unique_ptr<FormatBuffer> formatted_msg{
+      std::make_unique<FormatBuffer>()}; /** buffer for message **/
+  std::unique_ptr<std::vector<std::pair<std::string, std::string>>>
+      named_args; /** A unique ptr to save space as named args feature is not
+                     always used */
+  std::atomic<bool> *flush_flag{
+      nullptr}; /** This is only used in the case of Event::Flush **/
   LogLevel dynamic_log_level{LogLevel::None};
 };
 } // namespace detail

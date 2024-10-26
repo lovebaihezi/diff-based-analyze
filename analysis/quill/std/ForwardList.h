@@ -12,8 +12,8 @@
 #include "quill/core/InlinedVector.h"
 #include "quill/core/Utf8Conv.h"
 
-#include "quill/bundled/fmt/ranges.h"
 #include "quill/bundled/fmt/format.h"
+#include "quill/bundled/fmt/ranges.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -21,88 +21,92 @@
 #include <vector>
 
 #if defined(_WIN32)
-  #include <string>
+#include <string>
 #endif
 
 QUILL_BEGIN_NAMESPACE
 
 template <typename T, typename Allocator>
-struct Codec<std::forward_list<T, Allocator>>
-{
-  static size_t compute_encoded_size(detail::SizeCacheVector& conditional_arg_size_cache,
-                                     std::forward_list<T, Allocator> const& arg) noexcept
-  {
-    // We need to store the size of the forward_list in the buffer, so we reserve space for it.
-    // We add sizeof(size_t) bytes to accommodate the size information.
+struct Codec<std::forward_list<T, Allocator>> {
+  static size_t
+  compute_encoded_size(detail::SizeCacheVector &conditional_arg_size_cache,
+                       std::forward_list<T, Allocator> const &arg) noexcept {
+    // We need to store the size of the forward_list in the buffer, so we
+    // reserve space for it. We add sizeof(size_t) bytes to accommodate the size
+    // information.
     size_t total_size{sizeof(size_t)};
 
-    // Cache the number of elements of the forward list to avoid iterating again when
-    // encoding. This information is inserted first to maintain sequence in the cache.
-    // It will be replaced with the actual count after calculating the size of elements.
+    // Cache the number of elements of the forward list to avoid iterating again
+    // when encoding. This information is inserted first to maintain sequence in
+    // the cache. It will be replaced with the actual count after calculating
+    // the size of elements.
     size_t number_of_elements{0};
-    conditional_arg_size_cache.push_back(static_cast<uint32_t>(number_of_elements));
+    conditional_arg_size_cache.push_back(
+        static_cast<uint32_t>(number_of_elements));
     size_t const index = conditional_arg_size_cache.size() - 1u;
 
-    for (auto const& elem : arg)
-    {
-      total_size += Codec<T>::compute_encoded_size(conditional_arg_size_cache, elem);
+    for (auto const &elem : arg) {
+      total_size +=
+          Codec<T>::compute_encoded_size(conditional_arg_size_cache, elem);
       ++number_of_elements;
     }
 
     assert((number_of_elements <= std::numeric_limits<uint32_t>::max()) &&
            "len is outside the supported range");
-    conditional_arg_size_cache.assign(index, static_cast<uint32_t>(number_of_elements));
+    conditional_arg_size_cache.assign(
+        index, static_cast<uint32_t>(number_of_elements));
     return total_size;
   }
 
-  static void encode(std::byte*& buffer, detail::SizeCacheVector const& conditional_arg_size_cache,
-                     uint32_t& conditional_arg_size_cache_index, std::forward_list<T, Allocator> const& arg) noexcept
-  {
+  static void encode(std::byte *&buffer,
+                     detail::SizeCacheVector const &conditional_arg_size_cache,
+                     uint32_t &conditional_arg_size_cache_index,
+                     std::forward_list<T, Allocator> const &arg) noexcept {
     // First encode the number of elements of the forward list
-    size_t const elems_num = conditional_arg_size_cache[conditional_arg_size_cache_index++];
-    Codec<size_t>::encode(buffer, conditional_arg_size_cache, conditional_arg_size_cache_index, elems_num);
+    size_t const elems_num =
+        conditional_arg_size_cache[conditional_arg_size_cache_index++];
+    Codec<size_t>::encode(buffer, conditional_arg_size_cache,
+                          conditional_arg_size_cache_index, elems_num);
 
-    for (auto const& elem : arg)
-    {
-      Codec<T>::encode(buffer, conditional_arg_size_cache, conditional_arg_size_cache_index, elem);
+    for (auto const &elem : arg) {
+      Codec<T>::encode(buffer, conditional_arg_size_cache,
+                       conditional_arg_size_cache_index, elem);
     }
   }
 
-  static auto decode_arg(std::byte*& buffer)
-  {
+  static auto decode_arg(std::byte *&buffer) {
 #if defined(_WIN32)
     // Wide string support
-    if constexpr (std::disjunction_v<std::is_same<T, wchar_t*>, std::is_same<T, wchar_t const*>,
-                                     std::is_same<T, std::wstring>, std::is_same<T, std::wstring_view>>)
-    {
+    if constexpr (std::disjunction_v<std::is_same<T, wchar_t *>,
+                                     std::is_same<T, wchar_t const *>,
+                                     std::is_same<T, std::wstring>,
+                                     std::is_same<T, std::wstring_view>>) {
       // Read the size
       size_t const number_of_elements = Codec<size_t>::decode_arg(buffer);
 
       std::vector<std::string> arg;
       arg.reserve(number_of_elements);
 
-      for (size_t i = 0; i < number_of_elements; ++i)
-      {
+      for (size_t i = 0; i < number_of_elements; ++i) {
         std::wstring_view const v = Codec<T>::decode_arg(buffer);
         arg.emplace_back(detail::utf8_encode(v));
       }
 
       return arg;
-    }
-    else
-    {
+    } else {
 #endif
       // Read the size
       size_t const number_of_elements = Codec<size_t>::decode_arg(buffer);
 
       std::forward_list<T, Allocator> arg;
 
-      auto last_inserted = arg.before_begin(); // Keeps track of the last inserted position
+      auto last_inserted =
+          arg.before_begin(); // Keeps track of the last inserted position
 
-      for (size_t i = 0; i < number_of_elements; ++i)
-      {
+      for (size_t i = 0; i < number_of_elements; ++i) {
         // Insert after the last inserted element and update the iterator
-        last_inserted = arg.emplace_after(last_inserted, Codec<T>::decode_arg(buffer));
+        last_inserted =
+            arg.emplace_after(last_inserted, Codec<T>::decode_arg(buffer));
       }
 
       return arg;
@@ -112,8 +116,8 @@ struct Codec<std::forward_list<T, Allocator>>
 #endif
   }
 
-  static void decode_and_store_arg(std::byte*& buffer, DynamicFormatArgStore* args_store)
-  {
+  static void decode_and_store_arg(std::byte *&buffer,
+                                   DynamicFormatArgStore *args_store) {
     args_store->push_back(decode_arg(buffer));
   }
 };

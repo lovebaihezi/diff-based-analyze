@@ -16,7 +16,8 @@
 QUILL_BEGIN_NAMESPACE
 
 /**
- * @brief Defines serialization (codec) functionality for trivially copyable user defined types.
+ * @brief Defines serialization (codec) functionality for trivially copyable
+ * user defined types.
  *
  * Example usage:
  *
@@ -53,38 +54,37 @@ QUILL_BEGIN_NAMESPACE
  * \endcode
  */
 
-template <typename T>
-struct TriviallyCopyableTypeCodec
-{
+template <typename T> struct TriviallyCopyableTypeCodec {
   static_assert(std::is_trivially_copyable_v<T>,
-                "T must be trivially copyable. Non-trivially copyable types can still be logged, "
-                "but you will need a different approach. Please refer to the documentation or "
+                "T must be trivially copyable. Non-trivially copyable types "
+                "can still be logged, "
+                "but you will need a different approach. Please refer to the "
+                "documentation or "
                 "examples for alternative methods.");
 
-  static size_t compute_encoded_size(detail::SizeCacheVector&, T const& arg) noexcept
-  {
+  static size_t compute_encoded_size(detail::SizeCacheVector &,
+                                     T const &arg) noexcept {
     return sizeof(arg);
   }
 
-  static void encode(std::byte*& buffer, detail::SizeCacheVector const&, uint32_t&, T const& arg) noexcept
-  {
+  static void encode(std::byte *&buffer, detail::SizeCacheVector const &,
+                     uint32_t &, T const &arg) noexcept {
     std::memcpy(buffer, &arg, sizeof(arg));
     buffer += sizeof(arg);
   }
 
-  static T decode_arg(std::byte*& buffer)
-  {
+  static T decode_arg(std::byte *&buffer) {
     T arg;
 
     // Cast to void* to silence compiler warning about private members
-    std::memcpy(static_cast<void*>(&arg), buffer, sizeof(arg));
+    std::memcpy(static_cast<void *>(&arg), buffer, sizeof(arg));
 
     buffer += sizeof(arg);
     return arg;
   }
 
-  static void decode_and_store_arg(std::byte*& buffer, DynamicFormatArgStore* args_store)
-  {
+  static void decode_and_store_arg(std::byte *&buffer,
+                                   DynamicFormatArgStore *args_store) {
     args_store->push_back(decode_arg(buffer));
   }
 };

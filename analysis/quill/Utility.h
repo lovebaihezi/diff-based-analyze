@@ -14,27 +14,26 @@
 
 QUILL_BEGIN_NAMESPACE
 
-namespace utility
-{
+namespace utility {
 /**
  * @brief Formats the given buffer to hexadecimal representation.
  *
- * This function converts the contents of the input buffer to a hexadecimal string.
+ * This function converts the contents of the input buffer to a hexadecimal
+ * string.
  *
  * @param buffer Pointer to the input buffer.
  * @param size Size of the input buffer.
- * @return A string containing the hexadecimal representation of the given buffer.
+ * @return A string containing the hexadecimal representation of the given
+ * buffer.
  */
 template <typename T>
-QUILL_NODISCARD std::string to_hex(T* buffer, size_t size) noexcept
-{
+QUILL_NODISCARD std::string to_hex(T *buffer, size_t size) noexcept {
   static constexpr char hex_chars[] = "0123456789ABCDEF";
 
   std::string hex_string;
   hex_string.reserve(3 * size);
 
-  for (size_t i = 0; i < size; ++i)
-  {
+  for (size_t i = 0; i < size; ++i) {
     // 00001111 mask
     static constexpr uint8_t mask = 0x0Fu;
 
@@ -44,8 +43,7 @@ QUILL_NODISCARD std::string to_hex(T* buffer, size_t size) noexcept
     // add the remaining bits
     hex_string += hex_chars[buffer[i] & mask];
 
-    if (i != (size - 1))
-    {
+    if (i != (size - 1)) {
       // add a space delimiter
       hex_string += ' ';
     }

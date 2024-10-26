@@ -9,12 +9,12 @@
 #define FMTQUILL_ARGS_H_
 
 #ifndef FMTQUILL_MODULE
-#  include <functional>  // std::reference_wrapper
-#  include <memory>      // std::unique_ptr
-#  include <vector>
+#include <functional> // std::reference_wrapper
+#include <memory>     // std::unique_ptr
+#include <vector>
 #endif
 
-#include "format.h"  // std_string_view
+#include "format.h" // std_string_view
 
 FMTQUILL_BEGIN_NAMESPACE
 
@@ -24,10 +24,10 @@ template <typename T> struct is_reference_wrapper : std::false_type {};
 template <typename T>
 struct is_reference_wrapper<std::reference_wrapper<T>> : std::true_type {};
 
-template <typename T> auto unwrap(const T& v) -> const T& { return v; }
+template <typename T> auto unwrap(const T &v) -> const T & { return v; }
 template <typename T>
-auto unwrap(const std::reference_wrapper<T>& v) -> const T& {
-  return static_cast<const T&>(v);
+auto unwrap(const std::reference_wrapper<T> &v) -> const T & {
+  return static_cast<const T &>(v);
 }
 
 // node is defined outside dynamic_arg_list to workaround a C2504 bug in MSVC
@@ -46,25 +46,25 @@ class dynamic_arg_list {
     T value;
 
     template <typename Arg>
-    FMTQUILL_CONSTEXPR typed_node(const Arg& arg) : value(arg) {}
+    FMTQUILL_CONSTEXPR typed_node(const Arg &arg) : value(arg) {}
 
     template <typename Char>
-    FMTQUILL_CONSTEXPR typed_node(const basic_string_view<Char>& arg)
+    FMTQUILL_CONSTEXPR typed_node(const basic_string_view<Char> &arg)
         : value(arg.data(), arg.size()) {}
   };
 
   std::unique_ptr<node<>> head_;
 
- public:
-  template <typename T, typename Arg> auto push(const Arg& arg) -> const T& {
+public:
+  template <typename T, typename Arg> auto push(const Arg &arg) -> const T & {
     auto new_node = std::unique_ptr<typed_node<T>>(new typed_node<T>(arg));
-    auto& value = new_node->value;
+    auto &value = new_node->value;
     new_node->next = std::move(head_);
     head_ = std::move(new_node);
     return value;
   }
 };
-}  // namespace detail
+} // namespace detail
 
 /**
  * A dynamic list of formatting arguments with storage.
@@ -79,7 +79,7 @@ class dynamic_format_arg_store
     : public basic_format_args<Context>
 #endif
 {
- private:
+private:
   using char_type = typename Context::char_type;
 
   template <typename T> struct need_copy {
@@ -119,22 +119,22 @@ class dynamic_format_arg_store
                 : static_cast<unsigned long long>(detail::has_named_args_bit));
   }
 
-  auto data() const -> const basic_format_arg<Context>* {
+  auto data() const -> const basic_format_arg<Context> * {
     return named_info_.empty() ? data_.data() : data_.data() + 1;
   }
 
-  template <typename T> void emplace_arg(const T& arg) {
+  template <typename T> void emplace_arg(const T &arg) {
     data_.emplace_back(detail::make_arg<Context>(arg));
   }
 
   template <typename T>
-  void emplace_arg(const detail::named_arg<char_type, T>& arg) {
+  void emplace_arg(const detail::named_arg<char_type, T> &arg) {
     if (named_info_.empty()) {
-      constexpr const detail::named_arg_info<char_type>* zero_ptr{nullptr};
+      constexpr const detail::named_arg_info<char_type> *zero_ptr{nullptr};
       data_.insert(data_.begin(), {zero_ptr, 0});
     }
     data_.emplace_back(detail::make_arg<Context>(detail::unwrap(arg.value)));
-    auto pop_one = [](std::vector<basic_format_arg<Context>>* data) {
+    auto pop_one = [](std::vector<basic_format_arg<Context>> *data) {
       data->pop_back();
     };
     std::unique_ptr<std::vector<basic_format_arg<Context>>, decltype(pop_one)>
@@ -144,7 +144,7 @@ class dynamic_format_arg_store
     guard.release();
   }
 
- public:
+public:
   constexpr dynamic_format_arg_store() = default;
 
   /**
@@ -162,7 +162,7 @@ class dynamic_format_arg_store
    *     store.push_back(1.5f);
    *     std::string result = fmtquill::vformat("{} and {} and {}", store);
    */
-  template <typename T> void push_back(const T& arg) {
+  template <typename T> void push_back(const T &arg) {
     if (detail::const_check(need_copy<T>::value))
       emplace_arg(dynamic_args_.push<stored_type<T>>(arg));
     else
@@ -195,12 +195,12 @@ class dynamic_format_arg_store
    * copying of the argument. The name is always copied into the store.
    */
   template <typename T>
-  void push_back(const detail::named_arg<char_type, T>& arg) {
-    const char_type* arg_name =
+  void push_back(const detail::named_arg<char_type, T> &arg) {
+    const char_type *arg_name =
         dynamic_args_.push<std::basic_string<char_type>>(arg.name).c_str();
     if (detail::const_check(need_copy<T>::value)) {
-      emplace_arg(
-          fmtquill::arg(arg_name, dynamic_args_.push<stored_type<T>>(arg.value)));
+      emplace_arg(fmtquill::arg(arg_name,
+                                dynamic_args_.push<stored_type<T>>(arg.value)));
     } else {
       emplace_arg(fmtquill::arg(arg_name, arg.value));
     }
@@ -217,7 +217,7 @@ class dynamic_format_arg_store
   /// `new_cap_named` named arguments.
   void reserve(size_t new_cap, size_t new_cap_named) {
     FMTQUILL_ASSERT(new_cap >= new_cap_named,
-               "Set of arguments includes set of named arguments");
+                    "Set of arguments includes set of named arguments");
     data_.reserve(new_cap);
     named_info_.reserve(new_cap_named);
   }
@@ -225,4 +225,4 @@ class dynamic_format_arg_store
 
 FMTQUILL_END_NAMESPACE
 
-#endif  // FMTQUILL_ARGS_H_
+#endif // FMTQUILL_ARGS_H_

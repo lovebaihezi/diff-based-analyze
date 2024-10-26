@@ -23,14 +23,14 @@ class MacroMetadata;
  * Base filter class.
  * Filters can be added to Sinks
  */
-class Filter
-{
+class Filter {
 public:
   /**
    * Constructor
    * @param filter_name unique filter name
    */
-  explicit Filter(std::string filter_name) : _filter_name(std::move(filter_name)) {}
+  explicit Filter(std::string filter_name)
+      : _filter_name(std::move(filter_name)) {}
 
   /**
    * Destructor
@@ -49,19 +49,22 @@ public:
    * @param log_message The log message.
    * @param log_statement The log statement.
    *
-   * @return true if the log message should be written to the file, false otherwise
+   * @return true if the log message should be written to the file, false
+   * otherwise
    */
-  QUILL_NODISCARD virtual bool filter(MacroMetadata const* log_metadata, uint64_t log_timestamp,
-                                      std::string_view thread_id, std::string_view thread_name,
-                                      std::string_view logger_name, LogLevel log_level, std::string_view log_message,
-                                      std::string_view log_statement) noexcept = 0;
+  QUILL_NODISCARD virtual bool
+  filter(MacroMetadata const *log_metadata, uint64_t log_timestamp,
+         std::string_view thread_id, std::string_view thread_name,
+         std::string_view logger_name, LogLevel log_level,
+         std::string_view log_message,
+         std::string_view log_statement) noexcept = 0;
 
   /**
-   * Gets the name of the filter. Only useful if an existing filter is needed to be looked up
+   * Gets the name of the filter. Only useful if an existing filter is needed to
+   * be looked up
    * @return the name of the filter
    */
-  QUILL_NODISCARD virtual std::string const& get_filter_name() const noexcept
-  {
+  QUILL_NODISCARD virtual std::string const &get_filter_name() const noexcept {
     return _filter_name;
   }
 

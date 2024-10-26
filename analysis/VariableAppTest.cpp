@@ -8,7 +8,8 @@
 
 namespace diff_analysis {
 TEST_CASE("Run App on sinle File to generate Inst Variable", "[App, LLVM]") {
-  const char *argv[] = {"./diff_analysis", "cases/C-U/before.ll"};
+  const char *argv[] = {"./diff_analysis",
+                        "build/tests/challenges-a/rename-before.ll"};
   constexpr std::size_t argc = sizeof(argv) / sizeof(const char *);
   REQUIRE(argc == 2);
 

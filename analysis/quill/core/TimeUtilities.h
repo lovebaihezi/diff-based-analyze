@@ -19,8 +19,7 @@ struct tm;
 
 QUILL_BEGIN_NAMESPACE
 
-namespace detail
-{
+namespace detail {
 /**
  * Portable gmtime_r or _s per operating system
  * @param timer to a time_t object to convert
@@ -28,22 +27,21 @@ namespace detail
  * @return copy of the buf pointer, or throws on error
  * @throws std::system_error
  */
-inline tm* gmtime_rs(time_t const* timer, tm* buf)
-{
+inline tm *gmtime_rs(time_t const *timer, tm *buf) {
 #if defined(_WIN32)
   errno_t const res = gmtime_s(buf, timer);
-  if (res)
-  {
+  if (res) {
     QUILL_THROW(QuillError{
-      std::string{"failed to call gmtime_rs, with error message errno: " + std::to_string(res)}});
+        std::string{"failed to call gmtime_rs, with error message errno: " +
+                    std::to_string(res)}});
   }
   return buf;
 #else
-  tm* res = gmtime_r(timer, buf);
-  if (QUILL_UNLIKELY(!res))
-  {
-    QUILL_THROW(QuillError{std::string{"failed to call gmtime_rs, with error message errno: " +
-                                       std::to_string(errno) + " error: " + strerror(errno)}});
+  tm *res = gmtime_r(timer, buf);
+  if (QUILL_UNLIKELY(!res)) {
+    QUILL_THROW(QuillError{
+        std::string{"failed to call gmtime_rs, with error message errno: " +
+                    std::to_string(errno) + " error: " + strerror(errno)}});
   }
   return res;
 #endif
@@ -56,22 +54,21 @@ inline tm* gmtime_rs(time_t const* timer, tm* buf)
  * @return copy of the buf pointer, or throws on error
  * @throws std::system_error
  */
-inline tm* localtime_rs(time_t const* timer, tm* buf)
-{
+inline tm *localtime_rs(time_t const *timer, tm *buf) {
 #if defined(_WIN32)
   auto const res = localtime_s(buf, timer);
-  if (res)
-  {
+  if (res) {
     QUILL_THROW(QuillError{
-      std::string{"failed to call gmtime_rs, with error message errno: " + std::to_string(res)}});
+        std::string{"failed to call gmtime_rs, with error message errno: " +
+                    std::to_string(res)}});
   }
   return buf;
 #else
-  tm* res = localtime_r(timer, buf);
-  if (QUILL_UNLIKELY(!res))
-  {
-    QUILL_THROW(QuillError{std::string{"failed to call localtime_rs, with error message errno: " +
-                                       std::to_string(errno) + " error: " + strerror(errno)}});
+  tm *res = localtime_r(timer, buf);
+  if (QUILL_UNLIKELY(!res)) {
+    QUILL_THROW(QuillError{
+        std::string{"failed to call localtime_rs, with error message errno: " +
+                    std::to_string(errno) + " error: " + strerror(errno)}});
   }
   return res;
 #endif
@@ -82,13 +79,11 @@ inline tm* localtime_rs(time_t const* timer, tm* buf)
  * @param tm struct tm to convert
  * @throws on invalid input
  */
-inline time_t timegm(tm* tm)
-{
+inline time_t timegm(tm *tm) {
 #if defined(_WIN32)
   time_t const ret_val = _mkgmtime(tm);
 
-  if (QUILL_UNLIKELY(ret_val == -1))
-  {
+  if (QUILL_UNLIKELY(ret_val == -1)) {
     QUILL_THROW(QuillError{"_mkgmtime failed."});
   }
 
@@ -96,8 +91,7 @@ inline time_t timegm(tm* tm)
 #else
   time_t const ret_val = ::timegm(tm);
 
-  if (QUILL_UNLIKELY(ret_val == (time_t)-1))
-  {
+  if (QUILL_UNLIKELY(ret_val == (time_t)-1)) {
     QUILL_THROW(QuillError{"timegm failed."});
   }
 

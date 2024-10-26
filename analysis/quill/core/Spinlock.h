@@ -12,63 +12,53 @@
 
 QUILL_BEGIN_NAMESPACE
 
-namespace detail
-{
+namespace detail {
 /***/
-class Spinlock
-{
+class Spinlock {
 public:
   Spinlock() = default;
 
   /**
    * Deleted
    */
-  Spinlock(Spinlock const&) = delete;
-  Spinlock& operator=(Spinlock const&) = delete;
+  Spinlock(Spinlock const &) = delete;
+  Spinlock &operator=(Spinlock const &) = delete;
 
   /***/
-  QUILL_ATTRIBUTE_HOT void lock() noexcept
-  {
-    do
-    {
-      while (_flag.load(std::memory_order_relaxed) == State::Locked)
-      {
+  QUILL_ATTRIBUTE_HOT void lock() noexcept {
+    do {
+      while (_flag.load(std::memory_order_relaxed) == State::Locked) {
         // keep trying
       }
-    } while (_flag.exchange(State::Locked, std::memory_order_acquire) == State::Locked);
+    } while (_flag.exchange(State::Locked, std::memory_order_acquire) ==
+             State::Locked);
   }
 
   /***/
-  QUILL_ATTRIBUTE_HOT void unlock() noexcept
-  {
+  QUILL_ATTRIBUTE_HOT void unlock() noexcept {
     _flag.store(State::Free, std::memory_order_release);
   }
 
 private:
-  enum class State : uint8_t
-  {
-    Free = 0,
-    Locked = 1
-  };
+  enum class State : uint8_t { Free = 0, Locked = 1 };
 
   std::atomic<State> _flag{State::Free};
 };
 
 /***/
-class LockGuard
-{
+class LockGuard {
 public:
-  explicit LockGuard(Spinlock& s) : _spinlock(s) { _spinlock.lock(); }
+  explicit LockGuard(Spinlock &s) : _spinlock(s) { _spinlock.lock(); }
   ~LockGuard() { _spinlock.unlock(); }
 
   /**
    * Deleted
    */
-  LockGuard(LockGuard const&) = delete;
-  LockGuard& operator=(LockGuard const&) = delete;
+  LockGuard(LockGuard const &) = delete;
+  LockGuard &operator=(LockGuard const &) = delete;
 
 private:
-  Spinlock& _spinlock;
+  Spinlock &_spinlock;
 };
 } // namespace detail
 
