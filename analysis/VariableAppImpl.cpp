@@ -10,7 +10,6 @@
 #include "llvm/IR/DebugProgramInstruction.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/Support/Casting.h"
-#include "llvm/Support/raw_ostream.h"
 
 namespace diff_analysis {
 auto VariableApp::getMap(const llvm::Module &currentModule) -> Variables {
@@ -40,7 +39,6 @@ auto VariableApp::getMap(const llvm::Module &currentModule) -> Variables {
           if (dvr.isDbgValue()) {
             auto value = dvr.getValue();
             auto variableName = variable->getName();
-            LOG_INFO(App::logger(), "Variable Name: {}", variableName.str());
             if (!variableName.empty() && !variableName.starts_with(".")) {
               auto name_str = variableName.str();
               auto insts = VariableInstMap{};

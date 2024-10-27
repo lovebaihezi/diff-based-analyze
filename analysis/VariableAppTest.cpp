@@ -22,9 +22,9 @@ TEST_CASE("Run App on sinle File to generate Inst Variable", "[App, LLVM]") {
 
   auto variables_value = variables.value();
 
-  REQUIRE(variables_value["argc"].instructions.size() == 2);
-  REQUIRE(variables_value["argv"].instructions.size() == 0);
-  REQUIRE(variables_value["arg_index"].instructions.size() == 2);
+  REQUIRE(variables_value["argc"].size() == 2);
+  REQUIRE(variables_value["argv"].size() == 0);
+  REQUIRE(variables_value["arg_index"].size() == 2);
 
   app->shutdown();
 }
