@@ -22,7 +22,6 @@ auto VariableApp::getMap(const llvm::Module &currentModule) -> Variables {
   }
 
   for (const auto &function : currentModule) {
-    LOG_INFO(App::logger(), "Function: {}", function.getName().str());
     for (const auto &function_arg : function.args()) {
       if (!function_arg.getName().empty() &&
           !function_arg.getName().starts_with(".")) {
@@ -45,7 +44,7 @@ auto VariableApp::getMap(const llvm::Module &currentModule) -> Variables {
 
               for (const auto &user : value->users()) {
                 if (auto inst = llvm::cast<llvm::Instruction>(user)) {
-                  insts.instructions.emplace(inst);
+                  insts.emplace(inst);
                 }
               }
               variables.emplace(variableName, insts);

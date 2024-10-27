@@ -90,10 +90,14 @@ public:
   auto insert(const value_type &value) -> std::pair<iterator, bool> {
     return inner.insert(value);
   }
-  auto emplace(const value_type &value) -> std::pair<iterator, bool> {
-    return inner.emplace(value);
+  template<typename... Args>
+  auto emplace(Args&&... args) -> std::pair<iterator, bool> {
+    return inner.emplace(std::forward<Args>(args)...);
   }
   auto erase(const key_type &key) -> size_type { return inner.erase(key); }
   auto clear() -> void { inner.clear(); }
+  auto operator[](const std::string &key) -> const VariableInstMap& { 
+    return inner[key];
+  }
 };
 } // namespace diff_analysis
