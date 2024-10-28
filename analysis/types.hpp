@@ -143,9 +143,10 @@ public:
   auto operator-(const Variables &rhs) -> Diffs {
     Diffs diff;
     for (const auto &[key, value] : inner) {
-      if (rhs.inner.find(key) == rhs.inner.end()) {
-        // TODO
-      } else {
+      // Name Not changed, inst got changed
+      // TODO: Not only name, but also bb, function
+      auto rhs_iter = rhs.inner.find(key);
+      if (rhs_iter != rhs.inner.end()) {
         std::vector<llvm::Instruction *> unchanged;
         unchanged.reserve(value.size());
         for (const auto &left_inst : value) {
@@ -175,6 +176,10 @@ public:
             diff.insertAdded(key, right_inst);
           }
         }
+      } else {
+        // Name Changed
+        // inst, bb, function not changed
+        
       }
     }
     return diff;
