@@ -146,12 +146,13 @@ public:
       if (rhs.inner.find(key) == rhs.inner.end()) {
         // TODO
       } else {
-        std::vector<llvm::Instruction*> unchanged;
+        std::vector<llvm::Instruction *> unchanged;
         unchanged.reserve(value.size());
-        for (const auto &left_inst: value) {
-          // inst that occurs in left but not in right, which means it got removed
+        for (const auto &left_inst : value) {
+          // inst that occurs in left but not in right, which means it got
+          // removed
           auto is_removed = true;
-          for (const auto &right_inst: rhs.inner.at(key)) {
+          for (const auto &right_inst : rhs.inner.at(key)) {
             if (left_inst->isSameOperationAs(right_inst)) {
               unchanged.push_back(left_inst);
               is_removed = false;
@@ -162,9 +163,9 @@ public:
           }
         }
         // inst that occurs in right but not in left, which means it got added
-        for (const auto &right_inst: rhs.inner.at(key)) {
+        for (const auto &right_inst : rhs.inner.at(key)) {
           auto is_added = true;
-          for (const auto &left_inst: value) {
+          for (const auto &left_inst : value) {
             assert(left_inst != nullptr);
             if (right_inst->isSameOperationAs(left_inst)) {
               is_added = false;
