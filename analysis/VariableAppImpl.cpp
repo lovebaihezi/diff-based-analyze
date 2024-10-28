@@ -11,6 +11,7 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/SourceMgr.h"
 #include <string_view>
+#include <tuple>
 
 namespace diff_analysis {
 auto VariableApp::getMap(const llvm::Module &currentModule) -> Variables {
@@ -59,7 +60,7 @@ auto VariableApp::getMap(const llvm::Module &currentModule) -> Variables {
 }
 
 auto VariableApp::getVariables(llvm::LLVMContext &ctx, std::string_view ir_path)
-    -> tl::expected<Variables, llvm::SMDiagnostic> {
+    -> tl::expected<std::tuple<Variables, Box<llvm::Module>>, llvm::SMDiagnostic> {
   llvm::SMDiagnostic err;
   std::unique_ptr<llvm::Module> module = llvm::parseIRFile(ir_path, err, ctx);
 
@@ -69,14 +70,13 @@ auto VariableApp::getVariables(llvm::LLVMContext &ctx, std::string_view ir_path)
     return tl::unexpected{err};
   } else {
     auto variableNames = getMap(*module);
-    return variableNames;
+    return std::make_tuple(variableNames, std::move(module));
   }
 }
 
-auto VariableApp::run(std::string_view ir_path)
-    -> tl::expected<Variables, llvm::SMDiagnostic> {
+auto VariableApp::run(llvm::LLVMContext& ctx, std::string_view ir_path)
+    -> tl::expected<std::tuple<Variables, Box<llvm::Module>>, llvm::SMDiagnostic> {
   llvm::SMDiagnostic err;
-  llvm::LLVMContext ctx;
   std::unique_ptr<llvm::Module> module = llvm::parseIRFile(ir_path, err, ctx);
 
   if (!module) {
@@ -85,15 +85,14 @@ auto VariableApp::run(std::string_view ir_path)
     return tl::unexpected{err};
   } else {
     auto variableNames = getMap(*module);
-    return variableNames;
+    return std::make_tuple(variableNames, std::move(module));
   }
 }
 
-auto VariableApp::diff(std::string_view previous_ir_path,
+auto VariableApp::diff(llvm::LLVMContext& ctx, std::string_view previous_ir_path,
                        std::string_view current_ir_path)
     -> tl::expected<Diffs, llvm::SMDiagnostic> {
 
-  auto ctx = llvm::LLVMContext{};
   auto previous_variables = getVariables(ctx, previous_ir_path);
   auto current_variables = getVariables(ctx, current_ir_path);
 
@@ -105,6 +104,9 @@ auto VariableApp::diff(std::string_view previous_ir_path,
     return tl::unexpected{current_variables.error()};
   }
 
-  return previous_variables.value() - current_variables.value();
+  auto&& [previous, prev_m] = previous_variables.value();
+  auto&& [current, cur_m] = current_variables.value();
+
+  return previous - current;
 }
 } // namespace diff_analysis
