@@ -7,7 +7,7 @@
 #define TESTING 1
 
 namespace diff_analysis {
-TEST_CASE("Run App on sinle File to generate Inst Variable", "[App, LLVM]") {
+TEST_CASE("Run App on single File to generate Inst Variable", "[App, LLVM]") {
   const char *argv[] = {"./diff_analysis",
                         "build/tests/challenges-a/rename-before.ll"};
   constexpr std::size_t argc = sizeof(argv) / sizeof(const char *);
@@ -25,6 +25,28 @@ TEST_CASE("Run App on sinle File to generate Inst Variable", "[App, LLVM]") {
   REQUIRE(variables_value["argc"].size() == 2);
   REQUIRE(variables_value["argv"].size() == 0);
   REQUIRE(variables_value["arg_index"].size() == 2);
+
+  app->shutdown();
+}
+TEST_CASE("Run APP on only name changed IR file", "[App, LLVM]") {
+  const char *argv[] = {"./diff_analysis"};
+  constexpr std::size_t argc = sizeof(argv) / sizeof(const char *);
+
+  auto app = App::init(argc, argv);
+  auto var_app = VariableApp{};
+
+  auto previous_ir_path = "build/tests/challenges-a/rename-before.ll";
+  auto current_ir_path = "build/tests/challenges-a/rename-after.ll";
+
+  auto diffs = var_app.diff(std::string_view{previous_ir_path},
+                            std::string_view{current_ir_path});
+
+  REQUIRE(diffs.has_value());
+
+  auto diffs_value = diffs.value();
+  REQUIRE(diffs_value.getNameChanges().size() == 1);
+  REQUIRE(diffs_value.getAdded().size() == 0);
+  REQUIRE(diffs_value.getRemoved().size() == 0);
 
   app->shutdown();
 }

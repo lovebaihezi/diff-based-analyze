@@ -149,5 +149,5 @@ full-clean-all:
 
 # Format the code
 format:
-    clang-format --style=file -i $(fd --extension cpp --extension cc --extension hh --extension hpp)
-    clang-format --style=file -i $(fd --extension c --extension h)
+    clang-format --style=file -i $(fd --extension cpp --extension hpp)
+    # clang-format --style=file -i $(fd --extension c --extension h)
