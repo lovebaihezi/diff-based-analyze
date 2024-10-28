@@ -17,6 +17,37 @@
 #include <set>
 
 namespace diff_analysis {
+class Diffs {
+private:
+  std::map<std::string, std::string> nameChanges;
+  std::map<std::string, std::set<const llvm::Instruction *>> added;
+  std::map<std::string, std::set<const llvm::Instruction *>> removed;
+
+public:
+  auto getNameChanges() -> std::map<std::string, std::string> & {
+    return nameChanges;
+  }
+  auto
+  getAdded() -> std::map<std::string, std::set<const llvm::Instruction *>> & {
+    return added;
+  }
+  auto
+  getRemoved() -> std::map<std::string, std::set<const llvm::Instruction *>> & {
+    return removed;
+  }
+  auto insertNameChange(const std::string &key,
+                        const std::string &value) -> void {
+    nameChanges[key] = value;
+  }
+  auto insertAdded(const std::string &key,
+                   const llvm::Instruction *value) -> void {
+    added[key].insert(value);
+  }
+  auto insertRemoved(const std::string &key,
+                     const llvm::Instruction *value) -> void {
+    removed[key].insert(value);
+  }
+};
 class VariableInstMap {
 private:
   std::set<llvm::Instruction *> instructions{};
@@ -81,6 +112,10 @@ public:
   auto size() const -> size_type { return inner.size(); }
   auto empty() const -> bool { return inner.empty(); }
   auto find(const key_type &key) -> iterator { return inner.find(key); }
+  auto at(const key_type &key) -> VariableInstMap & { return inner.at(key); }
+  auto at(const key_type &key) const -> const VariableInstMap & {
+    return inner.at(key);
+  }
   auto find(const key_type &key) const -> const_iterator {
     return inner.find(key);
   }
@@ -90,14 +125,39 @@ public:
   auto insert(const value_type &value) -> std::pair<iterator, bool> {
     return inner.insert(value);
   }
-  template<typename... Args>
-  auto emplace(Args&&... args) -> std::pair<iterator, bool> {
+  template <typename... Args>
+  auto emplace(Args &&...args) -> std::pair<iterator, bool> {
     return inner.emplace(std::forward<Args>(args)...);
   }
   auto erase(const key_type &key) -> size_type { return inner.erase(key); }
   auto clear() -> void { inner.clear(); }
-  auto operator[](const std::string &key) -> const VariableInstMap& { 
+  auto operator[](const std::string &key) -> const VariableInstMap & {
     return inner[key];
+  }
+
+  auto operator-(const Variables &rhs) -> Diffs {
+    Diffs diff;
+    for (const auto &[key, value] : inner) {
+      if (rhs.inner.find(key) == rhs.inner.end()) {
+        diff.insertNameChange(key, key);
+        for (const auto &inst : value) {
+          diff.insertAdded(key, inst);
+        }
+      } else {
+        auto &rhs_insts = rhs.inner.at(key);
+        for (const auto &inst : value) {
+          if (rhs_insts.find(inst) == rhs_insts.end()) {
+            diff.insertAdded(key, inst);
+          }
+        }
+        for (const auto &inst : rhs_insts) {
+          if (value.find(inst) == value.end()) {
+            diff.insertRemoved(key, inst);
+          }
+        }
+      }
+    }
+    return diff;
   }
 };
 } // namespace diff_analysis

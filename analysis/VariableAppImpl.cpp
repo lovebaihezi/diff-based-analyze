@@ -1,15 +1,16 @@
 #include "App.hpp"
 #include "VariableApp.hpp"
 #include "expected.hpp"
+#include "quill/LogMacros.h"
 #include "types.hpp"
 
-#include <llvm/IR/Instruction.h>
-#include <llvm/Support/SourceMgr.h>
-
-#include "quill/LogMacros.h"
 #include "llvm/IR/DebugProgramInstruction.h"
+#include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/LLVMContext.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Support/SourceMgr.h"
+#include <string_view>
 
 namespace diff_analysis {
 auto VariableApp::getMap(const llvm::Module &currentModule) -> Variables {
@@ -57,6 +58,21 @@ auto VariableApp::getMap(const llvm::Module &currentModule) -> Variables {
   return variables;
 }
 
+auto VariableApp::getVariables(llvm::LLVMContext &ctx, std::string_view ir_path)
+    -> tl::expected<Variables, llvm::SMDiagnostic> {
+  llvm::SMDiagnostic err;
+  std::unique_ptr<llvm::Module> module = llvm::parseIRFile(ir_path, err, ctx);
+
+  if (!module) {
+    LOG_CRITICAL(App::logger(), "FAILED TO PARSE MODULE FROM IR FILE: {}",
+                 ir_path);
+    return tl::unexpected{err};
+  } else {
+    auto variableNames = getMap(*module);
+    return variableNames;
+  }
+}
+
 auto VariableApp::run(std::string_view ir_path)
     -> tl::expected<Variables, llvm::SMDiagnostic> {
   llvm::SMDiagnostic err;
@@ -71,5 +87,24 @@ auto VariableApp::run(std::string_view ir_path)
     auto variableNames = getMap(*module);
     return variableNames;
   }
+}
+
+auto VariableApp::diff(std::string_view previous_ir_path,
+                       std::string_view current_ir_path)
+    -> tl::expected<Diffs, llvm::SMDiagnostic> {
+
+  auto ctx = llvm::LLVMContext{};
+  auto previous_variables = getVariables(ctx, previous_ir_path);
+  auto current_variables = getVariables(ctx, current_ir_path);
+
+  if (!previous_variables) {
+    return tl::unexpected{previous_variables.error()};
+  }
+
+  if (!current_variables) {
+    return tl::unexpected{current_variables.error()};
+  }
+
+  return previous_variables.value() - current_variables.value();
 }
 } // namespace diff_analysis
