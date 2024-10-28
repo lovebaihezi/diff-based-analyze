@@ -15,12 +15,12 @@ TEST_CASE("Run App on single File to generate Inst Variable", "[App, LLVM]") {
 
   auto app = App::init(argc, argv);
   auto var_app = VariableApp{};
-  auto variables = var_app.run(std::string_view{argv[1]});
+  llvm::LLVMContext ctx;
+  auto variables = var_app.run(ctx, std::string_view{argv[1]});
 
   REQUIRE(variables.has_value());
-  REQUIRE(variables.value().size() == 3);
-
-  auto variables_value = variables.value();
+  auto&& [variables_value, module] = variables.value();
+  REQUIRE(variables_value.size() == 3);
 
   REQUIRE(variables_value["argc"].size() == 2);
   REQUIRE(variables_value["argv"].size() == 0);
@@ -28,6 +28,7 @@ TEST_CASE("Run App on single File to generate Inst Variable", "[App, LLVM]") {
 
   app->shutdown();
 }
+
 TEST_CASE("Run APP on only name changed IR file", "[App, LLVM]") {
   const char *argv[] = {"./diff_analysis"};
   constexpr std::size_t argc = sizeof(argv) / sizeof(const char *);
@@ -38,7 +39,8 @@ TEST_CASE("Run APP on only name changed IR file", "[App, LLVM]") {
   auto previous_ir_path = "build/tests/challenges-a/rename-before.ll";
   auto current_ir_path = "build/tests/challenges-a/rename-after.ll";
 
-  auto diffs = var_app.diff(std::string_view{previous_ir_path},
+  llvm::LLVMContext ctx;
+  auto diffs = var_app.diff(ctx, std::string_view{previous_ir_path},
                             std::string_view{current_ir_path});
 
   REQUIRE(diffs.has_value());

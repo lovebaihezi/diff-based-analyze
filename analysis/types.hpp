@@ -1,5 +1,9 @@
 #pragma once
 
+#include "App.hpp"
+#include "quill/LogMacros.h"
+#include "llvm/Support/raw_ostream.h"
+#include <cassert>
 #include <llvm/ADT/MapVector.h>
 #include <llvm/ADT/SetVector.h>
 #include <llvm/ADT/SmallVector.h>
@@ -14,6 +18,7 @@
 #include <llvm/Support/SourceMgr.h>
 
 #include <map>
+#include <ranges>
 #include <set>
 
 namespace diff_analysis {
@@ -139,20 +144,34 @@ public:
     Diffs diff;
     for (const auto &[key, value] : inner) {
       if (rhs.inner.find(key) == rhs.inner.end()) {
-        diff.insertNameChange(key, key);
-        for (const auto &inst : value) {
-          diff.insertAdded(key, inst);
-        }
+        // TODO
       } else {
-        auto &rhs_insts = rhs.inner.at(key);
-        for (const auto &inst : value) {
-          if (rhs_insts.find(inst) == rhs_insts.end()) {
-            diff.insertAdded(key, inst);
+        std::vector<llvm::Instruction*> unchanged;
+        unchanged.reserve(value.size());
+        for (const auto &left_inst: value) {
+          // inst that occurs in left but not in right, which means it got removed
+          auto is_removed = true;
+          for (const auto &right_inst: rhs.inner.at(key)) {
+            if (left_inst->isSameOperationAs(right_inst)) {
+              unchanged.push_back(left_inst);
+              is_removed = false;
+            }
+          }
+          if (is_removed) {
+            diff.insertRemoved(key, left_inst);
           }
         }
-        for (const auto &inst : rhs_insts) {
-          if (value.find(inst) == value.end()) {
-            diff.insertRemoved(key, inst);
+        // inst that occurs in right but not in left, which means it got added
+        for (const auto &right_inst: rhs.inner.at(key)) {
+          auto is_added = true;
+          for (const auto &left_inst: value) {
+            assert(left_inst != nullptr);
+            if (right_inst->isSameOperationAs(left_inst)) {
+              is_added = false;
+            }
+          }
+          if (is_added) {
+            diff.insertAdded(key, right_inst);
           }
         }
       }
