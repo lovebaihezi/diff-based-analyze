@@ -60,7 +60,8 @@ auto VariableApp::getMap(const llvm::Module &currentModule) -> Variables {
 }
 
 auto VariableApp::getVariables(llvm::LLVMContext &ctx, std::string_view ir_path)
-    -> tl::expected<std::tuple<Variables, Box<llvm::Module>>, llvm::SMDiagnostic> {
+    -> tl::expected<std::tuple<Variables, Box<llvm::Module>>,
+                    llvm::SMDiagnostic> {
   llvm::SMDiagnostic err;
   std::unique_ptr<llvm::Module> module = llvm::parseIRFile(ir_path, err, ctx);
 
@@ -74,8 +75,9 @@ auto VariableApp::getVariables(llvm::LLVMContext &ctx, std::string_view ir_path)
   }
 }
 
-auto VariableApp::run(llvm::LLVMContext& ctx, std::string_view ir_path)
-    -> tl::expected<std::tuple<Variables, Box<llvm::Module>>, llvm::SMDiagnostic> {
+auto VariableApp::run(llvm::LLVMContext &ctx, std::string_view ir_path)
+    -> tl::expected<std::tuple<Variables, Box<llvm::Module>>,
+                    llvm::SMDiagnostic> {
   llvm::SMDiagnostic err;
   std::unique_ptr<llvm::Module> module = llvm::parseIRFile(ir_path, err, ctx);
 
@@ -89,7 +91,8 @@ auto VariableApp::run(llvm::LLVMContext& ctx, std::string_view ir_path)
   }
 }
 
-auto VariableApp::diff(llvm::LLVMContext& ctx, std::string_view previous_ir_path,
+auto VariableApp::diff(llvm::LLVMContext &ctx,
+                       std::string_view previous_ir_path,
                        std::string_view current_ir_path)
     -> tl::expected<Diffs, llvm::SMDiagnostic> {
 
@@ -104,8 +107,8 @@ auto VariableApp::diff(llvm::LLVMContext& ctx, std::string_view previous_ir_path
     return tl::unexpected{current_variables.error()};
   }
 
-  auto&& [previous, prev_m] = previous_variables.value();
-  auto&& [current, cur_m] = current_variables.value();
+  auto &&[previous, prev_m] = previous_variables.value();
+  auto &&[current, cur_m] = current_variables.value();
 
   return previous - current;
 }

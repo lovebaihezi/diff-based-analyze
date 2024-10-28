@@ -19,7 +19,7 @@ TEST_CASE("Run App on single File to generate Inst Variable", "[App, LLVM]") {
   auto variables = var_app.run(ctx, std::string_view{argv[1]});
 
   REQUIRE(variables.has_value());
-  auto&& [variables_value, module] = variables.value();
+  auto &&[variables_value, module] = variables.value();
   REQUIRE(variables_value.size() == 3);
 
   REQUIRE(variables_value["argc"].size() == 2);
