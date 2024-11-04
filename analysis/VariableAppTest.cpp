@@ -40,15 +40,21 @@ TEST_CASE("Run APP on only name changed IR file", "[App, LLVM][.]") {
   auto current_ir_path = "build/tests/challenges-a/rename-after.ll";
 
   llvm::LLVMContext ctx;
-  auto diffs = var_app.diff(ctx, std::string_view{previous_ir_path},
-                            std::string_view{current_ir_path});
+  auto previous_variables = var_app.run(ctx, previous_ir_path);
+  auto current_variables = var_app.run(ctx, current_ir_path);
 
-  REQUIRE(diffs.has_value());
+  REQUIRE(previous_variables);
 
-  auto diffs_value = diffs.value();
-  REQUIRE(diffs_value.getNameChanges().size() == 1);
-  REQUIRE(diffs_value.getAdds().size() == 0);
-  REQUIRE(diffs_value.getRemoves().size() == 0);
+  REQUIRE(current_variables);
+
+  auto &&[previous, prev_m] = previous_variables.value();
+  auto &&[current, cur_m] = current_variables.value();
+
+  auto diffs = current - previous;
+
+  REQUIRE(diffs.getNameChanges().size() == 1);
+  REQUIRE(diffs.getAdds().size() == 0);
+  REQUIRE(diffs.getRemoves().size() == 0);
 
   app->shutdown();
 }
@@ -64,15 +70,28 @@ TEST_CASE("APP Test Case: check the bounded inst changes", "[App, LLVM]") {
   auto current_ir_path = "build/tests/missed_bound_check/unchecked.ll";
 
   llvm::LLVMContext ctx;
-  auto diffs = var_app.diff(ctx, std::string_view{previous_ir_path},
-                            std::string_view{current_ir_path});
 
-  REQUIRE(diffs.has_value());
+  auto previous_variables = var_app.run(ctx, previous_ir_path);
+  auto current_variables = var_app.run(ctx, current_ir_path);
 
-  auto diffs_value = diffs.value();
-  REQUIRE(diffs_value.getNameChanges().size() == 0);
-  REQUIRE(diffs_value.getAdds().size() == 2);
-  REQUIRE(diffs_value.getRemoves().size() == 0);
+  REQUIRE(previous_variables);
+
+  REQUIRE(current_variables);
+
+  auto &&[previous, prev_m] = previous_variables.value();
+  auto &&[current, cur_m] = current_variables.value();
+
+  auto diffs = current - previous;
+
+  REQUIRE(diffs.getNameChanges().size() == 0);
+  REQUIRE(diffs.getAdds().size() == 2);
+  REQUIRE(diffs.getRemoves().size() == 0);
+
+  auto rev_diffs = previous - current;
+
+  REQUIRE(rev_diffs.getNameChanges().size() == 0);
+  REQUIRE(rev_diffs.getAdds().size() == 0);
+  REQUIRE(rev_diffs.getRemoves().size() == 2);
 
   app->shutdown();
 }

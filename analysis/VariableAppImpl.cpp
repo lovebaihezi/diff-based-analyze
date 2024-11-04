@@ -90,26 +90,4 @@ auto VariableApp::run(llvm::LLVMContext &ctx, std::string_view ir_path)
     return std::make_tuple(variableNames, std::move(module));
   }
 }
-
-auto VariableApp::diff(llvm::LLVMContext &ctx,
-                       std::string_view previous_ir_path,
-                       std::string_view current_ir_path)
-    -> tl::expected<Diffs, llvm::SMDiagnostic> {
-
-  auto previous_variables = getVariables(ctx, previous_ir_path);
-  auto current_variables = getVariables(ctx, current_ir_path);
-
-  if (!previous_variables) {
-    return tl::unexpected{previous_variables.error()};
-  }
-
-  if (!current_variables) {
-    return tl::unexpected{current_variables.error()};
-  }
-
-  auto &&[previous, prev_m] = previous_variables.value();
-  auto &&[current, cur_m] = current_variables.value();
-
-  return previous - current;
-}
 } // namespace diff_analysis
