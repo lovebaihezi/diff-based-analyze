@@ -15,6 +15,7 @@ jobs:
         # run: zig build -Doptimize=ReleaseSafe --verbose-link --search-prefix ${{ github.workspace }}/llvm/lib
         # zig build -Doptimize=ReleaseSafe --verbose-link --search-prefix /usr/lib/llvm-18
         run: |
+          just install-llvm
           just build-all
       - name: Build tests
         run: |
