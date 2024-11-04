@@ -3,6 +3,7 @@
 #include "expected.hpp"
 #include "rust.hpp"
 #include "types.hpp"
+#include "llvm/IR/LLVMContext.h"
 
 #include <string_view>
 

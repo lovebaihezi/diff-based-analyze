@@ -1,8 +1,5 @@
 #pragma once
 
-#include "App.hpp"
-#include "quill/LogMacros.h"
-#include "llvm/Support/raw_ostream.h"
 #include <cassert>
 #include <llvm/ADT/MapVector.h>
 #include <llvm/ADT/SetVector.h>
@@ -18,39 +15,48 @@
 #include <llvm/Support/SourceMgr.h>
 
 #include <map>
-#include <ranges>
+#include <optional>
 #include <set>
+#include <span>
 
 namespace diff_analysis {
+struct Delta {
+  std::string var_name;
+  std::vector<const llvm::Instruction *> insts;
+  // [0..split_index) means removed insts, [split_index..end) means added insts
+  std::size_t split_index;
+};
 class Diffs {
 private:
-  std::map<std::string, std::string> nameChanges;
-  std::map<std::string, std::set<const llvm::Instruction *>> added;
-  std::map<std::string, std::set<const llvm::Instruction *>> removed;
+  using Rel = std::vector<std::pair<std::optional<std::string>, std::optional<std::string>>>;
+
+  Rel nameChanges;
+  Delta delta;
 
 public:
-  auto getNameChanges() -> std::map<std::string, std::string> & {
-    return nameChanges;
+  auto getNameChanges() -> Rel & { return nameChanges; }
+  auto getAdds() -> std::span<const llvm::Instruction *> {
+    auto begin = std::begin(delta.insts);
+    return std::span(begin, begin + delta.split_index);
   }
-  auto
-  getAdded() -> std::map<std::string, std::set<const llvm::Instruction *>> & {
-    return added;
+  auto getRemoves() -> std::span<const llvm::Instruction *> {
+    auto begin = std::begin(delta.insts);
+    auto end = std::end(delta.insts);
+    return std::span(begin + delta.split_index, end);
   }
-  auto
-  getRemoved() -> std::map<std::string, std::set<const llvm::Instruction *>> & {
-    return removed;
+  auto insertChanges(const std::string &&old, const std::string &&new_name) -> void {
+    nameChanges.emplace_back(old, new_name);
   }
-  auto insertNameChange(const std::string &key,
-                        const std::string &value) -> void {
-    nameChanges[key] = value;
+  auto insertRemoved(const std::string &&var_name,
+                       const llvm::Instruction *inst) -> void {
+    delta.var_name = std::move(var_name);
+    delta.insts.push_back(inst);
   }
-  auto insertAdded(const std::string &key,
-                   const llvm::Instruction *value) -> void {
-    added[key].insert(value);
-  }
-  auto insertRemoved(const std::string &key,
-                     const llvm::Instruction *value) -> void {
-    removed[key].insert(value);
+  auto insertAdded(const std::string &&var_name,
+                   const llvm::Instruction *inst) -> void {
+    delta.var_name = std::move(var_name);
+    delta.insts.push_back(inst);
+    delta.split_index = delta.insts.size();
   }
 };
 class VariableInstMap {
@@ -142,44 +148,55 @@ public:
 
   auto operator-(const Variables &rhs) -> Diffs {
     Diffs diff;
-    for (const auto &[key, value] : inner) {
+    auto keys = std::vector<std::reference_wrapper<const std::string>>{};
+    for (const auto &[k, v] : inner) {
+      keys.push_back(std::ref(k));
+    }
+    for (auto i = 0; i < keys.size(); i += 1) {
+      auto left_key = keys[i];
       // Name Not changed, inst got changed
       // TODO: Not only name, but also bb, function
-      auto rhs_iter = rhs.inner.find(key);
+      auto left_value = inner[left_key];
+      auto rhs_iter = rhs.inner.find(left_key);
       if (rhs_iter != rhs.inner.end()) {
-        std::vector<llvm::Instruction *> unchanged;
-        unchanged.reserve(value.size());
-        for (const auto &left_inst : value) {
+        for (const auto &left_inst : left_value) {
           // inst that occurs in left but not in right, which means it got
           // removed
           auto is_removed = true;
-          for (const auto &right_inst : rhs.inner.at(key)) {
+          for (const auto &right_inst : rhs.inner.at(left_key)) {
             if (left_inst->isSameOperationAs(right_inst)) {
-              unchanged.push_back(left_inst);
               is_removed = false;
             }
           }
           if (is_removed) {
-            diff.insertRemoved(key, left_inst);
+            const std::string copied_key = left_key;
+            diff.insertRemoved(std::move(copied_key), left_inst);
           }
         }
         // inst that occurs in right but not in left, which means it got added
-        for (const auto &right_inst : rhs.inner.at(key)) {
+        for (const auto &right_inst : rhs.inner.at(left_key)) {
           auto is_added = true;
-          for (const auto &left_inst : value) {
+          for (const auto &left_inst : left_value) {
             assert(left_inst != nullptr);
             if (right_inst->isSameOperationAs(left_inst)) {
               is_added = false;
+              break;
             }
           }
           if (is_added) {
-            diff.insertAdded(key, right_inst);
+            const std::string copied_key = left_key;
+            diff.insertAdded(std::move(copied_key), right_inst);
           }
         }
       } else {
-        // Name Changed
-        // inst, bb, function not changed
-        
+        // TODO
+        // Name Changed or Variable added/deleted
+        // for (const auto &[rhs_k, rhs_v] : rhs.inner) {
+        //   for (const auto &rhs_inst : rhs_v) {
+        //     for (const auto &left_inst : left_value) {
+        //     }
+        //   }
+        // }
       }
     }
     return diff;

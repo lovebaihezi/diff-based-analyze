@@ -29,7 +29,7 @@ TEST_CASE("Run App on single File to generate Inst Variable", "[App, LLVM]") {
   app->shutdown();
 }
 
-TEST_CASE("Run APP on only name changed IR file", "[App, LLVM]") {
+TEST_CASE("Run APP on only name changed IR file", "[App, LLVM][.]") {
   const char *argv[] = {"./diff_analysis"};
   constexpr std::size_t argc = sizeof(argv) / sizeof(const char *);
 
@@ -47,8 +47,8 @@ TEST_CASE("Run APP on only name changed IR file", "[App, LLVM]") {
 
   auto diffs_value = diffs.value();
   REQUIRE(diffs_value.getNameChanges().size() == 1);
-  REQUIRE(diffs_value.getAdded().size() == 0);
-  REQUIRE(diffs_value.getRemoved().size() == 0);
+  REQUIRE(diffs_value.getAdds().size() == 0);
+  REQUIRE(diffs_value.getRemoves().size() == 0);
 
   app->shutdown();
 }
