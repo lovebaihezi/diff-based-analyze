@@ -52,4 +52,28 @@ TEST_CASE("Run APP on only name changed IR file", "[App, LLVM][.]") {
 
   app->shutdown();
 }
+
+TEST_CASE("APP Test Case: check the bounded inst changes", "[App, LLVM]") {
+  const char *argv[] = {"./diff_analysis"};
+  constexpr std::size_t argc = sizeof(argv) / sizeof(const char *);
+
+  auto app = App::init(argc, argv);
+  auto var_app = VariableApp{};
+
+  auto previous_ir_path = "build/tests/missed_bound_check/checked.ll";
+  auto current_ir_path = "build/tests/missed_bound_check/unchecked.ll";
+
+  llvm::LLVMContext ctx;
+  auto diffs = var_app.diff(ctx, std::string_view{previous_ir_path},
+                            std::string_view{current_ir_path});
+
+  REQUIRE(diffs.has_value());
+
+  auto diffs_value = diffs.value();
+  REQUIRE(diffs_value.getNameChanges().size() == 0);
+  REQUIRE(diffs_value.getAdds().size() == 2);
+  REQUIRE(diffs_value.getRemoves().size() == 0);
+
+  app->shutdown();
+}
 } // namespace diff_analysis
