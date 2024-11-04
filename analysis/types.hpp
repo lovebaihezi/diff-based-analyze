@@ -146,17 +146,17 @@ public:
     return inner[key];
   }
 
-  auto operator-(const Variables &rhs) -> Diffs {
+  auto operator-(const Variables &rhs) const -> Diffs {
     Diffs diff;
     auto keys = std::vector<std::reference_wrapper<const std::string>>{};
     for (const auto &[k, v] : inner) {
       keys.push_back(std::ref(k));
     }
     for (auto i = 0; i < keys.size(); i += 1) {
-      auto left_key = keys[i];
+      const auto& left_key = keys[i];
       // Name Not changed, inst got changed
       // TODO: Not only name, but also bb, function
-      auto left_value = inner[left_key];
+      const auto& [_left_key, left_value] = *inner.find(left_key);
       auto rhs_iter = rhs.inner.find(left_key);
       if (rhs_iter != rhs.inner.end()) {
         for (const auto &left_inst : left_value) {
