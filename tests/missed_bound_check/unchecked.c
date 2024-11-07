@@ -13,7 +13,7 @@ struct Param {
 };
 
 const char* functionA(struct Param* input, int flag) {
-  if (input && flag) {
+  if (flag && input) {
     char* buf = (char*)malloc(sizeof(char) + sizeof(int) + 1);
     switch (input->kind) {
       case A:
@@ -24,7 +24,7 @@ const char* functionA(struct Param* input, int flag) {
         sprintf(buf, "C%d", input->value);
     }
     return buf;
-  } else if (input) {
+  } else {
     switch (input->kind) {
       case A:
         return "A";
@@ -33,7 +33,5 @@ const char* functionA(struct Param* input, int flag) {
       case C:
         return "C";
     }
-  } else {
-    return "null";
   }
 }
