@@ -53,9 +53,7 @@ TEST_CASE("Run APP on only name changed IR file", "[App, LLVM][.]") {
   auto diffs = current - previous;
 
   REQUIRE(diffs.getNameChanges().size() == 1);
-  REQUIRE(diffs.getChangedVariablesNames().size() == 1);
-  REQUIRE(diffs.getAdds().size() == 0);
-  REQUIRE(diffs.getRemoves().size() == 0);
+  REQUIRE(diffs.getChangedVariablesNames().size() == 0);
 
   app->shutdown();
 }
@@ -85,12 +83,14 @@ TEST_CASE("APP Test Case: check the bounded inst changes", "[App, LLVM]") {
   auto rev_diffs = checked - unchecked;
 
   REQUIRE(rev_diffs.getNameChanges().size() == 0);
+  REQUIRE(rev_diffs.getChangedVariablesNames().size() == 0);
   REQUIRE(rev_diffs.getAdds().size() == 2);
   REQUIRE(rev_diffs.getRemoves().size() == 0);
 
   auto diffs = unchecked - checked;
 
   REQUIRE(diffs.getNameChanges().size() == 0);
+  REQUIRE(rev_diffs.getChangedVariablesNames().size() == 0);
   REQUIRE(diffs.getAdds().size() == 0);
   REQUIRE(diffs.getRemoves().size() == 2);
 
