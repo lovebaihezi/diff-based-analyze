@@ -1,5 +1,7 @@
 #pragma once
 
+#include "App.hpp"
+#include "quill/LogMacros.h"
 #include <cassert>
 #include <llvm/ADT/MapVector.h>
 #include <llvm/ADT/SetVector.h>
@@ -189,6 +191,7 @@ public:
           }
         }
       } else {
+        LOG_WARNING(App::logger(), "TODO: Got Variable from right not exists in left");
         // TODO
         // Name Changed or Variable added/deleted
         // for (const auto &[rhs_k, rhs_v] : rhs.inner) {

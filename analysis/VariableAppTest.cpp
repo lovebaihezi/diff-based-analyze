@@ -66,32 +66,32 @@ TEST_CASE("APP Test Case: check the bounded inst changes", "[App, LLVM]") {
   auto app = App::init(argc, argv);
   auto var_app = VariableApp{};
 
-  auto previous_ir_path = "build/tests/missed_bound_check/checked.ll";
-  auto current_ir_path = "build/tests/missed_bound_check/unchecked.ll";
+  auto checked_ir = "build/tests/missed_bound_check/checked.ll";
+  auto unchecked_ir = "build/tests/missed_bound_check/unchecked.ll";
 
   llvm::LLVMContext ctx;
 
-  auto previous_variables = var_app.run(ctx, previous_ir_path);
-  auto current_variables = var_app.run(ctx, current_ir_path);
+  auto checked_var = var_app.run(ctx, checked_ir);
+  auto unchecked_var = var_app.run(ctx, unchecked_ir);
 
-  REQUIRE(previous_variables);
+  REQUIRE(checked_var);
 
-  REQUIRE(current_variables);
+  REQUIRE(unchecked_var);
 
-  auto &&[previous, prev_m] = previous_variables.value();
-  auto &&[current, cur_m] = current_variables.value();
+  auto &&[checked, prev_m] = checked_var.value();
+  auto &&[unchecked, cur_m] = unchecked_var.value();
 
-  auto diffs = current - previous;
-
-  REQUIRE(diffs.getNameChanges().size() == 0);
-  REQUIRE(diffs.getAdds().size() == 0);
-  REQUIRE(diffs.getRemoves().size() == 2);
-
-  auto rev_diffs = previous - current;
+  auto rev_diffs = checked - unchecked;
 
   REQUIRE(rev_diffs.getNameChanges().size() == 0);
   REQUIRE(rev_diffs.getAdds().size() == 2);
   REQUIRE(rev_diffs.getRemoves().size() == 0);
+
+  auto diffs = unchecked - checked;
+
+  REQUIRE(diffs.getNameChanges().size() == 0);
+  REQUIRE(diffs.getAdds().size() == 0);
+  REQUIRE(diffs.getRemoves().size() == 2);
 
   app->shutdown();
 }
