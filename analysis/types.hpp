@@ -20,6 +20,7 @@
 #include <optional>
 #include <set>
 #include <span>
+#include <string_view>
 
 namespace diff_analysis {
 struct Delta {
@@ -30,36 +31,62 @@ struct Delta {
 };
 class Diffs {
 private:
-  using Rel = std::vector<std::pair<std::optional<std::string>, std::optional<std::string>>>;
+  using Rel = std::vector<
+      std::pair<std::optional<std::string>, std::optional<std::string>>>;
 
   Rel nameChanges;
-  Delta delta;
+  std::vector<Delta> deltas;
 
 public:
   auto getNameChanges() -> Rel & { return nameChanges; }
-  auto getAdds() -> std::span<const llvm::Instruction *> {
-    auto begin = std::begin(delta.insts);
-    return std::span(begin, begin + delta.split_index);
+  auto getAdds(std::string_view key)
+      -> std::optional<std::span<const llvm::Instruction *>> {
+    auto it = std::find_if(std::begin(deltas), std::end(deltas),
+                           [key](const auto &d) { return d.var_name == key; });
+    if (it == std::end(deltas)) {
+      return {};
+    } else {
+      auto begin = std::begin(it->insts);
+      auto end = std::end(it->insts);
+      return std::span(begin + it->split_index, end);
+    }
   }
-  auto getRemoves() -> std::span<const llvm::Instruction *> {
-    auto begin = std::begin(delta.insts);
-    auto end = std::end(delta.insts);
-    return std::span(begin + delta.split_index, end);
+  auto getChangedVariablesNames() -> std::vector<std::string_view> {
+    std::vector<std::string_view> res;
+    for (const auto &delta : deltas) {
+      res.push_back(delta.var_name);
+    }
+    return res;
   }
-  auto insertChanges(const std::string &&old, const std::string &&new_name) -> void {
+  auto getRemoves(std::string_view key)
+      -> std::optional<std::span<const llvm::Instruction *>> {
+    auto it = std::find_if(std::begin(deltas), std::end(deltas),
+                           [key](const auto &d) { return d.var_name == key; });
+    if (it == std::end(deltas)) {
+      return {};
+    } else {
+      auto begin = std::begin(it->insts);
+      auto end = std::end(it->insts);
+      return std::span(begin, begin + it->split_index);
+    }
+  }
+  auto insertChanges(const std::string &&old,
+                     const std::string &&new_name) -> void {
     nameChanges.emplace_back(old, new_name);
   }
   auto insertRemoved(const std::string &&var_name,
-                       const llvm::Instruction *inst) -> void {
-    delta.var_name = std::move(var_name);
-    delta.insts.push_back(inst);
+                     const llvm::Instruction *inst) -> void {
+    auto it = std::find_if(
+        std::begin(deltas), std::end(deltas),
+        [var_name](const auto &d) { return d.var_name == var_name; });
+    if (it == std::end(deltas)) {
+      deltas.push_back({var_name, {inst}, 0});
+    } else {
+      it->insts.push_back(inst);
+    }
   }
   auto insertAdded(const std::string &&var_name,
-                   const llvm::Instruction *inst) -> void {
-    delta.var_name = std::move(var_name);
-    delta.insts.push_back(inst);
-    delta.split_index = delta.insts.size();
-  }
+                   const llvm::Instruction *inst) -> void {}
 };
 class VariableInstMap {
 private:
@@ -155,10 +182,10 @@ public:
       keys.push_back(std::ref(k));
     }
     for (auto i = 0; i < keys.size(); i += 1) {
-      const auto& left_key = keys[i];
+      const auto &left_key = keys[i];
       // Name Not changed, inst got changed
       // TODO: Not only name, but also bb, function
-      const auto& [_left_key, left_value] = *inner.find(left_key);
+      const auto &[_left_key, left_value] = *inner.find(left_key);
       auto rhs_iter = rhs.inner.find(left_key);
       if (rhs_iter != rhs.inner.end()) {
         for (const auto &left_inst : left_value) {
@@ -191,7 +218,8 @@ public:
           }
         }
       } else {
-        LOG_WARNING(App::logger(), "TODO: Got Variable from right not exists in left");
+        LOG_WARNING(App::logger(),
+                    "TODO: Got Variable from right not exists in left");
         // TODO
         // Name Changed or Variable added/deleted
         // for (const auto &[rhs_k, rhs_v] : rhs.inner) {

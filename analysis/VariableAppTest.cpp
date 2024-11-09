@@ -53,6 +53,7 @@ TEST_CASE("Run APP on only name changed IR file", "[App, LLVM][.]") {
   auto diffs = current - previous;
 
   REQUIRE(diffs.getNameChanges().size() == 1);
+  REQUIRE(diffs.getChangedVariablesNames().size() == 1);
   REQUIRE(diffs.getAdds().size() == 0);
   REQUIRE(diffs.getRemoves().size() == 0);
 
