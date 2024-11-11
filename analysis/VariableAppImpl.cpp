@@ -1,16 +1,17 @@
 #include "App.hpp"
 #include "VariableApp.hpp"
 #include "expected.hpp"
+#include "quill/LogMacros.h"
 #include "types.hpp"
 
-#include <llvm/IR/Instruction.h>
-#include <llvm/Support/SourceMgr.h>
-
-#include "quill/LogMacros.h"
 #include "llvm/IR/DebugProgramInstruction.h"
+#include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/LLVMContext.h"
 #include "llvm/Support/Casting.h"
-#include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/SourceMgr.h"
+#include <string_view>
+#include <tuple>
 
 namespace diff_analysis {
 auto VariableApp::getMap(const llvm::Module &currentModule) -> Variables {
@@ -23,7 +24,6 @@ auto VariableApp::getMap(const llvm::Module &currentModule) -> Variables {
   }
 
   for (const auto &function : currentModule) {
-    LOG_INFO(App::logger(), "Function: {}", function.getName().str());
     for (const auto &function_arg : function.args()) {
       if (!function_arg.getName().empty() &&
           !function_arg.getName().starts_with(".")) {
@@ -40,14 +40,13 @@ auto VariableApp::getMap(const llvm::Module &currentModule) -> Variables {
           if (dvr.isDbgValue()) {
             auto value = dvr.getValue();
             auto variableName = variable->getName();
-            LOG_INFO(App::logger(), "Variable Name: {}", variableName.str());
             if (!variableName.empty() && !variableName.starts_with(".")) {
               auto name_str = variableName.str();
               auto insts = VariableInstMap{};
 
               for (const auto &user : value->users()) {
                 if (auto inst = llvm::cast<llvm::Instruction>(user)) {
-                  insts.instructions.emplace(inst);
+                  insts.emplace(inst);
                 }
               }
               variables.emplace(variableName, insts);
@@ -60,10 +59,10 @@ auto VariableApp::getMap(const llvm::Module &currentModule) -> Variables {
   return variables;
 }
 
-auto VariableApp::run(std::string_view ir_path)
-    -> tl::expected<Variables, llvm::SMDiagnostic> {
+auto VariableApp::getVariables(llvm::LLVMContext &ctx, std::string_view ir_path)
+    -> tl::expected<std::tuple<Variables, Box<llvm::Module>>,
+                    llvm::SMDiagnostic> {
   llvm::SMDiagnostic err;
-  llvm::LLVMContext ctx;
   std::unique_ptr<llvm::Module> module = llvm::parseIRFile(ir_path, err, ctx);
 
   if (!module) {
@@ -72,7 +71,23 @@ auto VariableApp::run(std::string_view ir_path)
     return tl::unexpected{err};
   } else {
     auto variableNames = getMap(*module);
-    return variableNames;
+    return std::make_tuple(variableNames, std::move(module));
+  }
+}
+
+auto VariableApp::run(llvm::LLVMContext &ctx, std::string_view ir_path)
+    -> tl::expected<std::tuple<Variables, Box<llvm::Module>>,
+                    llvm::SMDiagnostic> {
+  llvm::SMDiagnostic err;
+  std::unique_ptr<llvm::Module> module = llvm::parseIRFile(ir_path, err, ctx);
+
+  if (!module) {
+    LOG_CRITICAL(App::logger(), "FAILED TO PARSE MODULE FROM IR FILE: {}",
+                 ir_path);
+    return tl::unexpected{err};
+  } else {
+    auto variableNames = getMap(*module);
+    return std::make_tuple(variableNames, std::move(module));
   }
 }
 } // namespace diff_analysis
