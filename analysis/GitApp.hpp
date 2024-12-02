@@ -51,15 +51,34 @@ public:
   ~Repo() = default;
 };
 
-class GitApp {
+class GitApp final {
 private:
   Box<Repo> repo;
 
 public:
-  static auto init(Box<Repo> &&repo) -> Box<GitApp> { std::terminate(); }
-  static auto shutdown(Box<GitApp> &&app) -> void {
-    Repo::close(std::move(app->repo));
-  }
+  static auto init(Box<Repo> &&repo) -> Box<GitApp>;
+  static auto shutdown(Box<GitApp> &&app) -> void;
+
+  // Get HEAD reference
+  auto head() const -> tl::expected<git_reference *, const git_error *>;
+
+  // Get first commit
+  auto first_commit() const -> tl::expected<git_object *, const git_error *>;
+
+  // Look up a commit by its id
+  auto commit(const git_oid *commit_id) const
+      -> tl::expected<git_commit *, const git_error *>;
+
+  // Get the tree from a commit
+  auto commit_tree(git_commit *commit) const
+      -> tl::expected<git_tree *, const git_error *>;
+
+  // Look up tree entry by name
+  auto tree_entry_byname(git_tree *tree, const char *filename) const
+      -> tl::expected<const git_tree_entry *, const git_error *>;
+
+  // Repo ptr
+  auto get_repo() const -> git_repository *;
 
   ~GitApp() = default;
 };
