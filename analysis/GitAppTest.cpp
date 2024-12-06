@@ -6,7 +6,6 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
-#include <string>
 
 namespace diff_analysis {
 namespace fs = std::filesystem;
