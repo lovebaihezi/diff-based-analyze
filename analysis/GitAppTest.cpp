@@ -1,7 +1,7 @@
-#include "catch2/catch_test_macros.hpp"
-#include "git2/refs.h"
 
 #include "GitApp.hpp"
+#include "catch2/catch_test_macros.hpp"
+#include "git2/refs.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -11,44 +11,77 @@ namespace diff_analysis {
 namespace fs = std::filesystem;
 
 class TestSetup {
+private:
+  fs::path temp_dir_;
+  fs::path test_dir_;
+
 public:
-  static void setup_test_repo() {
+  TestSetup() {
+    // Create temporary directory
+    temp_dir_ = fs::temp_directory_path() / "git-analysis-test-XXXXXX";
+    fs::create_directory(temp_dir_);
+
+    // Create test directory inside temp directory
+    test_dir_ = temp_dir_ / "diff-based-analysis-test";
+  }
+
+  ~TestSetup() { cleanup(); }
+
+  void setup_test_repo() {
     // Create test directory
-    fs::create_directory("diff-based-analysis-test");
+    fs::create_directory(test_dir_);
 
     // Copy initial file
-    std::ifstream src("tests/challenges-a/add_inst-before.c", std::ios::binary);
-    std::ofstream dst("diff-based-analysis-test/main.c", std::ios::binary);
+    fs::path src_path =
+        fs::current_path() / "tests/challenges-a/add_inst-before.c";
+    fs::path dst_path = test_dir_ / "main.c";
+
+    std::ifstream src(src_path, std::ios::binary);
+    std::ofstream dst(dst_path, std::ios::binary);
     dst << src.rdbuf();
     src.close();
     dst.close();
 
     // Initialize git repo and make first commit
-    std::system("cd diff-based-analysis-test && git init && git add main.c && "
-                "git commit -m \"Initial commit\"");
+    std::string cmd =
+        "cd " + test_dir_.string() +
+        " && git init && git add main.c && git commit -m \"Initial commit\"";
+    std::system(cmd.c_str());
   }
 
-  static void update_test_file() {
+  void update_test_file() {
     // Copy updated file
-    std::ifstream src("tests/challenges-a/add_inst-after.c", std::ios::binary);
-    std::ofstream dst("diff-based-analysis-test/main.c", std::ios::binary);
+    fs::path src_path =
+        fs::current_path() / "tests/challenges-a/add_inst-after.c";
+    fs::path dst_path = test_dir_ / "main.c";
+
+    std::ifstream src(src_path, std::ios::binary);
+    std::ofstream dst(dst_path, std::ios::binary);
     dst << src.rdbuf();
     src.close();
     dst.close();
 
     // Commit changes
-    std::system("cd diff-based-analysis-test && git add main.c && git commit "
-                "-m \"Update main.c\"");
+    std::string cmd = "cd " + test_dir_.string() +
+                      " && git add main.c && git commit -m \"Update main.c\"";
+    std::system(cmd.c_str());
   }
 
-  static void cleanup() { fs::remove_all("diff-based-analysis-test"); }
+  void cleanup() {
+    if (fs::exists(temp_dir_)) {
+      fs::remove_all(temp_dir_);
+    }
+  }
+
+  fs::path get_test_dir() const { return test_dir_; }
 };
 
 TEST_CASE("GitApp initialization and basic operations", "[gitapp]") {
-  TestSetup::setup_test_repo();
+  TestSetup test_setup;
+  test_setup.setup_test_repo();
 
   SECTION("Repository initialization") {
-    auto repo = diff_analysis::Repo::init("diff-based-analysis-test");
+    auto repo = diff_analysis::Repo::init(test_setup.get_test_dir().string());
     REQUIRE(repo.has_value());
 
     auto app = diff_analysis::GitApp::init(std::move(repo.value()));
@@ -57,7 +90,8 @@ TEST_CASE("GitApp initialization and basic operations", "[gitapp]") {
   }
 
   SECTION("HEAD reference") {
-    auto repo = diff_analysis::Repo::init("diff-based-analysis-test").value();
+    auto repo =
+        diff_analysis::Repo::init(test_setup.get_test_dir().string()).value();
     auto app = diff_analysis::GitApp::init(std::move(repo));
 
     auto head_ref = app->head();
@@ -68,7 +102,8 @@ TEST_CASE("GitApp initialization and basic operations", "[gitapp]") {
   }
 
   SECTION("First commit") {
-    auto repo = diff_analysis::Repo::init("diff-based-analysis-test").value();
+    auto repo =
+        diff_analysis::Repo::init(test_setup.get_test_dir().string()).value();
     auto app = diff_analysis::GitApp::init(std::move(repo));
 
     auto first = app->first_commit();
@@ -79,7 +114,8 @@ TEST_CASE("GitApp initialization and basic operations", "[gitapp]") {
   }
 
   SECTION("Commit lookup and tree operations") {
-    auto repo = diff_analysis::Repo::init("diff-based-analysis-test").value();
+    auto repo =
+        diff_analysis::Repo::init(test_setup.get_test_dir().string()).value();
     auto app = diff_analysis::GitApp::init(std::move(repo));
 
     // Get HEAD reference
@@ -105,9 +141,10 @@ TEST_CASE("GitApp initialization and basic operations", "[gitapp]") {
   }
 
   SECTION("Test with updated file") {
-    TestSetup::update_test_file();
+    test_setup.update_test_file();
 
-    auto repo = diff_analysis::Repo::init("diff-based-analysis-test").value();
+    auto repo =
+        diff_analysis::Repo::init(test_setup.get_test_dir().string()).value();
     auto app = diff_analysis::GitApp::init(std::move(repo));
 
     // Verify HEAD reference after update
@@ -130,8 +167,5 @@ TEST_CASE("GitApp initialization and basic operations", "[gitapp]") {
     git_commit_free(commit_result.value());
     git_reference_free(head_ref.value());
   }
-
-  // Cleanup
-  TestSetup::cleanup();
 }
 } // namespace diff_analysis
