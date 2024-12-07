@@ -3,8 +3,10 @@
 #include "expected.hpp"
 #include "rust.hpp"
 
+#include "git2/diff.h"
 #include "git2/errors.h"
 #include "git2/repository.h"
+#include "git2/tree.h"
 #include "git2/types.h"
 
 #include <cstdio>
@@ -82,4 +84,42 @@ public:
 
   ~GitApp() = default;
 };
+
+class GitTree final {
+private:
+  git_tree *tree_ = nullptr;
+
+public:
+  GitTree() = default;
+  explicit GitTree(git_tree *tree);
+  GitTree(GitTree &&other) noexcept;
+  GitTree &operator=(GitTree &&other) noexcept;
+
+  auto entry_bypath(const char *path) const
+      -> tl::expected<const git_tree_entry *, const git_error *>;
+  auto entry_byindex(size_t idx) const
+      -> tl::expected<const git_tree_entry *, const git_error *>;
+  auto entry_byname(const char *filename) const
+      -> tl::expected<const git_tree_entry *, const git_error *>;
+  auto entrycount() const -> size_t;
+
+  template <typename F>
+  auto walk(git_treewalk_mode mode,
+            F &&callback) const -> tl::expected<void, const git_error *>;
+
+  auto diff_tree(const GitTree *new_tree, git_repository *repo) const
+      -> tl::expected<git_diff *, const git_error *>;
+
+  auto get() const -> git_tree *;
+
+  static auto entry_dup(const git_tree_entry *entry)
+      -> tl::expected<git_tree_entry *, const git_error *>;
+  static auto entry_free(git_tree_entry *entry) -> void;
+
+  ~GitTree();
+
+  GitTree(const GitTree &) = delete;
+  GitTree &operator=(const GitTree &) = delete;
+};
+
 } // namespace diff_analysis
