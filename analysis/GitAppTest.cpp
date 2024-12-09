@@ -1,7 +1,5 @@
-
 #include "GitApp.hpp"
 #include "catch2/catch_test_macros.hpp"
-#include "git2/global.h"
 #include "git2/refs.h"
 #include "uuidv4.hpp"
 
@@ -22,7 +20,7 @@ public:
     // Create temporary directory
     UUID uuid = UUID::generate();
     std::string unique_id = uuid.toString();
-    git_libgit2_init();
+    GitApp::init();
 
     // Create temporary directory with UUID
     temp_dir_ = fs::temp_directory_path() / ("git-analysis-test-" + unique_id);
@@ -77,6 +75,7 @@ public:
     if (fs::exists(temp_dir_)) {
       fs::remove_all(temp_dir_);
     }
+    GitApp::shutdown();
   }
 
   fs::path get_test_dir() const { return test_dir_; }
@@ -90,7 +89,7 @@ TEST_CASE("GitApp initialization and basic operations", "[gitapp]") {
     auto repo = diff_analysis::Repo::init(test_setup.get_test_dir().string());
     REQUIRE(repo.has_value());
 
-    auto app = diff_analysis::GitApp::init(std::move(repo.value()));
+    auto app = GitApp::run_on(std::move(repo.value()));
     REQUIRE(app != nullptr);
     REQUIRE(app->get_repo() != nullptr);
   }
@@ -98,7 +97,7 @@ TEST_CASE("GitApp initialization and basic operations", "[gitapp]") {
   SECTION("HEAD reference") {
     auto repo =
         diff_analysis::Repo::init(test_setup.get_test_dir().string()).value();
-    auto app = diff_analysis::GitApp::init(std::move(repo));
+    auto app = GitApp::run_on(std::move(repo));
 
     auto head_ref = app->head();
     REQUIRE(head_ref.has_value());
@@ -110,7 +109,7 @@ TEST_CASE("GitApp initialization and basic operations", "[gitapp]") {
   SECTION("First commit") {
     auto repo =
         diff_analysis::Repo::init(test_setup.get_test_dir().string()).value();
-    auto app = diff_analysis::GitApp::init(std::move(repo));
+    auto app = GitApp::run_on(std::move(repo));
 
     auto first = app->first_commit();
     REQUIRE(first.has_value());
@@ -122,7 +121,7 @@ TEST_CASE("GitApp initialization and basic operations", "[gitapp]") {
   SECTION("Commit lookup and tree operations") {
     auto repo =
         diff_analysis::Repo::init(test_setup.get_test_dir().string()).value();
-    auto app = diff_analysis::GitApp::init(std::move(repo));
+    auto app = GitApp::run_on(std::move(repo));
 
     // Get HEAD reference
     auto head_ref = app->head().value();
@@ -151,7 +150,7 @@ TEST_CASE("GitApp initialization and basic operations", "[gitapp]") {
 
     auto repo =
         diff_analysis::Repo::init(test_setup.get_test_dir().string()).value();
-    auto app = diff_analysis::GitApp::init(std::move(repo));
+    auto app = GitApp::run_on(std::move(repo));
 
     // Verify HEAD reference after update
     auto head_ref = app->head();

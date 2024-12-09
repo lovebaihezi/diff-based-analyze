@@ -56,10 +56,13 @@ public:
 class GitApp final {
 private:
   Box<Repo> repo;
+  GitApp(Box<Repo> &&arg_repo) : repo{std::move(arg_repo)} {}
 
 public:
-  static auto init(Box<Repo> &&repo) -> Box<GitApp>;
-  static auto shutdown(Box<GitApp> &&app) -> void;
+  GitApp() = default;
+  static auto init() -> void;
+  static auto run_on(Box<Repo> &&repo) -> Box<GitApp>;
+  static auto shutdown() -> void;
 
   // Get HEAD reference
   auto head() const -> tl::expected<git_reference *, const git_error *>;
@@ -82,7 +85,7 @@ public:
   // Repo ptr
   auto get_repo() const -> git_repository *;
 
-  ~GitApp() = default;
+  ~GitApp();
 };
 
 class GitTree final {

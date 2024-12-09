@@ -9,21 +9,21 @@
 
 namespace diff_analysis {
 
-auto GitApp::init(Box<Repo> &&repo) -> Box<GitApp> {
+auto GitApp::init() -> void { git_libgit2_init(); }
 
+auto GitApp::run_on(Box<Repo> &&repo) -> Box<GitApp> {
   // Create new GitApp instance
   auto app = std::make_unique<GitApp>();
   app->repo = std::move(repo);
   return app;
 }
 
-auto GitApp::shutdown(Box<GitApp> &&app) -> void {
-  // Clean up repository
-  Repo::close(std::move(app->repo));
-
+auto GitApp::shutdown() -> void {
   // Shutdown libgit2
   git_libgit2_shutdown();
 }
+
+GitApp::~GitApp() { Repo::close(std::move(repo)); };
 
 auto GitApp::head() const -> tl::expected<git_reference *, const git_error *> {
   git_reference *ref = nullptr;
