@@ -1,11 +1,12 @@
-
 #include "CompileOptionsApp.hpp"
 #include <algorithm>
 #include <format>
 #include <fstream>
-#include <json/json.h>
+#include <nlohmann/json.hpp>
 #include <ranges>
 #include <span>
+
+using json = nlohmann::json;
 
 class CompileOptionsApp::Impl {
 public:
@@ -75,27 +76,29 @@ CompileOptionsApp &
 CompileOptionsApp::operator=(CompileOptionsApp &&) noexcept = default;
 
 bool CompileOptionsApp::parseCompileCommands(std::string_view jsonPath) {
-  Json::Value root;
-  std::ifstream file{std::string(jsonPath)};
-
-  if (!file.is_open()) {
-    throw std::runtime_error(
-        std::format("Failed to open compile_commands.json at {}", jsonPath));
-  }
-
   try {
-    file >> root;
+    std::ifstream file{std::string(jsonPath)};
+    if (!file.is_open()) {
+      throw std::runtime_error(
+          std::format("Failed to open compile_commands.json at {}", jsonPath));
+    }
 
-    for (const auto &command : root) {
-      if (command.isMember("command")) {
-        pImpl->parseLibraryFlags(command["command"].asString());
+    json commands = json::parse(file);
+
+    // nlohmann/json supports range-based for loop directly
+    for (const auto &command : commands) {
+      if (command.contains("command")) {
+        pImpl->parseLibraryFlags(command["command"].get<std::string>());
       }
     }
-  } catch (const std::exception &e) {
-    throw std::runtime_error(std::format("Error parsing JSON: {}", e.what()));
-  }
 
-  return true;
+    return true;
+  } catch (const json::parse_error &e) {
+    throw std::runtime_error(std::format("JSON parse error: {}", e.what()));
+  } catch (const std::exception &e) {
+    throw std::runtime_error(
+        std::format("Error processing compile commands: {}", e.what()));
+  }
 }
 
 std::vector<CompileOptionsApp::LibraryInfo>
