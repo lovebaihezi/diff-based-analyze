@@ -1,5 +1,5 @@
 #include "CompileOptionsApp.hpp"
-#include <algorithm>
+#include <cassert>
 #include <format>
 #include <fstream>
 #include <nlohmann/json.hpp>
@@ -7,6 +7,8 @@
 #include <span>
 
 using json = nlohmann::json;
+
+namespace diff_analysis {
 
 class CompileOptionsApp::Impl {
 public:
@@ -20,10 +22,10 @@ public:
   static constexpr std::array<std::string_view, 3> defaultSearchPaths = {
       "/usr/lib", "/usr/local/lib", "/lib"};
 
-  [[nodiscard]] std::optional<std::filesystem::path>
-  findLibraryPath(std::string_view libName,
-                  std::span<const std::string_view> searchPaths =
-                      defaultSearchPaths) const {
+  [[nodiscard]] auto findLibraryPath(
+      std::string_view libName,
+      std::span<const std::string_view> searchPaths = defaultSearchPaths) const
+      -> tl::expected<std::filesystem::path, ParseError> {
 
     for (const auto &basePath : searchPaths) {
       auto fullPath =
@@ -33,11 +35,14 @@ public:
         return fullPath;
       }
     }
-    return std::nullopt;
+    return tl::unexpected{ParseError{
+        std::format("Could not find library {} in search paths", libName)}};
   }
 
-  bool parseLibraryFlags(std::string_view command) {
+  auto parseLibraryFlags(std::string_view command)
+      -> tl::expected<void, ParseError> {
     std::string_view remaining = command;
+
     while (!remaining.empty()) {
       auto space_pos = remaining.find(' ');
       auto token = remaining.substr(0, space_pos);
@@ -59,12 +64,11 @@ public:
         }
       }
 
-      if (space_pos == std::string_view::npos) {
+      if (space_pos == std::string_view::npos)
         break;
-      }
       remaining = remaining.substr(space_pos + 1);
     }
-    return true;
+    return {};
   }
 };
 
@@ -75,34 +79,40 @@ CompileOptionsApp::CompileOptionsApp(CompileOptionsApp &&) noexcept = default;
 CompileOptionsApp &
 CompileOptionsApp::operator=(CompileOptionsApp &&) noexcept = default;
 
-bool CompileOptionsApp::parseCompileCommands(std::string_view jsonPath) {
+auto CompileOptionsApp::parseCompileCommands(std::string_view jsonPath)
+    -> tl::expected<void, ParseError> {
   try {
     std::ifstream file{std::string(jsonPath)};
     if (!file.is_open()) {
-      throw std::runtime_error(
-          std::format("Failed to open compile_commands.json at {}", jsonPath));
+      return tl::unexpected{ParseError{
+          std::format("Failed to open compile_commands.json at {}", jsonPath)}};
     }
 
     json commands = json::parse(file);
 
-    // nlohmann/json supports range-based for loop directly
     for (const auto &command : commands) {
       if (command.contains("command")) {
-        pImpl->parseLibraryFlags(command["command"].get<std::string>());
+        auto command_value = command["command"];
+        assert(command_value.is_string());
+        auto str = command_value.get<std::string_view>();
+        if (auto result = pImpl->parseLibraryFlags(str); !result) {
+          return tl::unexpected{result.error()};
+        }
       }
     }
 
-    return true;
+    return {};
   } catch (const json::parse_error &e) {
-    throw std::runtime_error(std::format("JSON parse error: {}", e.what()));
+    return tl::unexpected{
+        ParseError{std::format("JSON parse error: {}", e.what())}};
   } catch (const std::exception &e) {
-    throw std::runtime_error(
-        std::format("Error processing compile commands: {}", e.what()));
+    return tl::unexpected{ParseError{
+        std::format("Error processing compile commands: {}", e.what())}};
   }
 }
 
-std::vector<CompileOptionsApp::LibraryInfo>
-CompileOptionsApp::getLinkedLibraries() const {
+auto CompileOptionsApp::getLinkedLibraries() const
+    -> tl::expected<std::vector<LibraryInfo>, ParseError> {
   std::vector<LibraryInfo> result;
   result.reserve(pImpl->libraries.size());
 
@@ -114,9 +124,8 @@ CompileOptionsApp::getLinkedLibraries() const {
   return result;
 }
 
-std::vector<std::filesystem::path>
-CompileOptionsApp::getLibraryPaths(std::string_view libName) const {
-
+auto CompileOptionsApp::getLibraryPaths(std::string_view libName) const
+    -> tl::expected<std::vector<std::filesystem::path>, ParseError> {
   std::vector<std::filesystem::path> result;
 
   auto matchingLibs =
@@ -130,3 +139,5 @@ CompileOptionsApp::getLibraryPaths(std::string_view libName) const {
   std::ranges::copy(matchingLibs, std::back_inserter(result));
   return result;
 }
+
+} // namespace diff_analysis
