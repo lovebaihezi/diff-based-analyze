@@ -2,6 +2,7 @@
 #include "GitApp.hpp"
 #include "catch2/catch_test_macros.hpp"
 #include "git2/refs.h"
+#include "uuidv4.hpp"
 
 #include <cstdlib>
 #include <filesystem>
@@ -18,9 +19,12 @@ private:
 public:
   TestSetup() {
     // Create temporary directory
-    temp_dir_ = fs::temp_directory_path() / "git-analysis-test-XXXXXX";
-    fs::create_directory(temp_dir_);
+    UUID uuid = UUID::generate();
+    std::string unique_id = uuid.toString();
 
+    // Create temporary directory with UUID
+    temp_dir_ = fs::temp_directory_path() / ("git-analysis-test-" + unique_id);
+    fs::create_directory(temp_dir_);
     // Create test directory inside temp directory
     test_dir_ = temp_dir_ / "diff-based-analysis-test";
   }
