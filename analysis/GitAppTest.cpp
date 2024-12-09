@@ -1,6 +1,7 @@
 
 #include "GitApp.hpp"
 #include "catch2/catch_test_macros.hpp"
+#include "git2/global.h"
 #include "git2/refs.h"
 #include "uuidv4.hpp"
 
@@ -21,6 +22,7 @@ public:
     // Create temporary directory
     UUID uuid = UUID::generate();
     std::string unique_id = uuid.toString();
+    git_libgit2_init();
 
     // Create temporary directory with UUID
     temp_dir_ = fs::temp_directory_path() / ("git-analysis-test-" + unique_id);

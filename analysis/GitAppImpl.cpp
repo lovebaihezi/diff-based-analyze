@@ -10,8 +10,6 @@
 namespace diff_analysis {
 
 auto GitApp::init(Box<Repo> &&repo) -> Box<GitApp> {
-  // Initialize libgit2
-  git_libgit2_init();
 
   // Create new GitApp instance
   auto app = std::make_unique<GitApp>();
