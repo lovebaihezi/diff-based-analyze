@@ -51,6 +51,8 @@ file(GLOB_RECURSE SOURCES
   types.hpp
   VariableApp.hpp
   VariableAppImpl.cpp
+  uuidv4.hpp
+  uuidv4Impl.cpp
 )
 
 # Add your source files
