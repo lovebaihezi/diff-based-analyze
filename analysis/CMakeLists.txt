@@ -58,6 +58,8 @@ file(GLOB_RECURSE SOURCES
   uuidv4Impl.cpp
   CompileOptionsApp.hpp
   CompileOptionsAppImpl.cpp
+  LibSymbolsApp.hpp
+  LibSymbolsAppImpl.cpp
 )
 
 # Add your source files
