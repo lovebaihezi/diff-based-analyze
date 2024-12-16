@@ -36,6 +36,9 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
+FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
+FetchContent_MakeAvailable(json)
+
 # Include directories for LLVM and libclang
 include_directories(${LLVM_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -53,6 +56,10 @@ file(GLOB_RECURSE SOURCES
   VariableAppImpl.cpp
   uuidv4.hpp
   uuidv4Impl.cpp
+  CompileOptionsApp.hpp
+  CompileOptionsAppImpl.cpp
+  LibSymbolsApp.hpp
+  LibSymbolsAppImpl.cpp
 )
 
 # Add your source files
@@ -65,7 +72,7 @@ add_executable(
 llvm_map_components_to_libnames(llvm_libs support core irreader analysis debuginfod)
 
 # Link with libgit2, quill, LLVM
-target_link_libraries(diff_analysis git2 ${llvm_libs})
+target_link_libraries(diff_analysis git2 ${llvm_libs} nlohmann_json::nlohmann_json)
 
 enable_testing()
 
@@ -75,7 +82,7 @@ add_executable(
   ${SOURCES}
   ${TEST_SOURCES}
 )
-target_link_libraries(tests PRIVATE Catch2::Catch2WithMain git2 ${llvm_libs})
+target_link_libraries(tests PRIVATE Catch2::Catch2WithMain git2 ${llvm_libs} nlohmann_json::nlohmann_json)
 
 include(Catch)
 catch_discover_tests(tests)

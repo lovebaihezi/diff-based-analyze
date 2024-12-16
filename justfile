@@ -137,6 +137,7 @@ build-all:
 
 # Run Analysis Tests
 run-analysis-tests:
+    PATH=PATH:$PWD/llvm/bin
     ./build/analysis/tests
 
 # Clean up All local builds
